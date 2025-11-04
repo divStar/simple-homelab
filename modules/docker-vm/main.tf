@@ -1,4 +1,10 @@
-# Read your SSH public key
+/**
+ * # Docker VM Setup
+ *
+ * This module sets up a [Flatcar Linux VM](https://www.flatcar.org/) with Docker.
+ *
+ * Docker is exposed via TLS port (2396). Look at the [`./files` folder](./files) for more configuration details.
+ */
 locals {
   ssh_public_key     = trimspace(file(pathexpand("~/.ssh/id_rsa.pub")))
   config_directory   = "${path.module}/files"
@@ -21,7 +27,7 @@ data "http" "step_ca_root_pem" {
 data "ct_config" "flatcar" {
   content      = file("${path.module}/files/config.yaml")
   strict       = true
-  pretty_print = false
+  pretty_print = true
 
   snippets = [
     file("${local.config_directory}/locale${local.config_file_suffix}"),

@@ -1,4 +1,8 @@
+# Docker VM Setup
 
+This module sets up a [Flatcar Linux VM](https://www.flatcar.org/) with Docker.
+
+Docker is exposed via TLS port (2396). Look at the [`./files` folder](./files) for more configuration details.
 
 ## Contents
 
@@ -7,7 +11,6 @@
 - [Requirements](#requirements)
 - [Providers](#providers)
 - [Resources](#resources)
-  - _local_file_.[butane_file](#local_filebutane_file)
   - _local_file_.[ignition_file](#local_fileignition_file)
   - _proxmox_virtual_environment_download_file_.[flatcar_image](#proxmox_virtual_environment_download_fileflatcar_image)
   - _proxmox_virtual_environment_file_.[ignition_config](#proxmox_virtual_environment_fileignition_config)
@@ -54,21 +57,6 @@
 
 ## Resources
   
-<blockquote><!-- resource:"local_file.butane_file":start -->
-
-### _local_file_.`butane_file`
-      
-  <table>
-    <tr>
-      <td>Provider</td>
-      <td><code>local (hashicorp/local)</code></td>
-    </tr>
-    <tr>
-      <td>In file</td>
-      <td><a href="./outputs.tf#L6"><code>outputs.tf#L6</code></a></td>
-    </tr>
-  </table>
-</blockquote><!-- resource:"local_file.butane_file":end -->
 <blockquote><!-- resource:"local_file.ignition_file":start -->
 
 ### _local_file_.`ignition_file`
@@ -96,7 +84,7 @@ Download Flatcar stable image
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L84"><code>main.tf#L84</code></a></td>
+      <td><a href="./main.tf#L90"><code>main.tf#L90</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_download_file.flatcar_image":end -->
@@ -112,7 +100,7 @@ Upload the transpiled Ignition config as a snippet
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L72"><code>main.tf#L72</code></a></td>
+      <td><a href="./main.tf#L78"><code>main.tf#L78</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_file.ignition_config":end -->
@@ -128,7 +116,7 @@ Create the Flatcar VM
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L96"><code>main.tf#L96</code></a></td>
+      <td><a href="./main.tf#L102"><code>main.tf#L102</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_vm.flatcar":end -->
