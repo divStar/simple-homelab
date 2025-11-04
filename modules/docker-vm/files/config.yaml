@@ -1,0 +1,4 @@
+variant: flatcar
+version: 1.1.0
+
+# The configuration is merged together from snippets using `data.ct_config` (Terraform).

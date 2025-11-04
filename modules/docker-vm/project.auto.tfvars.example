@@ -1,0 +1,77 @@
+proxmox_endpoint  = "https://sanctum.my.world:8006"
+proxmox_node_name = "sanctum"
+proxmox_password  = "<root-password>" # sadly this is necessary for VM deployment with -fw_args
+proxmox_ssh_user  = "root"
+proxmox_ssh_key   = "~/.ssh/id_rsa"
+
+vm_id         = 800
+vm_hostname   = "docker-vm"
+vm_ip         = "192.168.2.120"
+vm_gateway_ip = "192.168.2.1"
+vm_dns_ip     = "192.168.2.1"
+
+step_ca_client_version       = "0.27.4"
+step_ca_domain               = "<step-ca-domain>"
+step_ca_provisioner          = "<jwk-provisioner>"
+step_ca_provisioner_password = "<jwk-provisioner-password>"
+
+ignition_config_datastore_id = "local-zfs"
+ignition_config_file_name    = "flatcar-ignition-VM_ID.json"
+
+flatcar_image_datastore_id = "local-zfs"
+flatcar_image_file_name    = "flatcar_production_qemu_image.qcow2"
+# remove this once 'virtiofs' supports hits 'stable' channel, because 'stable' is the default
+flatcar_image_channel = "alpha"
+
+docker_daemon_configuration = <<-EOT
+  {
+    "live-restore": true,
+    "log-driver": "json-file",
+    "log-opts": {
+      "max-size": "100m",
+      "max-file": "10"
+    },
+    "metrics-addr": "127.0.0.1:9323",
+    "tls": true,
+    "tlsverify": true,
+    "tlscacert": "/etc/docker/ca.pem",
+    "tlscert": "/etc/docker/server.pem",
+    "tlskey": "/etc/docker/server-key.pem"
+  }
+EOT
+
+efi_disk_datastore_id = "local-zfs"
+
+disks = [
+  {
+    datastore_id = "local-zfs"
+    import_from  = "FLATCAR_IMAGE"
+    interface    = "virtio0"
+    file_format  = "qcow2"
+    size         = 32
+    serial       = "boot"
+  },
+  {
+    datastore_id = "local-zfs"
+    import_from  = "local:import/flatcar-docker.raw"
+    interface    = "virtio1"
+    file_format  = "raw"
+    size         = 128
+    serial       = "docker"
+    mount_path   = "/var/lib/docker"
+  },
+  {
+    datastore_id = "local-zfs"
+    import_from  = "local-zfs:import/flatcar-data.raw"
+    interface    = "virtio2"
+    file_format  = "raw"
+    size         = 64
+    serial       = "data"
+    mount_path   = "/mnt/data"
+  }
+]
+
+viritofs_resources = {
+  music-storage     = "/mnt/music",
+  pictures-storage  = "/mnt/pictures"
+}

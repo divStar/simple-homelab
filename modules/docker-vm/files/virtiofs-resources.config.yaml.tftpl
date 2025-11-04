@@ -1,0 +1,32 @@
+variant: flatcar
+version: 1.1.0
+
+storage:
+  directories:
+    # Create the directories for the VirtioFS mounts
+%{ for name, mount_path in virtiofs_resources ~}
+    - path: ${mount_path}
+      mode: 0755
+%{ endfor ~}
+
+systemd:
+  units:
+%{ for name, mount_path in virtiofs_resources ~}
+    # Mount unit for ${name}
+    - name: ${replace(replace(mount_path, "/", "-"), "/^-/", "")}.mount
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Mount ${name} via virtiofs
+        Before=docker.service
+        
+        [Mount]
+        What=${name}
+        Where=${mount_path}
+        Type=virtiofs
+        Options=rw
+        
+        [Install]
+        WantedBy=multi-user.target
+
+%{ endfor ~}

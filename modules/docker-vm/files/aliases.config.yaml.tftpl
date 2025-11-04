@@ -1,0 +1,16 @@
+variant: flatcar
+version: 1.1.0
+
+storage:
+  files:
+    # Shell aliases for core user
+    - path: /home/core/.bash_profile
+      mode: 0644
+      user:
+        name: core
+      group:
+        name: core
+      contents:
+        inline: |
+          # Pretty ls alias with colors, human-readable sizes, and directories first
+          alias ll='ls -alhF --color=auto --group-directories-first --time-style=long-iso'

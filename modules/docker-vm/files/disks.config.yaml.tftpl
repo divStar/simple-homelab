@@ -1,0 +1,33 @@
+variant: flatcar
+version: 1.1.0
+
+storage:
+  filesystems:
+    # Setup user disks; skip boot drive
+%{ for disk in slice(disks, 1, length(disks)) ~}
+    - device: /dev/disk/by-id/virtio-${disk.serial}
+      format: ext4
+      wipe_filesystem: false
+      label: ${disk.serial}
+%{ endfor ~}
+
+systemd:
+  units:
+    # Mount units for the disks; skip boot drive
+%{ for disk in slice(disks, 1, length(disks)) ~}
+    - name: ${replace(trim(disk.mount_path, "/"), "/", "-")}.mount
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Mount ${disk.serial} disk
+        Before=docker.service
+        
+        [Mount]
+        What=/dev/disk/by-label/${disk.serial}
+        Where=${disk.mount_path}
+        Type=ext4
+        Options=rw
+        
+        [Install]
+        WantedBy=local-fs.target
+%{ endfor ~}

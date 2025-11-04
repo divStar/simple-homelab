@@ -1,0 +1,13 @@
+proxmox_endpoint  = "https://192.168.178.25:8006"
+proxmox_host      = "192.168.178.25"
+proxmox_node_name = "sanctum"
+proxmox_password  = "abcdef12"
+proxmox_ssh_user  = "root"
+proxmox_ssh_key   = "~/.ssh/id_rsa"
+
+mount_points = [{
+  volume = "<step-ca-configuration-directory>"
+  path   = "/etc/step-ca"
+}]
+
+fingerprint_file = "secret_fingerprint"

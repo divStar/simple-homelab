@@ -1,0 +1,34 @@
+variant: flatcar
+version: 1.1.0
+
+systemd:
+  units:
+    # TLS socket on port 2396
+    - name: docker-tls-tcp.socket
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Docker Secured Socket for the API
+        
+        [Socket]
+        ListenStream=2396
+        BindIPv6Only=both
+        Service=docker.service
+        
+        [Install]
+        WantedBy=sockets.target
+
+    # Docker service drop-in: wait for all mounts and TLS configuration
+    - name: docker.service
+      dropins:
+        - name: 10-wait-mounts.conf
+          contents: |
+            [Unit]
+            After=var-lib-docker.mount
+            Requires=var-lib-docker.mount
+%{ for name, mount_path in virtiofs_resources ~}
+            After=${replace(replace(mount_path, "/", "-"), "/^-/", "")}.mount
+            Requires=${replace(replace(mount_path, "/", "-"), "/^-/", "")}.mount
+%{ endfor ~}
+            After=mnt-data.mount
+            Requires=mnt-data.mount

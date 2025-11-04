@@ -1,0 +1,31 @@
+variant: flatcar
+version: 1.1.0
+
+storage:
+  files:
+    # Set hostname
+    - path: /etc/hostname
+      mode: 0644
+      contents:
+        inline: ${vm_hostname}
+    # Static network configuration
+    - path: /etc/systemd/network/00-static.network
+      mode: 0644
+      contents:
+        inline: |
+          [Match]
+          Name=${vm_network_interface_name}
+          
+          [Network]
+          Address=${vm_ip}/24
+          Gateway=${vm_gateway_ip}
+          DNS=${vm_dns_ip}
+          LinkLocalAddressing=no
+          IPv6AcceptRA=no
+    # Disable IPv6
+    - path: /etc/sysctl.d/10-disable-ipv6.conf
+      mode: 0644
+      contents:
+        inline: |
+          net.ipv6.conf.all.disable_ipv6 = 1
+          net.ipv6.conf.default.disable_ipv6 = 1
