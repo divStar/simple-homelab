@@ -101,7 +101,7 @@ $ docker compose -f ./docker-compose.yml --env-file ./stack.env up -d
 
 Use e.g. `docker ps` to check if the container is running properly.
 
-> [!INFO]
+> [!TIP]
 > Have your license ready and ideas for a proper name of the Portainer administrator and his password beforehand, because for security reasons the Portainer container will have to be restarted if the initial set up times out.
 
 We will not be using Portainer for everything - it is just a much more sophisticated monitoring tool.
@@ -126,7 +126,7 @@ Assuming Step CA LXC is available and properly set up, Traefik should start up.
 > [!NOTE]
 > Don't worry about `ZITADEL_APPLICATION_CLIENT_ID` - this value is not yet known and while it **does prevent** you from accessing the Traefik dashboard (see previous note), it does not hinder the installation of Traefik.
 
-> [!INFO]
+> [!TIP]
 > Use `traefik-oidc-auth` for Forward-Auth OIDC authentication for applications such as the Traefik v3 dashboard. Use proper OAuth2 / OIDC login for applications, that support it.
 
 ## Installing Zitadel `docker-compose.yml`
