@@ -1,0 +1,150 @@
+services:
+  zitadel-db:
+    image: postgres:17-alpine
+    container_name: zitadel-db
+    restart: unless-stopped
+    environment:
+      - PGUSER
+      - POSTGRES_PASSWORD
+    networks:
+      - zitadel-network  # Only on internal network for security
+    volumes:
+      - zitadel-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "zitadel", "-U", "postgres"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 20s
+
+  zitadel:
+    image: ghcr.io/zitadel/zitadel:latest
+    container_name: zitadel
+    restart: unless-stopped
+    networks:
+      - services-network
+      - zitadel-network
+    command: 'start-from-init --masterkeyFile /config/masterkey --tlsMode external'
+    environment:
+      # External Zitadel configuration
+      - ZITADEL_EXTERNALDOMAIN
+      - ZITADEL_EXTERNALPORT
+      - ZITADEL_EXTERNALSECURE
+      
+      # Database configuration
+      - ZITADEL_DATABASE_POSTGRES_HOST
+      - ZITADEL_DATABASE_POSTGRES_PORT
+      - ZITADEL_DATABASE_POSTGRES_DATABASE
+      - ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME
+      - ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
+      - ZITADEL_DATABASE_POSTGRES_ADMIN_SSL_MODE
+      - ZITADEL_DATABASE_POSTGRES_USER_USERNAME
+      - ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
+      - ZITADEL_DATABASE_POSTGRES_USER_SSL_MODE
+
+      # Enable and configure Login v2 as the default login interface
+      - ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED
+      - ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_BASEURI
+      
+      # Disable the "org." requirement in the usernames
+      # This allows usernames like "divStar@example.domain" instead of "divStar@org.example.domain"
+      - ZITADEL_DEFAULTINSTANCE_DOMAINPOLICY_USERLOGINMUSTBEDOMAIN
+
+      # First Instance configuration
+      - ZITADEL_FIRSTINSTANCE_INSTANCENAME
+      - ZITADEL_FIRSTINSTANCE_ORG_NAME
+      - ZITADEL_FIRSTINSTANCE_PATPATH
+      - ZITADEL_FIRSTINSTANCE_MACHINEKEYPATH
+      
+      # This creates a machine user with IAM_LOGIN_CLIENT role and generates a PAT
+      - ZITADEL_FIRSTINSTANCE_LOGINCLIENTPATPATH
+      - ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_USERNAME
+      - ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_NAME
+      - ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_PAT_EXPIRATIONDATE
+      
+      # Configure redirect URLs for Login v2
+      - ZITADEL_OIDC_DEFAULTLOGINURLV2
+      - ZITADEL_OIDC_DEFAULTLOGOUTURLV2
+      - ZITADEL_SAML_DEFAULTLOGINURLV2
+      
+      # Admin Machine User with PAT (for Terraform/API access)
+      - ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_USERNAME
+      - ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_NAME
+      - ZITADEL_FIRSTINSTANCE_ORG_MACHINE_PAT_EXPIRATIONDATE
+      - ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINEKEY_EXPIRATIONDATE
+      - ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINEKEY_TYPE
+      
+      # First Human Admin User
+      - ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME
+      - ZITADEL_FIRSTINSTANCE_ORG_HUMAN_FIRSTNAME
+      - ZITADEL_FIRSTINSTANCE_ORG_HUMAN_LASTNAME
+      - ZITADEL_FIRSTINSTANCE_ORG_HUMAN_DISPLAYNAME
+      - ZITADEL_FIRSTINSTANCE_ORG_HUMAN_EMAIL_ADDRESS
+      - ZITADEL_FIRSTINSTANCE_ORG_HUMAN_EMAIL_VERIFIED
+      
+      # Debug logging if need be
+      - ZITADEL_LOG_LEVEL=debug
+      - ZITADEL_LOGSTORE_ACCESS_STDOUT_ENABLED=true
+      
+    volumes:
+      # Mount the directory containing masterkey and PAT files
+      - /mnt/data/zitadel:/config:rw
+    
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=services-network"
+
+      # API/console → 8080 en h2c
+      - "traefik.http.routers.zitadel-api.rule=Host(`zitadel.${BASE_DOMAIN}`) && !PathPrefix(`/ui/v2/login`)"
+      - "traefik.http.routers.zitadel-api.entrypoints=websecure"
+      - "traefik.http.routers.zitadel-api.service=zitadel-api"
+      - "traefik.http.services.zitadel-api.loadbalancer.server.port=8080"
+      - "traefik.http.services.zitadel-api.loadbalancer.server.scheme=h2c"
+      - "traefik.http.services.zitadel-api.loadbalancer.passhostheader=true"
+
+      # Login v2 → 3000
+      - "traefik.http.routers.zitadel-login.rule=Host(`zitadel.${BASE_DOMAIN}`) && PathPrefix(`/ui/v2/login`)"
+      - "traefik.http.routers.zitadel-login.entrypoints=websecure"
+      - "traefik.http.routers.zitadel-login.service=zitadel-login"
+      - "traefik.http.routers.zitadel-login.middlewares=zitadel-redirect-to-console"
+      - "traefik.http.services.zitadel-login.loadbalancer.server.port=3000"
+      - "traefik.http.services.zitadel-login.loadbalancer.passhostheader=true"
+      
+      # Redirect root path to console
+      - "traefik.http.middlewares.zitadel-redirect-to-console.redirectregex.regex=^/$"
+      - "traefik.http.middlewares.zitadel-redirect-to-console.redirectregex.replacement=/ui/console"
+      
+    depends_on:
+      zitadel-db:
+        condition: service_healthy
+
+  zitadel-login:
+    image: ghcr.io/zitadel/zitadel-login:latest
+    container_name: zitadel-login
+    restart: unless-stopped
+    
+    # Shares the network stack with Zitadel container
+    network_mode: service:zitadel
+    environment:
+      - ZITADEL_API_URL
+      - CUSTOM_REQUEST_HEADERS
+      - NEXT_PUBLIC_BASE_PATH
+      - ZITADEL_SERVICE_USER_TOKEN_FILE
+    
+    volumes:
+      - /mnt/data/zitadel:/config:ro
+    
+    depends_on:
+      zitadel:
+        condition: service_started # service_healthy
+        restart: false
+
+networks:
+  services-network:
+    external: true
+  zitadel-network:
+    external: true
+
+volumes:
+  zitadel-db-data:
+    external: true

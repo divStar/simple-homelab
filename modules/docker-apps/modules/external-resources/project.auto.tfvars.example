@@ -1,0 +1,38 @@
+remote_docker_host      = "tcp://docker-vm:2396/"
+ssl_client_certificates = "~/.docker/docker-vm"
+
+networks = {
+  "services-network" = {
+    subnet  = "172.20.10.0/24"
+    gateway = "172.20.10.1"
+    labels = {
+      "com.docker-vm.managed-using" = "Terraform"
+      "com.docker-vm.description"   = "Main network of the Docker VM"
+    }
+  },
+  "zitadel-network" = {
+    subnet  = "172.20.20.0/24"
+    gateway = "172.20.20.1"
+    labels = {
+      "com.docker-vm.managed-using" = "Terraform"
+      "com.docker-vm.description"   = "Zitadel's internal network"
+    }
+  }
+}
+
+volumes = {
+  "portainer-data" = {
+    labels = {
+      "com.docker-vm.managed-using" = "Terraform"
+      "com.docker-vm.description"   = "Portainer Data volume"
+      "com.docker-vm.tags"          = "portainer"
+    }
+  },
+  "zitadel-db-data" = {
+    labels = {
+      "com.docker-vm.managed-using" = "Terraform"
+      "com.docker-vm.description"   = "Zitadel PostgreSQL Data volume"
+      "com.docker-vm.tags"          = "zitadel"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+services:
+  portainer:
+    image: portainer/portainer-ee
+    container_name: portainer
+    restart: unless-stopped
+    ports:
+      - 9000:9000
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      - /var/run/:/var/run/:ro
+      - portainer-data:/data
+      - /etc/localtime:/etc/localtime
+    labels:
+      - "traefik.enable=true"
+      # Dashboard
+      - "traefik.http.routers.portainer-secure.rule=Host(`portainer.my.world`)"
+      - "traefik.http.routers.portainer-secure.entrypoints=websecure"
+      - "traefik.http.routers.portainer-secure.service=portainer-secure"
+      - "traefik.http.services.portainer-secure.loadbalancer.server.port=9000"
+
+networks:
+  default:
+    name: services-network
+    external: true
+
+volumes:
+  portainer-data:
+    external: true

@@ -54,9 +54,8 @@ storage:
 
 systemd:
   units:
-    # Docker certificate provisioning and renewal service
     - name: docker-cert.service
-      enabled: true
+      enabled: false
       contents: |
         [Unit]
         Description=Provision/renew Docker TLS certificate
@@ -66,13 +65,11 @@ systemd:
 
         [Service]
         Type=oneshot
-        RemainAfterExit=yes
         ExecStart=/opt/bin/docker-cert.sh
 
         [Install]
         WantedBy=multi-user.target
 
-    # Certificate renewal timer (every 12 hours)
     - name: docker-cert.timer
       enabled: true
       contents: |
@@ -80,7 +77,7 @@ systemd:
         Description=Renew Docker certificate every 12 hours
 
         [Timer]
-        OnBootSec=16h
+        OnBootSec=0
         OnUnitActiveSec=12h
         Persistent=true
 
