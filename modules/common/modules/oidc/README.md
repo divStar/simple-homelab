@@ -34,8 +34,7 @@ This module is as rigid as I need it, but of course it does not (yet?) allow for
 ![opentofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
 
 ## Providers
-  
-![zitadel](https://img.shields.io/badge/zitadel--ee4398)
+![zitadel/zitadel](https://img.shields.io/badge/zitadel--zitadel-passed_by_caller-ee4398)
 
 ## Resources
   

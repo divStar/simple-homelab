@@ -45,15 +45,14 @@ Docker is exposed via TLS port (2396). Look at the [`./files` folder](./files) f
 
 ## Requirements
 ![opentofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-![ct](https://img.shields.io/badge/ct-0.13.0-d82d82?logo=ct)
-![proxmox](https://img.shields.io/badge/proxmox-~>0.86.0-1e73c8?logo=proxmox)
+![ct](https://img.shields.io/badge/poseidon--ct-0.13.0-d82d82?logo=ct)
+![proxmox](https://img.shields.io/badge/bpg--proxmox-~>0.86.0-1e73c8?logo=proxmox)
 
 ## Providers
-  
-![ct](https://img.shields.io/badge/ct-0.13.0-d82d82)
-![http](https://img.shields.io/badge/http--c1166b)
-![local](https://img.shields.io/badge/local--0c61b6)
-![proxmox](https://img.shields.io/badge/proxmox-~>0.86.0-1e73c8)
+![poseidon/ct](https://img.shields.io/badge/poseidon--ct-0.13.0-d82d82)
+![hashicorp/http](https://img.shields.io/badge/hashicorp--http-passed_by_caller-c1166b)
+![hashicorp/local](https://img.shields.io/badge/hashicorp--local-passed_by_caller-0c61b6)
+![bpg/proxmox](https://img.shields.io/badge/bpg--proxmox-~>0.86.0-1e73c8)
 
 ## Resources
   

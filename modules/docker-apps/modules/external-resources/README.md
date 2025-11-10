@@ -25,11 +25,10 @@ It e.g. creates networks and volumes, that should not be removed if a docker com
 
 ## Requirements
 ![opentofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-![docker](https://img.shields.io/badge/docker-3.8.0-79ce23?logo=docker)
+![docker](https://img.shields.io/badge/kreuzwerker--docker-3.8.0-79ce23?logo=docker)
 
 ## Providers
-  
-![docker](https://img.shields.io/badge/docker-3.8.0-79ce23)
+![kreuzwerker/docker](https://img.shields.io/badge/kreuzwerker--docker-3.8.0-79ce23)
 
 ## Resources
   

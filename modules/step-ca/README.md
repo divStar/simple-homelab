@@ -49,11 +49,10 @@ This module sets up Step-CA in an Alpine LXC container using the provided inform
 ![opentofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
 ![proxmox](https://img.shields.io/badge/proxmox->=0.85.1-1e73c8?logo=proxmox)
 ![random](https://img.shields.io/badge/random->=3.7.2-82d72c?logo=random)
-![ssh](https://img.shields.io/badge/ssh->=2.7.0-4fa4f9?logo=ssh)
+![ssh](https://img.shields.io/badge/loafoe--ssh->=2.7.0-4fa4f9?logo=ssh)
 
 ## Providers
-  
-![ssh](https://img.shields.io/badge/ssh->=2.7.0-4fa4f9)
+![loafoe/ssh](https://img.shields.io/badge/loafoe--ssh->=2.7.0-4fa4f9)
 
 ## Modules
   

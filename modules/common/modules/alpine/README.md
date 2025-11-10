@@ -47,15 +47,14 @@ other Alpine packages (if specified; `bash` is installed by default).
 
 ## Requirements
 ![opentofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-![proxmox](https://img.shields.io/badge/proxmox->=0.75.0-1e73c8?logo=proxmox)
-![ssh](https://img.shields.io/badge/ssh-~>2.7-4fa4f9?logo=ssh)
+![proxmox](https://img.shields.io/badge/bpg--proxmox->=0.75.0-1e73c8?logo=proxmox)
+![ssh](https://img.shields.io/badge/loafoe--ssh-~>2.7-4fa4f9?logo=ssh)
 
 ## Providers
-  
-![proxmox](https://img.shields.io/badge/proxmox->=0.75.0-1e73c8)
-![random](https://img.shields.io/badge/random--82d72c)
-![ssh](https://img.shields.io/badge/ssh-~>2.7-4fa4f9)
-![tls](https://img.shields.io/badge/tls--54a9fe)
+![bpg/proxmox](https://img.shields.io/badge/bpg--proxmox->=0.75.0-1e73c8)
+![hashicorp/random](https://img.shields.io/badge/hashicorp--random-passed_by_caller-82d72c)
+![loafoe/ssh](https://img.shields.io/badge/loafoe--ssh-~>2.7-4fa4f9)
+![hashicorp/tls](https://img.shields.io/badge/hashicorp--tls-passed_by_caller-54a9fe)
 
 ## Resources
   

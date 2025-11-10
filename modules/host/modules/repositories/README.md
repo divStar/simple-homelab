@@ -27,8 +27,7 @@ the creation and activation of the no-subscription repositories.
 ![opentofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
 
 ## Providers
-  
-![ssh](https://img.shields.io/badge/ssh--4fa4f9)
+![loafoe/ssh](https://img.shields.io/badge/loafoe--ssh-passed_by_caller-4fa4f9)
 
 ## Resources
   
