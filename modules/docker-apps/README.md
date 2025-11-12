@@ -15,7 +15,7 @@ Docker context related commands:
 $ docker context ls 
 
 # Create a new context; replace <absolute-path-to> with proper absolute path
-$ docker context create <context-name> --docker "host=tcp://<ip>:2396,ca=/<absolute-path-to>/ca.pem,cert=<absolute-path-to>/cert.pem,key=<absolute-path-to>/key.pem"
+$ docker context create <context-name> --docker "host=tcp://<ip>:2376,ca=/<absolute-path-to>/ca.pem,cert=<absolute-path-to>/cert.pem,key=<absolute-path-to>/key.pem"
 
 # Inspect a particular context
 $ docker context inspect <context-name>
@@ -88,7 +88,7 @@ In the `docker-compose.yml` the following volume is mounted: `- /var/run:/var/ru
 
 Mounting `/var/run` does not result in the same issue and the Docker host connection is picked up correctly every time.
 
-The **reason** Docker (systemd) service is restarted frequently is, that it's exposed via Docker TLS (port 2396) and the certificates are auto-updated every 12-24 hours.
+The **reason** Docker (systemd) service is restarted frequently is, that it's exposed via Docker TLS (port 2376) and the certificates are auto-updated every 12-24 hours.
 
 ## Installing Portainer `docker-compose.yml`
 

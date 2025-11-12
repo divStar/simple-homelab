@@ -3,27 +3,12 @@ version: 1.1.0
 
 storage:
   directories:
-    # Create /opt/bin for `docker-cert.sh`
     - path: /opt/bin
       mode: 0755
-    # Create /etc/docker for Docker certificates
     - path: /etc/docker
       mode: 0755
 
   files:
-    - path: ${certificate_location}
-      mode: 0644
-      contents:
-        inline: |
-          ${indent(10, certificate_content)}
-
-    # Docker daemon configuration with TLS and live-restore
-    - path: /etc/docker/daemon.json
-      mode: 0644
-      contents:
-        inline: |
-          ${indent(10, docker_daemon_configuration)}
-
     # Certificate provisioning/renewal script
     - path: /opt/bin/docker-cert.sh
       mode: 0755
@@ -32,35 +17,39 @@ storage:
           #!/bin/bash
           set -euo pipefail
 
-          # Set STEPPATH to core user's .step directory
           export STEPPATH=/home/core/.step
 
           /opt/bin/step ca certificate "${vm_hostname}" \
             /etc/docker/server.pem \
             /etc/docker/server-key.pem \
             --san "${vm_hostname}" \
+            --san "${vm_hostname}.${vm_domain}" \
             --san "${vm_ip}" \
             --not-after=16h \
             --provisioner "${step_ca_provisioner}" \
             --provisioner-password-file /home/core/.step/provisioner-password \
             --force
+          
+          cp /etc/ssl/certs/step-ca-root.pem /etc/docker/ca.pem
 
           chmod 0600 /etc/docker/server-key.pem
           chmod 0644 /etc/docker/server.pem
+          chmod 0644 /etc/docker/ca.pem
 
-          # Restart docker daemon to pick up new certificates
-          # live-restore keeps containers running during restart
-          systemctl restart docker.service
+          # Only restart Docker if it's already running
+          # On first boot, Docker hasn't started yet, so this does nothing
+          # On renewals, this restarts Docker to pick up new certs
+          systemctl try-restart docker.service
 
 systemd:
   units:
+    # Initial certificate provisioning (runs once at boot)
     - name: docker-cert.service
       enabled: false
       contents: |
         [Unit]
         Description=Provision/renew Docker TLS certificate
-        After=install-step-cli.service update-ca-certificates.service network-online.target
-        Requires=install-step-cli.service
+        After=install-step-cli.service network-online.target
         Wants=network-online.target
 
         [Service]
@@ -70,6 +59,7 @@ systemd:
         [Install]
         WantedBy=multi-user.target
 
+    # Certificate renewal timer (runs every 12 hours)
     - name: docker-cert.timer
       enabled: true
       contents: |

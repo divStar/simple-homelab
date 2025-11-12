@@ -1,4 +1,4 @@
-remote_docker_host      = "tcp://docker-vm:2396/"
+remote_docker_host      = "tcp://docker-vm:2376/"
 ssl_client_certificates = "~/.docker/docker-vm"
 
 networks = {

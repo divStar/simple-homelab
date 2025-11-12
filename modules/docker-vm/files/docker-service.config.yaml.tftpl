@@ -1,25 +1,25 @@
 variant: flatcar
 version: 1.1.0
 
+storage:
+  files:
+    # Docker daemon configuration with TLS and live-restore
+    - path: /etc/docker/daemon.json
+      mode: 0644
+      contents:
+        inline: |
+          ${indent(10, docker_daemon_configuration)}
+
+  links:
+  - path: /etc/systemd/system/multi-user.target.wants/docker.service
+    target: /usr/lib/systemd/system/docker.service
+    hard: false
+    overwrite: true
+
 systemd:
   units:
-    # TLS socket on port 2396
-    - name: docker-tls-tcp.socket
-      enabled: true
-      contents: |
-        [Unit]
-        Description=Docker Secured Socket for the API
-        
-        [Socket]
-        ListenStream=2396
-        BindIPv6Only=both
-        Service=docker.service
-        
-        [Install]
-        WantedBy=sockets.target
-
-    # Docker service drop-in: wait for all mounts and TLS configuration
     - name: docker.service
+      enabled: true
       dropins:
         - name: 10-wait-mounts.conf
           contents: |
@@ -32,3 +32,12 @@ systemd:
 %{ endfor ~}
             After=mnt-data.mount
             Requires=mnt-data.mount
+            # Wait for initial certificate before starting
+            After=docker-cert.service
+
+            [Install]
+            WantedBy=multi-user.target
+        - name: 20-tls-port.conf
+          contents: |
+            [Service]
+            Environment="DOCKER_OPTS=--host=tcp://0.0.0.0:2376"

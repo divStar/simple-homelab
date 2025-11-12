@@ -3,24 +3,12 @@
  *
  * This module sets up a [Flatcar Linux VM](https://www.flatcar.org/) with Docker.
  *
- * Docker is exposed via TLS port (2396). Look at the [`./files` folder](./files) for more configuration details.
+ * Docker is exposed via TLS port (2376). Look at the [`./files` folder](./files) for more configuration details.
  */
 locals {
   ssh_public_key     = trimspace(file(pathexpand("~/.ssh/id_rsa.pub")))
   config_directory   = "${path.module}/files"
   config_file_suffix = ".config.yaml.tftpl"
-}
-
-# Download the `root_ca.crt` root CA certificate from Step CA.
-data "http" "step_ca_root_pem" {
-  url                = "https://${var.step_ca_domain}/roots.pem"
-  request_timeout_ms = 5000
-
-  retry {
-    attempts     = 3
-    min_delay_ms = 1000
-    max_delay_ms = 3000
-  }
 }
 
 # Butane config for Flatcar
@@ -49,27 +37,19 @@ data "ct_config" "flatcar" {
     }),
     file("${local.config_directory}/aliases${local.config_file_suffix}"),
     templatefile("${local.config_directory}/step-ca${local.config_file_suffix}", {
-      certificate_locations = [
-        "/etc/ssl/certs/step-ca.pem",
-        "/home/core/.step/certs/root_ca.crt"
-      ]
-      certificate_content          = data.http.step_ca_root_pem.response_body
       step_ca_client_version       = var.step_ca_client_version
       step_ca_domain               = var.step_ca_domain
-      step_ca_fingerprint          = file("${path.module}/../step-ca/secret_fingerprint")
       step_ca_provisioner_password = var.step_ca_provisioner_password
     }),
-    templatefile("${local.config_directory}/docker-tls${local.config_file_suffix}", {
-      docker_daemon_configuration = var.docker_daemon_configuration
-      certificate_location        = "/etc/docker/ca.pem"
-      certificate_content         = data.http.step_ca_root_pem.response_body
-      step_ca_provisioner         = var.step_ca_provisioner
-      vm_id                       = var.vm_id
-      vm_hostname                 = var.vm_hostname
-      vm_ip                       = var.vm_ip
+    templatefile("${local.config_directory}/docker-cert${local.config_file_suffix}", {
+      step_ca_provisioner = var.step_ca_provisioner
+      vm_hostname         = var.vm_hostname
+      vm_domain           = var.vm_domain
+      vm_ip               = var.vm_ip
     }),
     templatefile("${local.config_directory}/docker-service${local.config_file_suffix}", {
-      virtiofs_resources = var.viritofs_resources
+      docker_daemon_configuration = var.docker_daemon_configuration
+      virtiofs_resources          = var.viritofs_resources
     })
   ]
 }

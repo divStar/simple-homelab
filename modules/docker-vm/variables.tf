@@ -39,6 +39,11 @@ variable "vm_hostname" {
   type        = string
 }
 
+variable "vm_domain" {
+  description = "VM Domain for the host"
+  type        = string
+}
+
 variable "vm_ip" {
   description = "VM IP (v4)"
   type        = string

@@ -2,7 +2,7 @@
 
 This module sets up a [Flatcar Linux VM](https://www.flatcar.org/) with Docker.
 
-Docker is exposed via TLS port (2396). Look at the [`./files` folder](./files) for more configuration details.
+Docker is exposed via TLS port (2376). Look at the [`./files` folder](./files) for more configuration details.
 
 ## Contents
 

@@ -4,6 +4,7 @@ version: 1.1.0
 storage:
   directories:
     # Create Step CA client related certificate directory for core user
+    # They have to be created here, because the `core` user **is not allowed** to run `mkdir`
     - path: /home/core/.step/certs
       mode: 0755
       user:
@@ -18,28 +19,6 @@ storage:
         name: core
 
   files:
-%{ for name, certificate_location in certificate_locations ~}
-    - path: ${certificate_location}
-      mode: 0644
-      contents:
-        inline: |
-          ${indent(10, certificate_content)}
-%{ endfor ~}
-
-    - path: /home/core/.step/config/defaults.json
-      mode: 0644
-      user:
-        name: core
-      group:
-        name: core
-      contents:
-        inline: |
-          {
-            "ca-url": "https://${step_ca_domain}",
-            "fingerprint": "${step_ca_fingerprint}",
-            "root": "/home/core/.step/certs/root_ca.crt"
-          }
-
     # Store provisioner password for automated certificate requests
     - path: /home/core/.step/provisioner-password
       mode: 0600
@@ -49,25 +28,35 @@ storage:
         name: core
       contents:
         inline: ${step_ca_provisioner_password}
+      
+    - path: /opt/bin/install-step.sh
+      mode: 0755
+      contents:
+        inline: |
+          #!/bin/bash
+          set -euo pipefail
+          
+          # Install step binary
+          curl -fsSL -o /tmp/step.tar.gz "https://dl.smallstep.com/gh-release/cli/gh-release-header/v${step_ca_client_version}/step_linux_${step_ca_client_version}_amd64.tar.gz"
+          tar -xzf /tmp/step.tar.gz -C /tmp
+          install -m 0755 /tmp/step_${step_ca_client_version}/bin/step /opt/bin/step
+          rm -rf /tmp/step_${step_ca_client_version} /tmp/step.tar.gz
+          
+          # Get fingerprint from an insecurely downloaded roots.pem
+          FINGERPRINT=$(/opt/bin/step certificate fingerprint <(curl --silent --insecure https://${step_ca_domain}/roots.pem))
+          
+          # Bootstrap Step CA in /root/.step
+          /opt/bin/step ca bootstrap --ca-url https://${step_ca_domain} --fingerprint "$${FINGERPRINT}"
+          
+          # Bootstrap Step CA in /home/core/.step
+          sudo -u core /opt/bin/step ca bootstrap --ca-url https://${step_ca_domain} --fingerprint "$${FINGERPRINT}"
+
+          # Install it in the system truststore manually
+          cp /root/.step/certs/root_ca.crt /etc/ssl/certs/step-ca-root.pem
+          update-ca-certificates
 
 systemd:
   units:
-    # Run update-ca-certificates on first boot
-    - name: update-ca-certificates.service
-      enabled: true
-      contents: |
-        [Unit]
-        Description=Update CA certificates with custom Step CA
-        ConditionFirstBoot=true
-        Before=docker.service
-
-        [Service]
-        Type=oneshot
-        ExecStart=/usr/sbin/update-ca-certificates
-
-        [Install]
-        WantedBy=multi-user.target
-
     # Install step-cli on first boot
     - name: install-step-cli.service
       enabled: true
@@ -77,16 +66,12 @@ systemd:
         ConditionFirstBoot=true
         After=network-online.target
         Wants=network-online.target
-        Before=docker-cert.service
+        Before=docker-cert.service docker.service
 
         [Service]
         Type=oneshot
         RemainAfterExit=yes
-        ExecStart=/bin/bash -c '\
-          curl -fsSL -o /tmp/step.tar.gz "https://dl.smallstep.com/gh-release/cli/gh-release-header/v${step_ca_client_version}/step_linux_${step_ca_client_version}_amd64.tar.gz" && \
-          tar -xzf /tmp/step.tar.gz -C /tmp && \
-          install -m 0755 /tmp/step_${step_ca_client_version}/bin/step /opt/bin/step && \
-          rm -rf /tmp/step_${step_ca_client_version}'
+        ExecStart=/opt/bin/install-step.sh
 
         [Install]
         WantedBy=multi-user.target
