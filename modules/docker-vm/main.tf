@@ -18,6 +18,7 @@ data "ct_config" "flatcar" {
   pretty_print = true
 
   snippets = [
+    file("${local.config_directory}/general-fixes${local.config_file_suffix}"),
     file("${local.config_directory}/locale${local.config_file_suffix}"),
     templatefile("${local.config_directory}/network${local.config_file_suffix}", {
       vm_hostname               = var.vm_hostname
