@@ -73,9 +73,6 @@ secret_fingerprint
 # Claude code
 .claude
 
-# Environment files
-*.env
-
 # Default key
 admin_key.json
 
