@@ -36,10 +36,9 @@ storage:
           chmod 0644 /etc/docker/server.pem
           chmod 0644 /etc/docker/ca.pem
 
-          # Only restart Docker if it's already running
-          # On first boot, Docker hasn't started yet, so this does nothing
-          # On renewals, this restarts Docker to pick up new certs
-          systemctl try-restart docker.service
+          if systemctl is-active --quiet docker.service; then
+            systemctl restart docker.service --no-block
+          fi
 
 systemd:
   units:

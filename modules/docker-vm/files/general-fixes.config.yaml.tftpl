@@ -1,13 +1,11 @@
 variant: flatcar
 version: 1.1.0
 
-kernel_arguments:
-  should_not_exist:
-    - console=ttyS0,115200n8
-
-storage:
-  files:
-    # Required to prevent systemd-sysupdate.service from failing (https://github.com/flatcar/sysext-bakery/issues/88)
-    - path: /etc/sysupdate.d/noop.conf
-      contents:
-        source: https://github.com/flatcar/sysext-bakery/releases/download/latest/noop.conf
+systemd:
+  units:
+    - name: google-oslogin-cache.service
+      mask: true
+    - name: google-oslogin-cache.timer
+      mask: true
+    - name: serial-getty@ttyS0.service
+      mask: true

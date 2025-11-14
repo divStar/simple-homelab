@@ -34,6 +34,7 @@ Docker is exposed via TLS port (2376). Look at the [`./files` folder](./files) f
   - [step_ca_provisioner_password](#step_ca_provisioner_password-required) (**Required**)
   - [viritofs_resources](#viritofs_resources-required) (**Required**)
   - [vm_dns_ip](#vm_dns_ip-required) (**Required**)
+  - [vm_domain](#vm_domain-required) (**Required**)
   - [vm_gateway_ip](#vm_gateway_ip-required) (**Required**)
   - [vm_hostname](#vm_hostname-required) (**Required**)
   - [vm_id](#vm_id-required) (**Required**)
@@ -50,7 +51,6 @@ Docker is exposed via TLS port (2376). Look at the [`./files` folder](./files) f
 
 ## Providers
 ![poseidon/ct](https://img.shields.io/badge/poseidon--ct-0.13.0-d82d82)
-![hashicorp/http](https://img.shields.io/badge/hashicorp--http-passed_by_caller-c1166b)
 ![hashicorp/local](https://img.shields.io/badge/hashicorp--local-passed_by_caller-0c61b6)
 ![bpg/proxmox](https://img.shields.io/badge/bpg--proxmox-~>0.86.0-1e73c8)
 
@@ -83,7 +83,7 @@ Download Flatcar stable image
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L90"><code>main.tf#L90</code></a></td>
+      <td><a href="./main.tf#L71"><code>main.tf#L71</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_download_file.flatcar_image":end -->
@@ -99,7 +99,7 @@ Upload the transpiled Ignition config as a snippet
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L78"><code>main.tf#L78</code></a></td>
+      <td><a href="./main.tf#L59"><code>main.tf#L59</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_file.ignition_config":end -->
@@ -115,7 +115,7 @@ Create the Flatcar VM
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L102"><code>main.tf#L102</code></a></td>
+      <td><a href="./main.tf#L83"><code>main.tf#L83</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_vm.flatcar":end -->
@@ -143,7 +143,7 @@ Disks, that should be mounted
     mount_path   = optional(string)
   }))
   ```
-  In file: <a href="./variables.tf#L150"><code>variables.tf#L150</code></a>
+  In file: <a href="./variables.tf#L155"><code>variables.tf#L155</code></a>
 
 </details>
 </blockquote><!-- variable:"disks":end -->
@@ -160,7 +160,7 @@ Docker daemon.json configuration file content
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L130"><code>variables.tf#L130</code></a>
+  In file: <a href="./variables.tf#L135"><code>variables.tf#L135</code></a>
 
 </details>
 </blockquote><!-- variable:"docker_daemon_configuration":end -->
@@ -177,7 +177,7 @@ Proxmox location for the EFI disk
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L145"><code>variables.tf#L145</code></a>
+  In file: <a href="./variables.tf#L150"><code>variables.tf#L150</code></a>
 
 </details>
 </blockquote><!-- variable:"efi_disk_datastore_id":end -->
@@ -194,7 +194,7 @@ Proxmox location for the FlatCar image
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L109"><code>variables.tf#L109</code></a>
+  In file: <a href="./variables.tf#L114"><code>variables.tf#L114</code></a>
 
 </details>
 </blockquote><!-- variable:"flatcar_image_datastore_id":end -->
@@ -211,7 +211,7 @@ Filename of the FlatCar image (image type must match format of the boot disk in 
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L114"><code>variables.tf#L114</code></a>
+  In file: <a href="./variables.tf#L119"><code>variables.tf#L119</code></a>
 
 </details>
 </blockquote><!-- variable:"flatcar_image_file_name":end -->
@@ -228,7 +228,7 @@ Proxmox location of the Ignition configuration
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L99"><code>variables.tf#L99</code></a>
+  In file: <a href="./variables.tf#L104"><code>variables.tf#L104</code></a>
 
 </details>
 </blockquote><!-- variable:"ignition_config_datastore_id":end -->
@@ -245,7 +245,7 @@ Filename of the Ignition configuration; use `VM_ID` in the filename to replace i
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L104"><code>variables.tf#L104</code></a>
+  In file: <a href="./variables.tf#L109"><code>variables.tf#L109</code></a>
 
 </details>
 </blockquote><!-- variable:"ignition_config_file_name":end -->
@@ -347,7 +347,7 @@ Step CA client version (used in `step-ca.config.yaml.tftpl`)
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L78"><code>variables.tf#L78</code></a>
+  In file: <a href="./variables.tf#L83"><code>variables.tf#L83</code></a>
 
 </details>
 </blockquote><!-- variable:"step_ca_client_version":end -->
@@ -364,7 +364,7 @@ Step CA domain
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L83"><code>variables.tf#L83</code></a>
+  In file: <a href="./variables.tf#L88"><code>variables.tf#L88</code></a>
 
 </details>
 </blockquote><!-- variable:"step_ca_domain":end -->
@@ -381,7 +381,7 @@ Step CA provisioner name
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L88"><code>variables.tf#L88</code></a>
+  In file: <a href="./variables.tf#L93"><code>variables.tf#L93</code></a>
 
 </details>
 </blockquote><!-- variable:"step_ca_provisioner":end -->
@@ -398,7 +398,7 @@ Step CA provisioner password
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L93"><code>variables.tf#L93</code></a>
+  In file: <a href="./variables.tf#L98"><code>variables.tf#L98</code></a>
 
 </details>
 </blockquote><!-- variable:"step_ca_provisioner_password":end -->
@@ -415,7 +415,7 @@ Map of VirtioFS mapping names to attach to all VMs
   ```hcl
   map(string)
   ```
-  In file: <a href="./variables.tf#L140"><code>variables.tf#L140</code></a>
+  In file: <a href="./variables.tf#L145"><code>variables.tf#L145</code></a>
 
 </details>
 </blockquote><!-- variable:"viritofs_resources":end -->
@@ -432,10 +432,27 @@ VM DNS IP (v4)
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L62"><code>variables.tf#L62</code></a>
+  In file: <a href="./variables.tf#L67"><code>variables.tf#L67</code></a>
 
 </details>
 </blockquote><!-- variable:"vm_dns_ip":end -->
+<blockquote><!-- variable:"vm_domain":start -->
+
+### `vm_domain` (**Required**)
+
+VM Domain for the host
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  string
+  ```
+  In file: <a href="./variables.tf#L42"><code>variables.tf#L42</code></a>
+
+</details>
+</blockquote><!-- variable:"vm_domain":end -->
 <blockquote><!-- variable:"vm_gateway_ip":start -->
 
 ### `vm_gateway_ip` (**Required**)
@@ -449,7 +466,7 @@ VM gateway IP (v4)
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L52"><code>variables.tf#L52</code></a>
+  In file: <a href="./variables.tf#L57"><code>variables.tf#L57</code></a>
 
 </details>
 </blockquote><!-- variable:"vm_gateway_ip":end -->
@@ -500,7 +517,7 @@ VM IP (v4)
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L42"><code>variables.tf#L42</code></a>
+  In file: <a href="./variables.tf#L47"><code>variables.tf#L47</code></a>
 
 </details>
 </blockquote><!-- variable:"vm_ip":end -->
@@ -521,7 +538,7 @@ Image channel of the FlatCar image (alpha, beta, stable)
   ```json
   "stable"
   ```
-  In file: <a href="./variables.tf#L119"><code>variables.tf#L119</code></a>
+  In file: <a href="./variables.tf#L124"><code>variables.tf#L124</code></a>
 
 </details>
 </blockquote><!-- variable:"flatcar_image_channel":end -->
@@ -563,7 +580,7 @@ Name of the network interface in the VM (e.g. eth0)
   ```json
   "eth0"
   ```
-  In file: <a href="./variables.tf#L72"><code>variables.tf#L72</code></a>
+  In file: <a href="./variables.tf#L77"><code>variables.tf#L77</code></a>
 
 </details>
 </blockquote><!-- variable:"vm_network_interface_name":end -->
