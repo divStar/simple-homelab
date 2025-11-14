@@ -1,0 +1,43 @@
+# This Watchtower's documentation: https://watchtower.devcdn.net/
+services:
+  watchtower:
+    image: beatkind/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/:/var/run/:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - WATCHTOWER_LOG_FORMAT
+      - WATCHTOWER_LOG_LEVEL
+      - WATCHTOWER_NO_STARTUP_MESSAGE
+      - WATCHTOWER_CLEANUP
+      - WATCHTOWER_INCLUDE_RESTARTING
+      - WATCHTOWER_INCLUDE_STOPPED
+      - WATCHTOWER_POLL_INTERVAL
+      - WATCHTOWER_LABEL
+      - WATCHTOWER_HTTP_API_UPDATE
+      - WATCHTOWER_HTTP_API_TOKEN
+      - WATCHTOWER_HTTP_API_METRICS
+      - WATCHTOWER_HTTP_API_PERIODIC_POLLS
+      # Configure notification via e-mail
+      - WATCHTOWER_NOTIFICATIONS
+      - WATCHTOWER_NOTIFICATION_EMAIL_FROM
+      - WATCHTOWER_NOTIFICATION_EMAIL_FROM_NAME
+      - WATCHTOWER_NOTIFICATION_EMAIL_TO
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PORT
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_USER
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PASSWORD
+      - WATCHTOWER_NOTIFICATION_EMAIL_DELAY
+    labels:
+      - "traefik.enable=true"
+      # Dashboard
+      - "traefik.http.routers.watchtower-secure.rule=Host(`watchtower.my.world`)"
+      - "traefik.http.routers.watchtower-secure.entrypoints=websecure"
+      - "traefik.http.services.watchtower-secure.loadbalancer.server.port=8080"
+
+networks:
+  default:
+    external:
+      name: "services-network"
