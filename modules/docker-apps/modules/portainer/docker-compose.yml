@@ -9,15 +9,14 @@ services:
       - no-new-privileges:true
     volumes:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
-      - /var/run/:/var/run/:ro
+      - /var/run:/var/run:ro
       - portainer-data:/data
-      - /etc/localtime:/etc/localtime
+      - /etc/localtime:/etc/localtime:ro
     labels:
       - "traefik.enable=true"
       # Dashboard
       - "traefik.http.routers.portainer-secure.rule=Host(`portainer.my.world`)"
       - "traefik.http.routers.portainer-secure.entrypoints=websecure"
-      - "traefik.http.routers.portainer-secure.service=portainer-secure"
       - "traefik.http.services.portainer-secure.loadbalancer.server.port=9000"
 
 networks:
