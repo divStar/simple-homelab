@@ -23,15 +23,33 @@ resource "zitadel_project" "this" {
 
 # Application to create in the newly created project.
 resource "zitadel_application_oidc" "this" {
+  depends_on = [zitadel_project.this]
   project_id = zitadel_project.this.id
 
-  name                      = var.application_name
-  app_type                  = var.app_type
-  auth_method_type          = var.auth_method_type
-  redirect_uris             = var.redirect_uris
-  response_types            = var.response_types
-  grant_types               = var.grant_types
-  post_logout_redirect_uris = var.post_logout_redirect_uris
+  name                        = var.application_name
+  app_type                    = var.app_type
+  auth_method_type            = var.auth_method_type
+  redirect_uris               = var.redirect_uris
+  response_types              = var.response_types
+  grant_types                 = var.grant_types
+  access_token_type           = var.access_token_type
+  access_token_role_assertion = var.access_token_role_assertion
+  id_token_role_assertion     = var.id_token_role_assertion
+  id_token_userinfo_assertion = var.id_token_userinfo_assertion
+  post_logout_redirect_uris   = var.post_logout_redirect_uris
+}
+
+# Project roles to create
+resource "zitadel_project_role" "this" {
+  depends_on = [zitadel_project.this]
+  for_each   = var.project_roles
+
+  org_id     = data.zitadel_orgs.this.ids[0]
+  project_id = zitadel_project.this.id
+
+  role_key     = each.key
+  display_name = each.value.display_name
+  group        = each.value.group
 }
 
 # Find user, that should be granted the project (if set)
@@ -45,9 +63,11 @@ data "zitadel_machine_users" "this" {
 
 # Grant project to user (if set)
 resource "zitadel_user_grant" "this" {
-  count = var.admin_user == null ? 0 : 1
+  depends_on = [zitadel_application_oidc.this]
+  count      = var.admin_user == null ? 0 : 1
 
   org_id     = data.zitadel_orgs.this.ids[0]
   project_id = zitadel_project.this.id
   user_id    = data.zitadel_machine_users.this[0].user_ids[0]
+  role_keys  = keys(var.project_roles)
 }

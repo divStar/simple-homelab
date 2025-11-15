@@ -38,6 +38,31 @@ variable "grant_types" {
   type        = list(string)
 }
 
+variable "access_token_type" {
+  description = "Access token type (Bearer Token or JWT)"
+  type        = string
+  nullable    = false
+  default     = "OIDC_TOKEN_TYPE_BEARER"
+}
+
+variable "access_token_role_assertion" {
+  description = "Whether the roles in the access token are to be asserted or not"
+  type        = bool
+  default     = false
+}
+
+variable "id_token_role_assertion" {
+  description = "Whether to add the roles directly to the ID token"
+  type        = bool
+  default     = false
+}
+
+variable "id_token_userinfo_assertion" {
+  description = "Whether to include information such as email in the ID token"
+  type        = bool
+  default     = false
+}
+
 variable "post_logout_redirect_uris" {
   description = "Post-logout redirectURIs"
   type        = list(string)
@@ -48,4 +73,13 @@ variable "admin_user" {
   type        = string
   nullable    = true
   default     = null
+}
+
+variable "project_roles" {
+  description = "Roles to create for the project in Zitadel (the key is the `role_key` name)"
+  type = map(object({
+    display_name = string
+    group        = string
+  }))
+  default = {}
 }
