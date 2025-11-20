@@ -83,7 +83,7 @@ Download Flatcar stable image
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L71"><code>main.tf#L71</code></a></td>
+      <td><a href="./main.tf#L72"><code>main.tf#L72</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_download_file.flatcar_image":end -->
@@ -99,7 +99,7 @@ Upload the transpiled Ignition config as a snippet
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L59"><code>main.tf#L59</code></a></td>
+      <td><a href="./main.tf#L60"><code>main.tf#L60</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_file.ignition_config":end -->
@@ -115,7 +115,7 @@ Create the Flatcar VM
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L83"><code>main.tf#L83</code></a></td>
+      <td><a href="./main.tf#L84"><code>main.tf#L84</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_vm.flatcar":end -->
