@@ -191,12 +191,12 @@ resource "restapi_object" "portainer_settings" {
 output "client_id" {
   description = "Portainer Client ID"
   value       = module.portainer_web_ui_oidc.client_id
-  sensitive   = true
+  sensitive   = false
 }
 
 # `client_secret` for further use.
 output "client_secret" {
-  description = "Portainer Client ID"
+  description = "Portainer Client Secret"
   value       = module.portainer_web_ui_oidc.client_secret
-  sensitive   = true
+  sensitive   = false
 }
