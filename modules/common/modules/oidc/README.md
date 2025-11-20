@@ -13,6 +13,7 @@ This module is as rigid as I need it, but of course it does not (yet?) allow for
 - [Resources](#resources)
   - _zitadel_application_oidc_.[this](#zitadel_application_oidcthis)
   - _zitadel_project_.[this](#zitadel_projectthis)
+  - _zitadel_project_role_.[this](#zitadel_project_rolethis)
   - _zitadel_user_grant_.[this](#zitadel_user_grantthis)
 - [Variables](#variables)
   - [app_type](#app_type-required) (**Required**)
@@ -24,7 +25,12 @@ This module is as rigid as I need it, but of course it does not (yet?) allow for
   - [project_name](#project_name-required) (**Required**)
   - [redirect_uris](#redirect_uris-required) (**Required**)
   - [response_types](#response_types-required) (**Required**)
+  - [access_token_role_assertion](#access_token_role_assertion-optional) (*Optional*)
+  - [access_token_type](#access_token_type-optional) (*Optional*)
   - [admin_user](#admin_user-optional) (*Optional*)
+  - [id_token_role_assertion](#id_token_role_assertion-optional) (*Optional*)
+  - [id_token_userinfo_assertion](#id_token_userinfo_assertion-optional) (*Optional*)
+  - [project_roles](#project_roles-optional) (*Optional*)
 - [Outputs](#outputs)
   - [client_id](#client_id)
   - [client_secret](#client_secret)
@@ -70,6 +76,22 @@ Project to create in the organization found via the data source `zitadel_orgs`.
     </tr>
   </table>
 </blockquote><!-- resource:"zitadel_project.this":end -->
+<blockquote><!-- resource:"zitadel_project_role.this":start -->
+
+### _zitadel_project_role_.`this`
+
+Project roles to create
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>zitadel (zitadel/zitadel)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L43"><code>main.tf#L43</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"zitadel_project_role.this":end -->
 <blockquote><!-- resource:"zitadel_user_grant.this":start -->
 
 ### _zitadel_user_grant_.`this`
@@ -82,7 +104,7 @@ Grant project to user (if set)
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L47"><code>main.tf#L47</code></a></td>
+      <td><a href="./main.tf#L65"><code>main.tf#L65</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"zitadel_user_grant.this":end -->
@@ -187,7 +209,7 @@ Post-logout redirectURIs
   ```hcl
   list(string)
   ```
-  In file: <a href="./variables.tf#L41"><code>variables.tf#L41</code></a>
+  In file: <a href="./variables.tf#L66"><code>variables.tf#L66</code></a>
 
 </details>
 </blockquote><!-- variable:"post_logout_redirect_uris":end -->
@@ -242,6 +264,48 @@ Response types
 
 </details>
 </blockquote><!-- variable:"response_types":end -->
+<blockquote><!-- variable:"access_token_role_assertion":start -->
+
+### `access_token_role_assertion` (*Optional*)
+
+Whether the roles in the access token are to be asserted or not
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  bool
+  ```
+  **Default**:
+  ```json
+  false
+  ```
+  In file: <a href="./variables.tf#L48"><code>variables.tf#L48</code></a>
+
+</details>
+</blockquote><!-- variable:"access_token_role_assertion":end -->
+<blockquote><!-- variable:"access_token_type":start -->
+
+### `access_token_type` (*Optional*)
+
+Access token type (Bearer Token or JWT)
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  string
+  ```
+  **Default**:
+  ```json
+  "OIDC_TOKEN_TYPE_BEARER"
+  ```
+  In file: <a href="./variables.tf#L41"><code>variables.tf#L41</code></a>
+
+</details>
+</blockquote><!-- variable:"access_token_type":end -->
 <blockquote><!-- variable:"admin_user":start -->
 
 ### `admin_user` (*Optional*)
@@ -259,10 +323,76 @@ Administrator of the project; user `user_name` or leave empty if unknown or set 
   ```json
   null
   ```
-  In file: <a href="./variables.tf#L46"><code>variables.tf#L46</code></a>
+  In file: <a href="./variables.tf#L71"><code>variables.tf#L71</code></a>
 
 </details>
 </blockquote><!-- variable:"admin_user":end -->
+<blockquote><!-- variable:"id_token_role_assertion":start -->
+
+### `id_token_role_assertion` (*Optional*)
+
+Whether to add the roles directly to the ID token
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  bool
+  ```
+  **Default**:
+  ```json
+  false
+  ```
+  In file: <a href="./variables.tf#L54"><code>variables.tf#L54</code></a>
+
+</details>
+</blockquote><!-- variable:"id_token_role_assertion":end -->
+<blockquote><!-- variable:"id_token_userinfo_assertion":start -->
+
+### `id_token_userinfo_assertion` (*Optional*)
+
+Whether to include information such as email in the ID token
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  bool
+  ```
+  **Default**:
+  ```json
+  false
+  ```
+  In file: <a href="./variables.tf#L60"><code>variables.tf#L60</code></a>
+
+</details>
+</blockquote><!-- variable:"id_token_userinfo_assertion":end -->
+<blockquote><!-- variable:"project_roles":start -->
+
+### `project_roles` (*Optional*)
+
+Roles to create for the project in Zitadel (the key is the `role_key` name)
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  map(object({
+    display_name = string
+    group        = string
+  }))
+  ```
+  **Default**:
+  ```json
+  {}
+  ```
+  In file: <a href="./variables.tf#L78"><code>variables.tf#L78</code></a>
+
+</details>
+</blockquote><!-- variable:"project_roles":end -->
 
 ## Outputs
   
