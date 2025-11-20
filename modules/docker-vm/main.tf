@@ -19,6 +19,7 @@ data "ct_config" "flatcar" {
 
   snippets = [
     file("${local.config_directory}/general-fixes${local.config_file_suffix}"),
+    file("${local.config_directory}/fstrim${local.config_file_suffix}"),
     file("${local.config_directory}/locale${local.config_file_suffix}"),
     templatefile("${local.config_directory}/network${local.config_file_suffix}", {
       vm_hostname               = var.vm_hostname
@@ -120,6 +121,7 @@ resource "proxmox_virtual_environment_vm" "flatcar" {
   dynamic "disk" {
     for_each = var.disks
     content {
+      aio = "native"
       datastore_id = disk.value.datastore_id
       import_from  = disk.value.import_from == "FLATCAR_IMAGE" ? proxmox_virtual_environment_download_file.flatcar_image.id : disk.value.import_from
       interface    = disk.value.interface

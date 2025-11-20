@@ -1,11 +1,32 @@
 variant: flatcar
 version: 1.1.0
 
+storage:
+  files:
+    - path: /etc/sysupdate.d/noop.transfer
+      contents:
+        source: https://github.com/flatcar/sysext-bakery/releases/download/latest/noop.conf
+
 systemd:
   units:
+    # Disable and hide google-oslogin-cache service and timer
     - name: google-oslogin-cache.service
       mask: true
+
     - name: google-oslogin-cache.timer
       mask: true
+
+    # Disable and hide serial-getty@ttyS0 service
     - name: serial-getty@ttyS0.service
       mask: true
+
+    # Modify systemd-sysupdate service and timer
+    - name: systemd-sysupdate.service
+      dropins:
+        - name: sysext.conf
+          contents: |
+            [Service]
+            ExecStartPost=systemctl restart systemd-sysext
+
+    - name: systemd-sysupdate.timer
+      enabled: true
