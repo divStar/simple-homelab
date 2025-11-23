@@ -3,7 +3,6 @@ services:
     image: portainer/portainer-ee
     container_name: portainer
     restart: unless-stopped
-    command: --log-level=DEBUG
     ports:
       - 9000:9000
     security_opt:
