@@ -26,10 +26,10 @@ locals {
     for trigger in local.action_triggers :
     "${trigger.flow_type}:${trigger.trigger_type}" => trigger...
   }
-  
+
   # Create readable keys with snake_case and action names
   trigger_groups = {
-    for key, triggers in local.trigger_groups_raw : 
+    for key, triggers in local.trigger_groups_raw :
     "${replace(lower(split(":", key)[0]), "flow_type_", "")}:${replace(lower(split(":", key)[1]), "trigger_type_", "")}:${join(",", sort([for t in triggers : t.action_name]))}" => {
       flow_type    = split(":", key)[0]
       trigger_type = split(":", key)[1]
