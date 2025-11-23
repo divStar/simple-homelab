@@ -1,0 +1,18 @@
+  {
+    "AuthenticationMethod": 3,
+    "OAuthSettings": {
+      "ClientID": "${client_id}",
+      "ClientSecret": "${client_secret}",
+      "AccessTokenURI": "https://zitadel.${base_domain}/oauth/v2/token",
+      "AuthorizationURI": "https://zitadel.${base_domain}/oauth/v2/authorize",
+      "ResourceURI": "https://zitadel.${base_domain}/oidc/v1/userinfo",
+      "RedirectURI": "https://portainer.${base_domain}/",
+      "UserIdentifier": "preferred_username",
+      "Scopes": "openid email profile",
+      "OAuthAutoCreateUsers": true,
+      "DefaultTeamID": 0,
+      "SSO": true,
+      "LogoutURI": "https://zitadel.${base_domain}/oidc/v1/end_session?post_logout_redirect_uri=https://portainer.${base_domain}/",
+      "AuthStyle": 0
+    }
+  }
