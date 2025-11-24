@@ -45,7 +45,6 @@ content: |-
 
   <blockquote><!-- contents:start -->
 
-  - [Requirements](#requirements)
   - [Providers](#providers)
   {{- if .Module.HasModuleCalls }}
   - [Modules](#modules) _(nested and adjacent)_
@@ -76,7 +75,7 @@ content: |-
 
   {{- if .Module.HasRequirements }}
 
-  ## Requirements
+  ## Providers
     {{- /* Build a map of provider names to sources from resources */ -}}
     {{- $providerSources := dict -}}
     {{- range .Module.Resources -}}
@@ -85,7 +84,10 @@ content: |-
       {{- end -}}
     {{- end -}}
     
-    {{- $useOpenTofu := true -}}  {{- /* TOGGLE: Set to false for Terraform */ -}}
+    {{- /* TOGGLE: Set to false for Terraform */ -}}
+    {{- $useOpenTofu := true -}}
+    
+    {{- /* Iterate through Requirements (which includes terraform + all provider requirements) */ -}}
     {{ range .Module.Requirements }}
       {{- $displayName := .Name -}}
       {{- $logoName := .Name -}}
@@ -101,44 +103,27 @@ content: |-
           {{- $fullName = "Terraform" -}}
         {{- end -}}
       {{- else -}}
-        {{- /* For providers, try to get full source */ -}}
+        {{- /* For providers, get the full source from resources */ -}}
         {{- $source := index $providerSources .Name -}}
         {{- if $source -}}
+          {{- /* Use full source like "zitadel/zitadel" or "mastercard/restapi" */ -}}
           {{- $fullName = $source -}}
           {{- $displayName = $source -}}
+          {{- /* Extract provider name for logo (last part after /) */ -}}
+          {{- $parts := split "/" $source -}}
+          {{- $parts := split "/" $source -}}
+          {{- if $parts._1 -}}
+            {{- $logoName = $parts._1 -}}
+          {{- end -}}
         {{- end -}}
       {{- end -}}
       
+      {{- /* Format version text */ -}}
       {{- $versionText := .Version.Raw | replace " " "" -}}
       {{- if not $versionText -}}
         {{- $versionText = "any" -}}
       {{- end }}
-  ![{{ $logoName }}](https://img.shields.io/badge/{{- $displayName | replace "/" "--" -}}-{{- $versionText -}}-{{ printf "%02x%02x%02x" (mod (.Name | adler32sum) 256) (mod (add (.Name | adler32sum) 85) 256) (mod (add (.Name | adler32sum) 170) 256) }}?logo={{ $logoName }})
-    {{- end }}
-  {{- end }}
-
-  {{- if .Module.HasProviders }}
-
-  ## Providers
-    {{- /* Build a map of provider names to sources from resources */ -}}
-    {{- $providerSources := dict -}}
-    {{- range .Module.Resources -}}
-      {{- if .ProviderSource -}}
-        {{- $_ := set $providerSources .ProviderName .ProviderSource -}}
-      {{- end -}}
-    {{- end -}}
-    
-    {{ range .Module.Providers }}
-      {{- $fullName := .Name -}}
-      {{- $source := index $providerSources .Name -}}
-      {{- if $source -}}
-        {{- $fullName = $source -}}
-      {{- end -}}
-      {{- $versionText := .Version.Raw | replace " " "" -}}
-      {{- if not $versionText -}}
-        {{- $versionText = "passed_by_caller" -}}
-      {{- end }}
-  ![{{ $fullName }}](https://img.shields.io/badge/{{- $fullName | replace "/" "--" -}}-{{- $versionText -}}-{{ printf "%02x%02x%02x" (mod (.Name | adler32sum) 256) (mod (add (.Name | adler32sum) 85) 256) (mod (add (.Name | adler32sum) 170) 256) }})
+  ![{{ $fullName }}](https://img.shields.io/badge/{{- $displayName | replace "/" "--" -}}-{{- $versionText -}}-{{ printf "%02x%02x%02x" (mod (.Name | adler32sum) 256) (mod (add (.Name | adler32sum) 85) 256) (mod (add (.Name | adler32sum) 170) 256) }}?logo={{ $logoName }})
     {{- end }}
   {{- end }}
   
