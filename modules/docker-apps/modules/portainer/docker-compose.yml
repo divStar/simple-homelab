@@ -7,17 +7,17 @@ services:
       - 9000:9000
     security_opt:
       - no-new-privileges:true
-    command: --admin-password=${PORTAINER_ADMIN_PASSWORD_HASH} --license-key=${PORTAINER_LICENSE_KEY}
     volumes:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run/:/var/run/:ro
       - portainer-data:/data
-      - /etc/localtime:/etc/localtime:ro
+      - /etc/localtime:/etc/localtime
     labels:
       - "traefik.enable=true"
       # Dashboard
-      - "traefik.http.routers.portainer-secure.rule=Host(`portainer.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.portainer-secure.rule=Host(`portainer.my.world`)"
       - "traefik.http.routers.portainer-secure.entrypoints=websecure"
+      - "traefik.http.routers.portainer-secure.service=portainer-secure"
       - "traefik.http.services.portainer-secure.loadbalancer.server.port=9000"
 
 networks:

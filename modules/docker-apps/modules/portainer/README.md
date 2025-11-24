@@ -27,9 +27,6 @@ This module uses the [OIDC module](../../../common/modules/oidc/README.md) to cr
 ![mastercard/restapi](https://img.shields.io/badge/mastercard--restapi->=2.0.1-f94ea3?logo=restapi)
 ![zitadel](https://img.shields.io/badge/zitadel->=2.3.0-ee4398?logo=zitadel)
 
-## Providers
-![portainer/portainer](https://img.shields.io/badge/portainer--portainer->=1.17.0-d52a7f)
-
 ## Modules
   
 <blockquote><!-- module:"portainer_web_ui_oidc":start -->
@@ -166,7 +163,7 @@ In file: <a href="./main.tf#L191"><code>main.tf#L191</code></a>
 
 #### `client_secret`
 
-Portainer Client Secret
+Portainer Client ID
 
 In file: <a href="./main.tf#L198"><code>main.tf#L198</code></a>
 </blockquote><!-- output:"client_secret":end -->
