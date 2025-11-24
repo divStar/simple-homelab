@@ -6,7 +6,6 @@ This module uses the [OIDC module](../../../common/modules/oidc/README.md) to cr
 
 <blockquote><!-- contents:start -->
 
-- [Requirements](#requirements)
 - [Providers](#providers)
 - [Modules](#modules) _(nested and adjacent)_
   - [traefik_dashboard_oidc](#traefik_dashboard_oidc)
@@ -15,8 +14,8 @@ This module uses the [OIDC module](../../../common/modules/oidc/README.md) to cr
   - [client_id](#client_id)
 </blockquote><!-- contents:end -->
 
-## Requirements
-![opentofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
+## Providers
+![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
 ![zitadel](https://img.shields.io/badge/zitadel->=2.3.0-ee4398?logo=zitadel)
 
 ## Modules

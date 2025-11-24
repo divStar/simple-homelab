@@ -6,7 +6,6 @@ Imports existing storage into Proxmox.
 
 <blockquote><!-- contents:start -->
 
-- [Requirements](#requirements)
 - [Providers](#providers)
 - [Resources](#resources)
   - _ssh_resource_.[import_proxmox_storage](#ssh_resourceimport_proxmox_storage)
@@ -18,11 +17,8 @@ Imports existing storage into Proxmox.
   - [imported_directories](#imported_directories)
 </blockquote><!-- contents:end -->
 
-## Requirements
-![opentofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-
 ## Providers
-![loafoe/ssh](https://img.shields.io/badge/loafoe--ssh-passed_by_caller-4fa4f9)
+![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
 
 ## Resources
   

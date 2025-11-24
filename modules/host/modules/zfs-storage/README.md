@@ -6,7 +6,6 @@ Handles the import and export of ZFS pools as well as directories.
 
 <blockquote><!-- contents:start -->
 
-- [Requirements](#requirements)
 - [Providers](#providers)
 - [Resources](#resources)
   - _ssh_resource_.[export_zfs_pools](#ssh_resourceexport_zfs_pools)
@@ -18,11 +17,8 @@ Handles the import and export of ZFS pools as well as directories.
   - [storage_pools](#storage_pools)
 </blockquote><!-- contents:end -->
 
-## Requirements
-![opentofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-
 ## Providers
-![loafoe/ssh](https://img.shields.io/badge/loafoe--ssh-passed_by_caller-4fa4f9)
+![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
 
 ## Resources
   

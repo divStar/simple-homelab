@@ -6,7 +6,6 @@ Handles the download, execution and cleanup of (shell-)scripts on the host
 
 <blockquote><!-- contents:start -->
 
-- [Requirements](#requirements)
 - [Providers](#providers)
 - [Resources](#resources)
   - _ssh_resource_.[script_cleanup](#ssh_resourcescript_cleanup)
@@ -19,11 +18,8 @@ Handles the download, execution and cleanup of (shell-)scripts on the host
   - [installed_scripts](#installed_scripts)
 </blockquote><!-- contents:end -->
 
-## Requirements
-![opentofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-
 ## Providers
-![loafoe/ssh](https://img.shields.io/badge/loafoe--ssh-passed_by_caller-4fa4f9)
+![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
 
 ## Resources
   

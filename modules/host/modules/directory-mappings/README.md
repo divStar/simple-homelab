@@ -7,7 +7,6 @@ These mapped directories can then be used e.g. using `virtiofs` "pass-through" t
 
 <blockquote><!-- contents:start -->
 
-- [Requirements](#requirements)
 - [Providers](#providers)
 - [Resources](#resources)
   - _ssh_resource_.[directory_mappings](#ssh_resourcedirectory_mappings)
@@ -20,11 +19,8 @@ These mapped directories can then be used e.g. using `virtiofs` "pass-through" t
   - [directory_mappings](#directory_mappings)
 </blockquote><!-- contents:end -->
 
-## Requirements
-![opentofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-
 ## Providers
-![loafoe/ssh](https://img.shields.io/badge/loafoe--ssh-passed_by_caller-4fa4f9)
+![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
 
 ## Resources
   

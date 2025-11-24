@@ -6,7 +6,6 @@ Handles appending of SSH keys to the authorized\_keys file of a given user.
 
 <blockquote><!-- contents:start -->
 
-- [Requirements](#requirements)
 - [Providers](#providers)
 - [Resources](#resources)
   - _ssh_resource_.[add_key](#ssh_resourceadd_key)
@@ -24,11 +23,8 @@ Handles appending of SSH keys to the authorized\_keys file of a given user.
   - [ssh_key_file_used](#ssh_key_file_used)
 </blockquote><!-- contents:end -->
 
-## Requirements
-![opentofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-
 ## Providers
-![loafoe/ssh](https://img.shields.io/badge/loafoe--ssh-passed_by_caller-4fa4f9)
+![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
 
 ## Resources
   

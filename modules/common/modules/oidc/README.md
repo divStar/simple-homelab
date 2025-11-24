@@ -478,7 +478,7 @@ In file: <a href="./outputs.tf#L7"><code>outputs.tf#L7</code></a>
 
 #### `project_id`
 
-ID of the newly created project in Zitadel
+Zitadel project ID
 
 In file: <a href="./outputs.tf#L13"><code>outputs.tf#L13</code></a>
 </blockquote><!-- output:"project_id":end -->

@@ -8,7 +8,6 @@ It e.g. creates networks and volumes, that should not be removed if a docker com
 
 <blockquote><!-- contents:start -->
 
-- [Requirements](#requirements)
 - [Providers](#providers)
 - [Resources](#resources)
   - _docker_network_.[this](#docker_networkthis)
@@ -23,12 +22,9 @@ It e.g. creates networks and volumes, that should not be removed if a docker com
   - [volumes](#volumes)
 </blockquote><!-- contents:end -->
 
-## Requirements
-![opentofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-![docker](https://img.shields.io/badge/kreuzwerker--docker-3.8.0-79ce23?logo=docker)
-
 ## Providers
-![kreuzwerker/docker](https://img.shields.io/badge/kreuzwerker--docker-3.8.0-79ce23)
+![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
+![kreuzwerker/docker](https://img.shields.io/badge/kreuzwerker--docker-3.8.0-79ce23?logo=docker)
 
 ## Resources
   

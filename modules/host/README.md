@@ -6,7 +6,6 @@ This module and its sub-modules setup the Proxmox host.
 
 <blockquote><!-- contents:start -->
 
-- [Requirements](#requirements)
 - [Providers](#providers)
 - [Modules](#modules) _(nested and adjacent)_
   - [authorized_keys_appender](#authorized_keys_appender)
@@ -48,7 +47,7 @@ This module and its sub-modules setup the Proxmox host.
   - [terraform_user](#terraform_user)
 </blockquote><!-- contents:end -->
 
-## Requirements
+## Providers
 ![ssh](https://img.shields.io/badge/ssh-~>2.7-4fa4f9?logo=ssh)
 ![time](https://img.shields.io/badge/time->=0.13.0-b0055a?logo=time)
 ![tls](https://img.shields.io/badge/tls->=4.0.6-54a9fe?logo=tls)

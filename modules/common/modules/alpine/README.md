@@ -8,7 +8,6 @@ other Alpine packages (if specified; `bash` is installed by default).
 
 <blockquote><!-- contents:start -->
 
-- [Requirements](#requirements)
 - [Providers](#providers)
 - [Resources](#resources)
   - _proxmox_virtual_environment_container_.[container](#proxmox_virtual_environment_containercontainer)
@@ -45,16 +44,10 @@ other Alpine packages (if specified; `bash` is installed by default).
   - [ssh_private_key](#ssh_private_key)
 </blockquote><!-- contents:end -->
 
-## Requirements
-![opentofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-![proxmox](https://img.shields.io/badge/bpg--proxmox->=0.75.0-1e73c8?logo=proxmox)
-![ssh](https://img.shields.io/badge/loafoe--ssh-~>2.7-4fa4f9?logo=ssh)
-
 ## Providers
-![bpg/proxmox](https://img.shields.io/badge/bpg--proxmox->=0.75.0-1e73c8)
-![hashicorp/random](https://img.shields.io/badge/hashicorp--random-passed_by_caller-82d72c)
-![loafoe/ssh](https://img.shields.io/badge/loafoe--ssh-~>2.7-4fa4f9)
-![hashicorp/tls](https://img.shields.io/badge/hashicorp--tls-passed_by_caller-54a9fe)
+![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
+![bpg/proxmox](https://img.shields.io/badge/bpg--proxmox->=0.75.0-1e73c8?logo=proxmox)
+![loafoe/ssh](https://img.shields.io/badge/loafoe--ssh-~>2.7-4fa4f9?logo=ssh)
 
 ## Resources
   
