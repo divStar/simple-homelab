@@ -9,3 +9,8 @@ output "client_secret" {
   value       = zitadel_application_oidc.this.client_secret
   sensitive   = true
 }
+
+output "project_id" {
+  description = "Zitadel project ID"
+  value       = zitadel_project.this.id
+}

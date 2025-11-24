@@ -8,7 +8,6 @@ Docker is exposed via TLS port (2376). Look at the [`./files` folder](./files) f
 
 <blockquote><!-- contents:start -->
 
-- [Requirements](#requirements)
 - [Providers](#providers)
 - [Resources](#resources)
   - _local_file_.[ignition_file](#local_fileignition_file)
@@ -44,15 +43,10 @@ Docker is exposed via TLS port (2376). Look at the [`./files` folder](./files) f
   - [vm_network_interface_name](#vm_network_interface_name-optional) (*Optional*)
 </blockquote><!-- contents:end -->
 
-## Requirements
-![opentofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-![ct](https://img.shields.io/badge/poseidon--ct-0.13.0-d82d82?logo=ct)
-![proxmox](https://img.shields.io/badge/bpg--proxmox-~>0.86.0-1e73c8?logo=proxmox)
-
 ## Providers
-![poseidon/ct](https://img.shields.io/badge/poseidon--ct-0.13.0-d82d82)
-![hashicorp/local](https://img.shields.io/badge/hashicorp--local-passed_by_caller-0c61b6)
-![bpg/proxmox](https://img.shields.io/badge/bpg--proxmox-~>0.86.0-1e73c8)
+![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
+![poseidon/ct](https://img.shields.io/badge/poseidon--ct-0.13.0-d82d82?logo=ct)
+![bpg/proxmox](https://img.shields.io/badge/bpg--proxmox-~>0.86.0-1e73c8?logo=proxmox)
 
 ## Resources
   
