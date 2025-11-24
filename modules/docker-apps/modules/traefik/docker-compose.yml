@@ -43,7 +43,7 @@ services:
       - 5432:5432 # postgres-db port
     volumes:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run:/var/run/:ro
       - /mnt/data/traefik/:/certs/
     labels:
       - "traefik.enable=true"

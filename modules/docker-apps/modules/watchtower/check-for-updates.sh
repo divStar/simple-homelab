@@ -68,6 +68,7 @@ fi
 
 # Make the API call
 echo "Calling API endpoint: $API_URL"
+echo curl -H \"Authorization: Bearer ${TOKEN}\" \"$API_URL\"
 curl -H "Authorization: Bearer ${TOKEN}" "$API_URL"
 
 echo ""
