@@ -17,23 +17,19 @@ terraform {
       source  = "mastercard/restapi"
       version = ">= 2.0.1"
     }
+    portainer = {
+      source  = "portainer/portainer"
+      version = ">= 1.18.0"
+    }
   }
 }
 
 locals {
-  base_domain   = "my.world"
-  portainer_jwt = restapi_object.portainer_jwt.api_data["jwt"]
+  base_domain = regex("BASE_DOMAIN\\s*=\\s*(\\S+)", file("${path.module}/stack.env"))[0]
 }
 
 variable "admin_password" {
   description = "Portainer admin password"
-  type        = string
-  sensitive   = true
-  nullable    = false
-}
-
-variable "portainer_license" {
-  description = "Portainer license key"
   type        = string
   sensitive   = true
   nullable    = false
@@ -47,65 +43,10 @@ provider "zitadel" {
   jwt_profile_file = "${path.module}/../../admin_key.json"
 }
 
-# `restapi` provider set up.
-provider "restapi" {
-  alias                = "unauthorized"
-  uri                  = "https://portainer.${local.base_domain}"
-  write_returns_object = true
-  debug                = true
-
-  headers = {
-    "Content-Type" = "application/json"
-  }
-}
-
-# `restapi` provider set up.
-provider "restapi" {
-  alias                = "jwt"
-  uri                  = "https://portainer.${local.base_domain}"
-  write_returns_object = true
-  debug                = true
-
-  headers = {
-    "Content-Type"  = "application/json"
-    "Authorization" = "Bearer ${local.portainer_jwt}"
-  }
-}
-
-resource "restapi_object" "portainer_admin_init" {
-  provider      = restapi.unauthorized
-  create_method = "POST"
-  path          = "/api/users/admin/init"
-  data = jsonencode({
-    username = "admin",
-    password = var.admin_password
-  })
-  object_id = "portainer_token"
-}
-
-resource "restapi_object" "portainer_jwt" {
-  depends_on = [restapi_object.portainer_admin_init]
-
-  provider      = restapi.unauthorized
-  create_method = "POST"
-  path          = "/api/auth"
-  data = jsonencode({
-    username = "admin",
-    password = var.admin_password
-  })
-  object_id = "portainer_token"
-}
-
-resource "restapi_object" "portainer_license" {
-  depends_on = [restapi_object.portainer_admin_init]
-
-  provider      = restapi.jwt
-  create_method = "POST"
-  path          = "/api/licenses/add"
-  data = jsonencode({
-    key = var.portainer_license,
-  })
-  object_id = "portainer_token"
+provider "portainer" {
+  endpoint = "https://portainer.${local.base_domain}"
+  api_user     = "admin"
+  api_password = var.admin_password
 }
 
 # Call to the [OIDC module](../../../common/modules/oidc/README.md) to create the necessary resources in Zitadel.
@@ -154,37 +95,23 @@ module "portainer_web_ui_oidc" {
   admin_user = "igor.voronin@${local.base_domain}"
 }
 
-resource "restapi_object" "portainer_settings" {
-  depends_on = [module.portainer_web_ui_oidc]
-
-  provider      = restapi.jwt
-  create_method = "PUT"
-  path          = "/api/settings"
-  data = jsonencode({
-    "AuthenticationMethod" : 3,
-    "OAuthSettings" : {
-      "ClientID" : "${module.portainer_web_ui_oidc.client_id}",
-      "ClientSecret" : "${module.portainer_web_ui_oidc.client_secret}",
-      "AccessTokenURI" : "https://zitadel.${local.base_domain}/oauth/v2/token",
-      "AuthorizationURI" : "https://zitadel.${local.base_domain}/oauth/v2/authorize",
-      "ResourceURI" : "https://zitadel.${local.base_domain}/oidc/v1/userinfo",
-      "RedirectURI" : "https://portainer.${local.base_domain}/",
-      "UserIdentifier" : "preferred_username",
-      "Scopes" : "openid email profile roles",
-      "OAuthAutoCreateUsers" : true,
-      "OAuthAutoMapTeamMemberships" : true,
-      "DefaultTeamID" : 0,
-      "SSO" : true,
-      "LogoutURI" : "https://zitadel.${local.base_domain}/oidc/v1/end_session?post_logout_redirect_uri=https://portainer.${local.base_domain}/",
-      "AuthStyle" : 0,
-      "TeamMemberships" : {
-        "OAuthClaimName" : "roles",
-        "AdminAutoPopulate" : true,
-        "AdminGroupClaimsRegexList" : ["portainer_admin"]
-      }
-    }
-  })
-  object_id = "portainer_settings"
+resource "portainer_settings" "this" {
+  authentication_method = 3
+  oauth_settings {
+    client_id               = module.portainer_web_ui_oidc.client_id
+    client_secret           = module.portainer_web_ui_oidc.client_secret
+    access_token_uri        = "https://zitadel.${local.base_domain}/oauth/v2/token"
+    authorization_uri       = "https://zitadel.${local.base_domain}/oauth/v2/authorize"
+    resource_uri            = "https://zitadel.${local.base_domain}/oidc/v1/userinfo"
+    redirect_uri            = "https://portainer.${local.base_domain}/"
+    logout_uri              = "https://zitadel.${local.base_domain}/oidc/v1/end_session?post_logout_redirect_uri=https://portainer.${local.base_domain}/"
+    user_identifier         = "preferred_username"
+    scopes                  = "openid email profile roles"
+    oauth_auto_create_users = true
+    default_team_id         = 0
+    sso                     = true
+    auth_style              = 0
+  }
 }
 
 # `client_id` for further use.

@@ -95,7 +95,7 @@ data "zitadel_machine_users" "this" {
 
 # Grant project to user (if set)
 resource "zitadel_user_grant" "this" {
-  depends_on = [zitadel_application_oidc.this]
+  depends_on = [zitadel_project_role.this,zitadel_application_oidc.this]
   count      = var.admin_user == null ? 0 : 1
 
   org_id     = local.organization_id
