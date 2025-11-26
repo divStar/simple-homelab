@@ -1,0 +1,212 @@
+// ============================================================================
+// OPENTELEMETRY RECEIVER FOR PROXMOX
+// ============================================================================
+
+// Receive OpenTelemetry metrics from Proxmox via HTTP
+otelcol.receiver.otlp "proxmox" {
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.proxmox.input]
+  }
+}
+
+// Batch metrics for efficiency
+otelcol.processor.batch "proxmox" {
+  output {
+    metrics = [otelcol.exporter.prometheus.proxmox.input]
+  }
+}
+
+// Convert OTLP metrics to Prometheus format
+otelcol.exporter.prometheus "proxmox" {
+  forward_to = [prometheus.remote_write.local.receiver]
+}
+
+// ============================================================================
+// METRICS COLLECTION
+// ============================================================================
+
+// Built-in cAdvisor exporter for container metrics
+prometheus.exporter.cadvisor "containers" {
+  docker_host      = "unix:///var/run/docker.sock"
+  storage_duration = "5m"
+}
+
+// Host/VM system metrics (CPU, memory, disk, network)
+prometheus.exporter.unix "host" {
+  // Exports node_* metrics for host-level monitoring
+}
+
+// Add relabeling to clean up labels
+prometheus.relabel "cadvisor_cleanup" {
+  forward_to = [prometheus.remote_write.local.receiver]
+  
+  // Extract and rename useful compose labels
+  rule {
+    source_labels = ["container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+  
+  rule {
+    source_labels = ["container_label_com_docker_compose_project"]
+    target_label  = "project"
+  }
+  
+  rule {
+    source_labels = ["container_label_com_docker_compose_image"]
+    target_label  = "compose_image"
+  }
+  
+  // Extract and rename image version
+  rule {
+    source_labels = ["container_label_org_opencontainers_image_version"]
+    target_label  = "image_version"
+  }
+  
+  // Drop ALL com_docker_compose labels (we already extracted what we need)
+  rule {
+    regex  = "container_label_com_docker_compose_.*"
+    action = "labeldrop"
+  }
+  
+  // Drop ALL traefik labels
+  rule {
+    regex  = "container_label_traefik_.*"
+    action = "labeldrop"
+  }
+  
+  // Drop ALL opencontainers labels (we already extracted what we need)
+  rule {
+    regex  = "container_label_org_opencontainers_.*"
+    action = "labeldrop"
+  }
+  
+  // Drop other common noisy labels
+  rule {
+    regex  = "container_label_com_centurylinklabs_.*"
+    action = "labeldrop"
+  }
+}
+
+// Scrape cAdvisor metrics and send through relabeling
+prometheus.scrape "cadvisor" {
+  targets         = prometheus.exporter.cadvisor.containers.targets
+  forward_to      = [prometheus.relabel.cadvisor_cleanup.receiver]
+  scrape_interval = "15s"
+}
+
+// Scrape host/VM metrics
+prometheus.scrape "unix" {
+  targets         = prometheus.exporter.unix.host.targets
+  forward_to      = [prometheus.remote_write.local.receiver]
+  scrape_interval = "15s"
+}
+
+// Self-monitoring: expose Alloy metrics
+prometheus.exporter.self "alloy" { }
+
+prometheus.scrape "alloy_self" {
+  targets    = prometheus.exporter.self.alloy.targets
+  forward_to = [prometheus.remote_write.local.receiver]
+}
+
+// Forward metrics to Prometheus
+prometheus.remote_write "local" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+    
+    queue_config {
+      capacity             = 10000
+      max_shards           = 10
+      min_shards           = 1
+      max_samples_per_send = 5000
+      batch_send_deadline  = "5s"
+    }
+  }
+}
+
+// ============================================================================
+// LOG COLLECTION
+// ============================================================================
+
+// Discover all Docker containers
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+// Relabel to clean up container names
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+  
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container_name"
+  }
+  
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "compose_project"
+  }
+  
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "compose_service"
+  }
+}
+
+// Scrape logs from discovered containers
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.containers.output
+  forward_to = [loki.process.add_labels.receiver]
+}
+
+// Add additional labels and process logs
+loki.process "add_labels" {
+  // Add hostname label
+  stage.static_labels {
+    values = {
+      hostname = env("HOSTNAME"),
+      cluster  = "docker-cluster",
+    }
+  }
+  
+  // Parse JSON logs (if applicable)
+  stage.json {
+    expressions = {
+      level = "level",
+      msg   = "msg",
+    }
+  }
+  
+  // Extract log level from common patterns
+  stage.regex {
+    expression = "(?i)(?P<extracted_level>debug|info|warn|warning|error|fatal|critical)"
+  }
+  
+  stage.labels {
+    values = {
+      level = "extracted_level",
+    }
+  }
+  
+  forward_to = [loki.write.local.receiver]
+}
+
+// Write logs to Loki
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+    
+    batch_wait = "1s"
+    batch_size = "1MiB"
+  }
+  
+  external_labels = {
+    cluster = "docker-cluster",
+  }
+}
