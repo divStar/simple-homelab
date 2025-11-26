@@ -74,8 +74,6 @@ services:
       - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[2].Value={{ .claims.roles }}"
       - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[3].Name=Authorization"
       - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[3].Value=Bearer {{ .accessToken }}"
-      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Authorization.AssertClaims[0].Name=roles"
-      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Authorization.AssertClaims[0].AnyOf[0]=traefik-user"
 
 networks:
   default:
