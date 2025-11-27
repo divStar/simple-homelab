@@ -13,13 +13,9 @@ terraform {
       source  = "zitadel/zitadel"
       version = ">= 2.3.0"
     }
-    restapi = {
-      source  = "mastercard/restapi"
-      version = ">= 2.0.1"
-    }
     portainer = {
       source  = "portainer/portainer"
-      version = ">= 1.18.0"
+      version = ">= 1.18.2"
     }
   }
 }
@@ -111,6 +107,14 @@ resource "portainer_settings" "this" {
     default_team_id         = 0
     sso                     = true
     auth_style              = 0
+    
+    oauth_auto_map_team_memberships = true
+
+    team_memberships {
+      oauth_claim_name                = "roles"
+      admin_auto_populate             = true
+      admin_group_claims_regex_list   = ["portainer_admin"]
+    }
   }
 }
 
