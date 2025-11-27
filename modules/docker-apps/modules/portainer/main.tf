@@ -21,7 +21,7 @@ terraform {
 }
 
 locals {
-  base_domain = regex("BASE_DOMAIN\\s*=\\s*(\\S+)", file("${path.module}/stack.env"))[0]
+  base_domain = "my.world"
   portainer_jwt = restapi_object.portainer_jwt.api_data["jwt"]
 }
 
