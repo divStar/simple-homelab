@@ -13,13 +13,9 @@ terraform {
       source  = "zitadel/zitadel"
       version = ">= 2.3.0"
     }
-    restapi = {
-      source  = "mastercard/restapi"
-      version = ">= 2.0.1"
-    }
     portainer = {
       source  = "portainer/portainer"
-      version = ">= 1.18.2"
+      version = ">= 1.19.0"
     }
   }
 }
@@ -57,23 +53,7 @@ provider "zitadel" {
   jwt_profile_file = "${path.module}/../../admin_key.json"
 }
 
-provider "restapi" {
-  uri                  = "https://portainer.${local.base_domain}"
-  write_returns_object = true
-  debug                = true
-
-  headers = {
-    "Content-Type" = "application/json"
-  }
-}
-
 provider "portainer" {
-  alias    = "unauth"
-  endpoint = "https://portainer.${local.base_domain}"
-}
-
-provider "portainer" {
-  alias        = "auth"
   endpoint     = "https://portainer.${local.base_domain}"
   api_user     = var.admin_username
   api_password = var.admin_password
@@ -125,32 +105,19 @@ module "portainer_web_ui_oidc" {
   admin_user = "igor.voronin@${local.base_domain}"
 }
 
-# resource "portainer_init" "this" {
-#   provider = portainer.unauth
-#   username = var.admin_username
-#   password = var.admin_password
-# }
-
-resource "restapi_object" "portainer_admin_init" {
-  create_method = "POST"
-  path          = "/api/users/admin/init"
-  data = jsonencode({
-    username = "admin",
-    password = var.admin_password
-  })
-  object_id = "portainer_token"
+resource "portainer_user_admin" "this" {
+  username = var.admin_username
+  password = var.admin_password
 }
 
 resource "portainer_licenses" "this" {
-  provider   = portainer.auth
-  depends_on = [restapi_object.portainer_admin_init]
+  depends_on = [portainer_user_admin.this]
   key        = var.license_key
   force      = true
 }
 
 resource "portainer_settings" "this" {
-  provider   = portainer.auth
-  depends_on = [restapi_object.portainer_admin_init, portainer_licenses.this]
+  depends_on = [portainer_licenses.this]
 
   authentication_method = 3
   oauth_settings {
