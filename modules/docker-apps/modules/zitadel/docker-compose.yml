@@ -83,8 +83,7 @@ services:
       - ZITADEL_FIRSTINSTANCE_ORG_HUMAN_EMAIL_VERIFIED
       
       # Debug logging if need be
-      - ZITADEL_LOG_LEVEL=debug
-      - ZITADEL_LOGSTORE_ACCESS_STDOUT_ENABLED=true
+      - ZITADEL_LOGSTORE_ACCESS_STDOUT_ENABLED
       
     volumes:
       # Mount the directory containing masterkey and PAT files
