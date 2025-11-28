@@ -27,12 +27,12 @@ systemd:
       enabled: true
       contents: |
         [Unit]
-        Description=Discard unused blocks once a week
+        Description=Discard unused blocks once a day
         Documentation=man:fstrim(8)
         ConditionVirtualization=!container
         
         [Timer]
-        OnBootSec=0
+        OnBootSec=1min
         OnUnitActiveSec=24h
         AccuracySec=1h
         Persistent=true
