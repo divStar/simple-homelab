@@ -25,7 +25,7 @@ storage:
             --san "${vm_hostname}" \
             --san "${vm_hostname}.${vm_domain}" \
             --san "${vm_ip}" \
-            --not-after=16h \
+            --not-after=24h \
             --provisioner "${step_ca_provisioner}" \
             --provisioner-password-file /home/core/.step/provisioner-password \
             --force
