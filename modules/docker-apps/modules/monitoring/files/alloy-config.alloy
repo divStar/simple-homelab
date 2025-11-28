@@ -1,3 +1,17 @@
+// Write logs to Loki
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+    
+    batch_wait = "1s"
+    batch_size = "1MiB"
+  }
+  
+  external_labels = {
+    cluster = "docker-cluster",
+  }
+}
+
 // ============================================================================
 // OPENTELEMETRY RECEIVER FOR PROXMOX
 // ============================================================================
@@ -129,7 +143,7 @@ prometheus.remote_write "local" {
 }
 
 // ============================================================================
-// LOG COLLECTION
+// CONTAINERS LOG COLLECTION
 // ============================================================================
 
 // Discover all Docker containers
@@ -197,16 +211,62 @@ loki.process "add_labels" {
   forward_to = [loki.write.local.receiver]
 }
 
-// Write logs to Loki
-loki.write "local" {
-  endpoint {
-    url = "http://loki:3100/loki/api/v1/push"
-    
-    batch_wait = "1s"
-    batch_size = "1MiB"
+// ============================================================================
+// SYSTEM LOG COLLECTION (Docker Host/VM)
+// ============================================================================
+
+// Define relabeling rules to extract journal fields as labels
+loki.relabel "journal" {
+  forward_to = []
+  
+  rule {
+    source_labels = ["__journal__systemd_unit"]
+    target_label  = "unit"
   }
   
-  external_labels = {
-    cluster = "docker-cluster",
+  rule {
+    source_labels = ["__journal_priority_keyword"]
+    target_label  = "level"
   }
+  
+  rule {
+    source_labels = ["__journal__transport"]
+    target_label  = "transport"
+  }
+  
+  rule {
+    source_labels = ["__journal__boot_id"]
+    target_label  = "boot_id"
+  }
+
+  rule {
+    source_labels = ["__journal__comm"]
+    target_label  = "process"
+  }
+
+  rule {
+    source_labels = ["__journal_syslog_identifier"]
+    target_label  = "syslog_identifier"
+  }
+}
+
+// Read systemd journal logs from the host
+loki.source.journal "system" {
+  path          = "/var/log/journal"
+  forward_to    = [loki.process.system_logs.receiver]
+  relabel_rules = loki.relabel.journal.rules
+  max_age       = "168h"  // 7 days
+}
+
+// Process system logs before sending to Loki
+loki.process "system_logs" {
+  stage.static_labels {
+    values = {
+      hostname = env("HOSTNAME"),
+      cluster  = "docker-cluster",
+      job      = "systemd-journal",
+    }
+  }
+
+  forward_to = [loki.write.local.receiver]
 }
