@@ -32,8 +32,6 @@ systemd:
 %{ endfor ~}
             After=mnt-data.mount
             Requires=mnt-data.mount
-            # Wait for initial certificate before starting
-            After=docker-cert.service
 
             [Install]
             WantedBy=multi-user.target

@@ -10,12 +10,12 @@
 resource "docker_network" "this" {
   for_each = var.networks
 
-  name   = each.key
-  driver = each.value.driver
+  name    = each.key
+  driver  = each.value.driver
 
   ipam_config {
-    subnet   = each.value.subnet
-    gateway  = each.value.gateway
+    subnet    = each.value.subnet
+    gateway   = each.value.gateway
     ip_range = each.value.ip_range
   }
 
