@@ -11,10 +11,12 @@ variable "ssl_client_certificates" {
 variable "networks" {
   description = "Networks in Docker to create"
   type = map(object({
-    subnet  = string
-    gateway = string
-    driver  = optional(string)
-    labels  = optional(map(string), {})
+    subnet   = string
+    gateway  = optional(string)
+    driver   = optional(string)
+    ip_range = optional(string)
+    options  = optional(map(string), {})
+    labels   = optional(map(string), {})
   }))
   default = {}
 }
