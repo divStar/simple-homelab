@@ -21,7 +21,7 @@ terraform {
 }
 
 locals {
-  base_domain = "my.world"
+  base_domain   = "my.world"
   portainer_jwt = restapi_object.portainer_jwt.api_data["jwt"]
 }
 
