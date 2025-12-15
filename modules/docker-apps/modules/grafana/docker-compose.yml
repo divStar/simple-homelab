@@ -15,7 +15,6 @@ services:
       - GF_AUTH_GENERIC_OAUTH_ICON
     networks:
       - services-network
-      - monitoring-network
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.grafana.rule=Host(`grafana.${BASE_DOMAIN}`)"
@@ -30,8 +29,6 @@ services:
 
 networks:
   services-network:
-    external: true
-  monitoring-network:
     external: true
 
 volumes:
