@@ -22,9 +22,9 @@ services:
       - prometheus-data:/prometheus
     networks:
       - services-network
-      - monitoring-network
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "docker-vm:192.168.178.120"
+      - "proxmox:192.168.178.25"
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
@@ -78,7 +78,6 @@ services:
       - alloy-data:/var/lib/alloy
       - /var/log/journal:/var/log/journal:ro
     networks:
-      - monitoring-network
       - services-network
     ports:
       - "4318:4318"
@@ -120,7 +119,7 @@ services:
     volumes:
       - loki-data:/loki
     networks:
-      - monitoring-network
+      - services-network
     restart: unless-stopped
     ports:
       - "3100:3100"
@@ -143,11 +142,16 @@ configs:
         # Docker daemon metrics (exposed on host)
         - job_name: 'docker-daemon'
           static_configs:
-            - targets: ['host.docker.internal:9323']
+            - targets: ['docker-vm:9323']
           relabel_configs:
             - source_labels: [__address__]
               target_label: instance
               replacement: 'docker-host'
+
+        # Scrape SMART status of disks
+        - job_name: 'smartctl'
+          static_configs:
+            - targets: ['proxmox:9633']
 
         # Grafana Alloy self-monitoring
         - job_name: 'alloy'
@@ -507,8 +511,6 @@ configs:
         reporting_enabled: true
 networks:
   services-network:
-    external: true
-  monitoring-network:
     external: true
 volumes:
   prometheus-data:

@@ -61,3 +61,8 @@ output "gitops_user" {
     org_repo    = module.gitops_user.repo_actual_path
   }
 }
+
+output "smartctl_exporter_version" {
+  description = "Version of `smartctl-exporter`, that was installed"
+  value       = module.smartctl_exporter.smartctl_exporter_version
+}

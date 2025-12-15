@@ -65,15 +65,6 @@ module "zfs_storage" {
   storage_pools = var.storage_pools
 }
 
-# Handles the import of directories into Proxmox.
-module "proxmox_storage_import" {
-  depends_on = [module.zfs_storage]
-  source     = "./modules/proxmox-storage-import"
-
-  ssh                 = var.ssh
-  storage_directories = var.storage_directories
-}
-
 # Handles letting Proxmox trust its own CA certificate.
 module "trust_proxmox_ca" {
   source = "./modules/trust-proxmox-ca"
@@ -81,10 +72,25 @@ module "trust_proxmox_ca" {
   ssh = var.ssh
 }
 
+# Handles the installation of the `smartctl-exporter`.
+module "smartctl_exporter" {
+  source = "./modules/smartctl-exporter"
+
+  ssh = var.ssh
+}
+
+# Handles the import of directories into Proxmox.
+module "proxmox_storage_import" {
+  source     = "./modules/proxmox-storage-import"
+  depends_on = [module.zfs_storage]
+
+  ssh                 = var.ssh
+  storage_directories = var.storage_directories
+}
+
 # Handles the installation of additional `apt` packages.
 module "packages" {
-  source = "./modules/packages"
-
+  source     = "./modules/packages"
   depends_on = [module.repositories]
 
   ssh      = var.ssh
@@ -93,8 +99,7 @@ module "packages" {
 
 # Handles mapping directories for future use (e.g. file sharing via `virtiofs` into VMs).
 module "directory_mappings" {
-  source = "./modules/directory-mappings"
-
+  source     = "./modules/directory-mappings"
   depends_on = [module.zfs_storage]
 
   ssh                = var.ssh

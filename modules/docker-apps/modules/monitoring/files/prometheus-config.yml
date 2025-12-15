@@ -14,11 +14,16 @@ scrape_configs:
   # Docker daemon metrics (exposed on host)
   - job_name: 'docker-daemon'
     static_configs:
-      - targets: ['host.docker.internal:9323']
+      - targets: ['docker-vm:9323']
     relabel_configs:
       - source_labels: [__address__]
         target_label: instance
         replacement: 'docker-host'
+  
+  # Scrape SMART status of disks
+  - job_name: 'smartctl'
+    static_configs:
+      - targets: ['proxmox:9633']
 
   # Grafana Alloy self-monitoring
   - job_name: 'alloy'

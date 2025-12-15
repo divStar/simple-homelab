@@ -56,7 +56,7 @@ Set up Docker volumes, which will be used as `external` volumes
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L31"><code>main.tf#L31</code></a></td>
+      <td><a href="./main.tf#L38"><code>main.tf#L38</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"docker_volume.this":end -->
@@ -109,10 +109,12 @@ Networks in Docker to create
   **Type**:
   ```hcl
   map(object({
-    subnet  = string
-    gateway = string
-    driver  = optional(string)
-    labels  = optional(map(string), {})
+    subnet   = string
+    gateway  = optional(string)
+    driver   = optional(string)
+    ip_range = optional(string)
+    options  = optional(map(string), {})
+    labels   = optional(map(string), {})
   }))
   ```
   **Default**:
@@ -144,7 +146,7 @@ Volumes in Docker to create (to be used as `external` volumes)
   ```json
   {}
   ```
-  In file: <a href="./variables.tf#L22"><code>variables.tf#L22</code></a>
+  In file: <a href="./variables.tf#L24"><code>variables.tf#L24</code></a>
 
 </details>
 </blockquote><!-- variable:"volumes":end -->

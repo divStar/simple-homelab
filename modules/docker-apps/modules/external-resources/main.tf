@@ -14,9 +14,12 @@ resource "docker_network" "this" {
   driver = each.value.driver
 
   ipam_config {
-    subnet  = each.value.subnet
-    gateway = each.value.gateway
+    subnet   = each.value.subnet
+    gateway  = each.value.gateway
+    ip_range = each.value.ip_range
   }
+
+  options = each.value.options
 
   dynamic "labels" {
     for_each = each.value.labels
@@ -24,6 +27,10 @@ resource "docker_network" "this" {
       label = labels.key
       value = labels.value
     }
+  }
+
+  lifecycle {
+    ignore_changes = [labels]
   }
 }
 
@@ -41,5 +48,9 @@ resource "docker_volume" "this" {
       label = labels.key
       value = labels.value
     }
+  }
+
+  lifecycle {
+    ignore_changes = [labels]
   }
 }
