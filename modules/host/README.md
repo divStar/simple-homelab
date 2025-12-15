@@ -17,6 +17,7 @@ This module and its sub-modules setup the Proxmox host.
   - [repositories](#repositories)
   - [scripts](#scripts)
   - [share_user](#share_user)
+  - [smartctl_exporter](#smartctl_exporter)
   - [terraform_user](#terraform_user)
   - [trust_proxmox_ca](#trust_proxmox_ca)
   - [zfs_storage](#zfs_storage)
@@ -43,6 +44,7 @@ This module and its sub-modules setup the Proxmox host.
   - [installed_scripts](#installed_scripts)
   - [no_subscription](#no_subscription)
   - [share_user](#share_user)
+  - [smartctl_exporter_version](#smartctl_exporter_version)
   - [storage_pools](#storage_pools)
   - [terraform_user](#terraform_user)
 </blockquote><!-- contents:end -->
@@ -66,7 +68,7 @@ Handles adding the SSH key of the machine running this script to the gitops user
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L119"><code>main.tf#L119</code></a></td>
+      <td><a href="./main.tf#L124"><code>main.tf#L124</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/authorized-keys-appender/README.md">README.md</a> <em>(experimental)</em></td>
@@ -104,7 +106,7 @@ Handles mapping directories for future use (e.g. file sharing via `virtiofs` int
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L95"><code>main.tf#L95</code></a></td>
+      <td><a href="./main.tf#L101"><code>main.tf#L101</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/directory-mappings/README.md">README.md</a> <em>(experimental)</em></td>
@@ -123,7 +125,7 @@ Handles creating a gitops user, providing it with access to the gitops git repos
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L111"><code>main.tf#L111</code></a></td>
+      <td><a href="./main.tf#L116"><code>main.tf#L116</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/gitops-user/README.md">README.md</a> <em>(experimental)</em></td>
@@ -142,7 +144,7 @@ Handles the installation of additional `apt` packages.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L85"><code>main.tf#L85</code></a></td>
+      <td><a href="./main.tf#L92"><code>main.tf#L92</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/packages/README.md">README.md</a> <em>(experimental)</em></td>
@@ -161,7 +163,7 @@ Handles the import of directories into Proxmox.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L69"><code>main.tf#L69</code></a></td>
+      <td><a href="./main.tf#L83"><code>main.tf#L83</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/proxmox-storage-import/README.md">README.md</a> <em>(experimental)</em></td>
@@ -225,6 +227,25 @@ Handles creating a share user.
     </tr>
   </table>
 </blockquote><!-- module:"share_user":end -->
+<blockquote><!-- module:"smartctl_exporter":start -->
+
+### `smartctl_exporter`
+
+Handles the installation of the `smartctl-exporter`.
+  <table>
+    <tr>
+      <td>Module location</td>
+      <td><code>./modules/smartctl-exporter</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L76"><code>main.tf#L76</code></a></td>
+    </tr>
+    <tr>
+      <td colspan="2"><a href="./modules/smartctl-exporter/README.md">README.md</a> <em>(experimental)</em></td>
+    </tr>
+  </table>
+</blockquote><!-- module:"smartctl_exporter":end -->
 <blockquote><!-- module:"terraform_user":start -->
 
 ### `terraform_user`
@@ -256,7 +277,7 @@ Handles letting Proxmox trust its own CA certificate.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L78"><code>main.tf#L78</code></a></td>
+      <td><a href="./main.tf#L69"><code>main.tf#L69</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/trust-proxmox-ca/README.md">README.md</a> <em>(experimental)</em></td>
@@ -695,6 +716,14 @@ The user to manage file shares on the Proxmox host storage
 
 In file: <a href="./outputs.tf#L26"><code>outputs.tf#L26</code></a>
 </blockquote><!-- output:"share_user":end -->
+<blockquote><!-- output:"smartctl_exporter_version":start -->
+
+#### `smartctl_exporter_version`
+
+Version of `smartctl-exporter`, that was installed
+
+In file: <a href="./outputs.tf#L65"><code>outputs.tf#L65</code></a>
+</blockquote><!-- output:"smartctl_exporter_version":end -->
 <blockquote><!-- output:"storage_pools":start -->
 
 #### `storage_pools`
