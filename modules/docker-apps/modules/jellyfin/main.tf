@@ -23,7 +23,7 @@ terraform {
 locals {
   base_domain = regex("BASE_DOMAIN\\s*=\\s*(\\S+)", file("${path.module}/stack.env"))[0]
 
-  device_id    = "terraform-${formatdate("YYYYMMDDhhmmss", timestamp())}"
+  device_id = "terraform-${formatdate("YYYYMMDDhhmmss", timestamp())}"
   # access_token = jsondecode(restapi_object.jellyfin_auth.api_response).AccessToken
 
   roles = {
@@ -136,7 +136,7 @@ provider "zitadel" {
 
 # Call to the [OIDC module](../../../common/modules/oidc/README.md) to create the necessary resources in Zitadel.
 module "jellyfin_web_ui_oidc" {
-  source     = "../../../common/modules/oidc"
+  source = "../../../common/modules/oidc"
 
   org_name         = "Sanctum"
   project_name     = "Jellyfin"
