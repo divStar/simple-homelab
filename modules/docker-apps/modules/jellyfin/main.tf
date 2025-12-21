@@ -241,7 +241,7 @@ module "jellyfin_web_ui_oidc" {
 #     enableFolderRoles   = true
 #     enableAllFolders    = true # change to false as soon as enabledFolders + create libraries has been figured out
 #     enabledFolders      = []
-#     adminRoles          = ["jellyfin_admin"]
+#     adminRoles          = ["jellyfin-admin"]
 #     roles               = keys(local.roles)
 #     roleClaim           = "roles"
 #     folderRoleMapping   = []

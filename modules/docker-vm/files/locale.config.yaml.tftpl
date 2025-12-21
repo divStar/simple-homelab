@@ -3,17 +3,19 @@ version: 1.1.0
 
 storage:
   files:
+    - path: /etc/environment
+      mode: 0644
+      append:
+        - inline: |
+            LANG=C.UTF-8
+            LC_ALL=C.UTF-8
     - path: /etc/locale.conf
       mode: 0644
       overwrite: true
       contents:
         inline: |
-          LANG=en_US.UTF-8
-          LC_TIME=de_DE.UTF-8
-          LC_MONETARY=de_DE.UTF-8
-          LC_NUMERIC=de_DE.UTF-8
-          LC_MEASUREMENT=de_DE.UTF-8
-          LC_PAPER=de_DE.UTF-8
+          LANG=C.UTF-8
+          LC_ALL=C.UTF-8
   links:
     - path: /etc/localtime
       target: /usr/share/zoneinfo/Europe/Berlin

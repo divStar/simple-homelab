@@ -13,18 +13,12 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - jellyfin-config:/config
       - jellyfin-cache:/cache
-      # Music
-      - /mnt/music:/media/music
-      # Personal photos and videos
-      - /mnt/pictures/Personal/urlaubsfotos:/media/vacation-pictures
-      - /mnt/pictures/Personal/urlaubsvideos:/media/vacation-videos
-      - /mnt/pictures/Personal/mariia:/media/mariias-pictures
-      - /mnt/pictures/Personal/yuliia:/media/yuliias-pictures
       # Videos
-      - /mnt/pictures/Personal/urlaubsvideos:/media/urlaubsvideos
-      - /mnt/yuliia/похудение/:/media/yuliia-courses-video
-      - /mnt/yuliia/разное/:/media/yuliia-разное
-      - /mnt/storage:/media/video
+      - /mnt/video:/media/video
+      - /mnt/picture:/media/picture
+      - /mnt/photo:/media/photo
+      - /mnt/music:/media/music
+      - /mnt/yuliia:/media/yuliia
     networks:
       services-network:
         priority: 100
