@@ -1,6 +1,6 @@
-# Step-CA Setup
+# Samba Setup
 
-This module sets up Step-CA in an Alpine LXC container using the provided information.
+This module sets up Samba server in an Alpine LXC container using the provided information.
 
 ## Contents
 
@@ -10,13 +10,12 @@ This module sets up Step-CA in an Alpine LXC container using the provided inform
 - [Modules](#modules) _(nested and adjacent)_
   - [setup_container](#setup_container)
 - [Resources](#resources)
-  - _ssh_resource_.[configure_container](#ssh_resourceconfigure_container)
-  - _ssh_resource_.[configure_host](#ssh_resourceconfigure_host)
-  - _ssh_resource_.[revert_host](#ssh_resourcerevert_host)
+  - _ssh_resource_.[configure_samba](#ssh_resourceconfigure_samba)
+  - _ssh_resource_.[configure_users](#ssh_resourceconfigure_users)
+  - _terraform_data_.[users_trigger](#terraform_datausers_trigger)
 - [Variables](#variables)
-  - [acme](#acme-required) (**Required**)
   - [proxmox](#proxmox-required) (**Required**)
-  - [fingerprint_file](#fingerprint_file-optional) (*Optional*)
+  - [samba_users](#samba_users-required) (**Required**)
 - [Outputs](#outputs)
   - [root_password](#root_password)
   - [ssh_private_key](#ssh_private_key)
@@ -43,7 +42,7 @@ Alpine LXC container setup
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L17"><code>main.tf#L17</code></a></td>
+      <td><a href="./main.tf#L14"><code>main.tf#L14</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="../common/modules/alpine/README.md">README.md</a> <em>(experimental)</em></td>
@@ -53,11 +52,11 @@ Alpine LXC container setup
 
 ## Resources
   
-<blockquote><!-- resource:"ssh_resource.configure_container":start -->
+<blockquote><!-- resource:"ssh_resource.configure_samba":start -->
 
-### _ssh_resource_.`configure_container`
+### _ssh_resource_.`configure_samba`
 
-Configure Step-CA
+Deploy Samba configuration
   <table>
     <tr>
       <td>Provider</td>
@@ -65,15 +64,15 @@ Configure Step-CA
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L43"><code>main.tf#L43</code></a></td>
+      <td><a href="./main.tf#L54"><code>main.tf#L54</code></a></td>
     </tr>
   </table>
-</blockquote><!-- resource:"ssh_resource.configure_container":end -->
-<blockquote><!-- resource:"ssh_resource.configure_host":start -->
+</blockquote><!-- resource:"ssh_resource.configure_samba":end -->
+<blockquote><!-- resource:"ssh_resource.configure_users":start -->
 
-### _ssh_resource_.`configure_host`
+### _ssh_resource_.`configure_users`
 
-Configure ACME domain and order certificates
+Create system users and set Samba passwords
   <table>
     <tr>
       <td>Provider</td>
@@ -81,50 +80,29 @@ Configure ACME domain and order certificates
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L67"><code>main.tf#L67</code></a></td>
+      <td><a href="./main.tf#L75"><code>main.tf#L75</code></a></td>
     </tr>
   </table>
-</blockquote><!-- resource:"ssh_resource.configure_host":end -->
-<blockquote><!-- resource:"ssh_resource.revert_host":start -->
+</blockquote><!-- resource:"ssh_resource.configure_users":end -->
+<blockquote><!-- resource:"terraform_data.users_trigger":start -->
 
-### _ssh_resource_.`revert_host`
+### _terraform_data_.`users_trigger`
 
-ACME Cleanup on destroy
+Trigger for user list changes
   <table>
     <tr>
       <td>Provider</td>
-      <td><code>ssh (loafoe/ssh)</code></td>
+      <td><code>terraform (hashicorp/terraform)</code></td>
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L107"><code>main.tf#L107</code></a></td>
+      <td><a href="./main.tf#L49"><code>main.tf#L49</code></a></td>
     </tr>
   </table>
-</blockquote><!-- resource:"ssh_resource.revert_host":end -->
+</blockquote><!-- resource:"terraform_data.users_trigger":end -->
 
 ## Variables
   
-<blockquote><!-- variable:"acme":start -->
-
-### `acme` (**Required**)
-
-ACME configuration
-
-<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
-  <summary>Show more...</summary>
-
-  **Type**:
-  ```hcl
-  object({
-    contact         = string
-    name            = string
-    proxmox_domains = list(string)
-  })
-  ```
-  In file: <a href="./variables.tf#L17"><code>variables.tf#L17</code></a>
-
-</details>
-</blockquote><!-- variable:"acme":end -->
 <blockquote><!-- variable:"proxmox":start -->
 
 ### `proxmox` (**Required**)
@@ -150,27 +128,26 @@ Proxmox host configuration
 
 </details>
 </blockquote><!-- variable:"proxmox":end -->
-<blockquote><!-- variable:"fingerprint_file":start -->
+<blockquote><!-- variable:"samba_users":start -->
 
-### `fingerprint_file` (*Optional*)
+### `samba_users` (**Required**)
 
-File containing the fingerprint
+List of Samba users with their passwords
 
 <details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
   <summary>Show more...</summary>
 
   **Type**:
   ```hcl
-  string
+  list(object({
+    username = string
+    password = string
+  }))
   ```
-  **Default**:
-  ```json
-  ""
-  ```
-  In file: <a href="./variables.tf#L29"><code>variables.tf#L29</code></a>
+  In file: <a href="./variables.tf#L17"><code>variables.tf#L17</code></a>
 
 </details>
-</blockquote><!-- variable:"fingerprint_file":end -->
+</blockquote><!-- variable:"samba_users":end -->
 
 ## Outputs
   

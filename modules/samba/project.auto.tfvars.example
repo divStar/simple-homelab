@@ -7,10 +7,3 @@ proxmox = {
   password = "some-password"
   insecure = false
 }
-
-acme = {
-  contact         = "admin@my.world"
-  name            = "step-ca-acme"
-  proxmox_domains = ["sanctum.my.world"]
-}
-fingerprint_file = "/path/to/the/secret_fingerprint"
