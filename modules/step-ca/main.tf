@@ -4,34 +4,39 @@
  * This module sets up Step-CA in an Alpine LXC container using the provided information.
  */
 locals {
-  timestamp             = "+%Y-%m-%d-%H-%M-%S"
-  setup_host_script     = "setup-host.sh"
-  teardown_host_script  = "teardown-host.sh"
-  upgrade_alpine_script = "upgrade-alpine.sh"
+  proxmox_endpoint = "https://${var.proxmox.host}:8006"
+
+  container_ip = "192.168.178.155"
+
+  timestamp            = "+%Y-%m-%d-%H-%M-%S"
+  setup_host_script    = "setup-host.sh"
+  teardown_host_script = "teardown-host.sh"
 }
 
 # Alpine LXC container setup
 module "setup_container" {
   source = "../common/modules/alpine"
 
-  proxmox = {
-    host     = var.proxmox_host
-    name     = var.proxmox_node_name
-    ssh_user = var.proxmox_ssh_user
-    ssh_key  = var.proxmox_ssh_key
-  }
-  vm_id          = var.vm_id
-  hostname       = var.hostname
-  description    = var.description
-  mount_points   = var.mount_points
-  imagestore_id  = var.imagestore_id
-  ni_ip          = var.ni_ip
-  ni_gateway     = var.ni_gateway
-  ni_mac_address = var.ni_mac_address
-  ni_subnet_mask = var.ni_subnet_mask
-  ni_name        = var.ni_name
-  ni_bridge      = var.ni_bridge
-  startup_order  = var.startup_order
+  proxmox      = var.proxmox
+  vm_id        = 701
+  hostname     = "step-ca"
+  description  = "Alpine Linux based LXC container with Step-CA"
+  tags         = ["alpine", "lxc", "pve-resources"]
+  unprivileged = true
+
+  ni_mac_address = "EA:31:0E:A5:D8:4C"
+  ni_ip          = local.container_ip
+  ni_gateway     = "192.168.178.1"
+  ni_subnet_mask = 24
+  ni_name        = "eth0"
+  ni_bridge      = "vmbr0"
+
+  imagestore_id = "pve-resources"
+  startup_order = 1
+  mount_points = [
+    { volume = "/mnt/temp/step-ca", path = "/etc/step-ca" }
+  ]
+  packages = ["bash", "curl", "ca-certificates", "step-cli", "step-certificates"]
 }
 
 # Configure Step-CA
@@ -40,31 +45,20 @@ resource "ssh_resource" "configure_container" {
 
   depends_on = [module.setup_container]
 
-  host        = var.ni_ip
+  host        = local.container_ip
   user        = "root"
   private_key = module.setup_container.ssh_private_key
 
-  file {
-    source      = "${path.module}/files/${local.upgrade_alpine_script}"
-    destination = "/tmp/${local.upgrade_alpine_script}"
-    permissions = "0755"
-  }
-
-  commands = [
-    <<-EOT
-      apk add step-cli step-certificates
-      rc-service step-ca start
-      rc-update add step-ca default
-
-      # Wait for Step CA to be ready before bootstrapping
-      sleep 10
-
-      step ca bootstrap --ca-url https://${var.ni_ip} --fingerprint $(echo "${file(var.fingerprint_file)}") --install --force
-
-      echo "${file("${var.proxmox_ssh_key}.pub")}" >> /root/.ssh/authorized_keys
-      rc-service sshd restart
-    EOT
-  ]
+  commands = flatten([
+    [
+      "rc-service step-ca start",
+      "rc-update add step-ca default",
+      "sleep 10"
+    ],
+    [
+      "step ca bootstrap --ca-url https://${local.container_ip} --fingerprint $(echo \"${file(var.fingerprint_file)}\") --install --force"
+    ]
+  ])
 
   timeout = "1m"
 }
@@ -72,14 +66,12 @@ resource "ssh_resource" "configure_container" {
 # Configure ACME domain and order certificates
 resource "ssh_resource" "configure_host" {
   # when = "create"
-  count = var.skip_host_configuration == true ? 0 : 1
-
   depends_on = [ssh_resource.configure_container]
 
   # Note: connecting to Proxmox host here
-  host        = var.proxmox_host
-  user        = var.proxmox_ssh_user
-  private_key = file(var.proxmox_ssh_key)
+  host        = var.proxmox.host
+  user        = var.proxmox.ssh_user
+  private_key = file(var.proxmox.ssh_key)
 
   file {
     source      = "${path.module}/files/${local.setup_host_script}"
@@ -93,26 +85,27 @@ resource "ssh_resource" "configure_host" {
     permissions = "0755"
   }
 
-  commands = [
-    <<-EOT
-      /tmp/${local.setup_host_script} \
-        --step-server ${var.ni_ip} \
-        --proxmox-node-name ${var.proxmox_node_name} \
-        --fingerprint ${file(var.fingerprint_file)} \
-        --acme-name ${var.acme_name} \
-        --acme-contact ${var.acme_contact} \
-        --acme-domains "${join(";", var.acme_proxmox_domains)}" \
-        --log-file /tmp/${local.setup_host_script}.$(date ${local.timestamp}).log
-    EOT
-  ]
+  commands = flatten([
+    [
+      join(" ", [
+        "/tmp/${local.setup_host_script}",
+        "--step-server ${local.container_ip}",
+        "--proxmox-node-name ${var.proxmox.name}",
+        "--fingerprint ${file(var.fingerprint_file)}",
+        "--acme-name ${var.acme.name}",
+        "--acme-contact ${var.acme.contact}",
+        "--acme-domains \"${join(";", var.acme.proxmox_domains)}\"",
+        "--log-file /tmp/${local.setup_host_script}.$(date ${local.timestamp}).log"
+      ])
+    ]
+  ])
 
-  timeout = "75s"
+  timeout = "2m"
 }
 
 # ACME Cleanup on destroy
 resource "ssh_resource" "revert_host" {
-  when  = "destroy"
-  count = var.skip_host_configuration == true ? 0 : 1
+  when = "destroy"
 
   depends_on = [
     ssh_resource.configure_host,
@@ -120,21 +113,23 @@ resource "ssh_resource" "revert_host" {
   ]
 
   # Note: connecting to Proxmox host here
-  host        = var.proxmox_host
-  user        = var.proxmox_ssh_user
-  private_key = file(var.proxmox_ssh_key)
+  host        = var.proxmox.host
+  user        = var.proxmox.ssh_user
+  private_key = file(var.proxmox.ssh_key)
 
-  commands = [
-    <<-EOT
-      /tmp/${local.teardown_host_script} \
-        --proxmox-node-name ${var.proxmox_node_name} \
-        --acme-name ${var.acme_name} \
-        --log-file /tmp/${local.teardown_host_script}.$(date ${local.timestamp}).log
-      
-      # Remove the setup and teardown host scripts as they're not automatically deleted
-      rm -f /tmp/${local.setup_host_script} /tmp/${local.teardown_host_script}
-    EOT
-  ]
+  commands = flatten([
+    [
+      join(" ", [
+        "/tmp/${local.teardown_host_script}",
+        "--proxmox-node-name ${var.proxmox.name}",
+        "--acme-name ${var.acme.name}",
+        "--log-file /tmp/${local.teardown_host_script}.$(date ${local.timestamp}).log"
+      ])
+    ],
+    [
+      "rm -f /tmp/${local.setup_host_script} /tmp/${local.teardown_host_script}"
+    ]
+  ])
 
-  timeout = "60s"
+  timeout = "1m"
 }

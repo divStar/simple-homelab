@@ -15,6 +15,13 @@ variable "vm_id" {
   nullable    = false
 }
 
+variable "unprivileged" {
+  description = "Whether the LXC container will be created as an unprivileged container (default) or as a privileged one"
+  type        = bool
+  default     = true
+  nullable    = false
+}
+
 variable "hostname" {
   description = "Container host name"
   type        = string
@@ -48,24 +55,8 @@ variable "alpine_image" {
   nullable = false
 }
 
-variable "packages" {
-  description = "List of packages to install on the container"
-  type        = list(string)
-  default     = ["bash", "curl", "ca-certificates"]
-  nullable    = false
-}
+# Resource configuration
 
-variable "mount_points" {
-  description = "List of mount points for the container"
-  type = list(object({
-    volume = string
-    path   = string
-  }))
-  default  = []
-  nullable = false
-}
-
-# Resources configuration
 variable "cpu_cores" {
   description = "Amount of CPU (v)cores; SMT/HT cores count as cores."
   type        = number
@@ -104,7 +95,6 @@ variable "disk_size" {
 variable "startup_order" {
   description = "Container startup order; shutdowns happen in reverse order"
   type        = number
-  default     = 1
   nullable    = false
 }
 
@@ -122,7 +112,8 @@ variable "startup_down_delay" {
   nullable    = false
 }
 
-# Network interface configuration
+# Network configuration
+
 variable "ni_ip" {
   description = "Network interface IP address"
   type        = string
@@ -160,4 +151,34 @@ variable "ni_bridge" {
   type        = string
   default     = "vmbr0"
   nullable    = false
+}
+
+# General container configuration
+
+variable "packages" {
+  description = "List of packages to install on the container"
+  type        = list(string)
+  default     = ["bash", "curl", "ca-certificates"]
+  nullable    = false
+}
+
+variable "mount_points" {
+  description = "List of mount points for the container"
+  type = list(object({
+    volume = string
+    path   = string
+  }))
+  default  = []
+  nullable = false
+}
+
+variable "update_interval" {
+  type        = string
+  description = "Cron expression for automatic updates, or 'never' to disable"
+  default     = "0 3 * * 1"
+
+  validation {
+    condition     = var.update_interval == "never" || length(var.update_interval) > 0
+    error_message = "update_interval must be 'never' or a non-empty cron expression"
+  }
 }
