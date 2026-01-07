@@ -5,6 +5,10 @@
  * generates a `root_password` and a `ssh_key`, installs `openssh` as well as
  * other Alpine packages (if specified; `bash` is installed by default).
  */
+locals {
+  upgrade_alpine_script = "upgrade-alpine.sh"
+  update_alpine_script  = "update-alpine.sh"
+}
 
 # Downloads the `alpine` image.
 resource "proxmox_virtual_environment_download_file" "template" {
@@ -34,11 +38,16 @@ resource "proxmox_virtual_environment_container" "container" {
   # Wait for the template to be downloaded before creating the container
   depends_on = [proxmox_virtual_environment_download_file.template]
 
+  vm_id        = var.vm_id
   node_name    = var.proxmox.name
   description  = var.description
   tags         = var.tags
-  vm_id        = var.vm_id
-  unprivileged = true
+  unprivileged = var.unprivileged
+
+  timeout_create = 180
+  timeout_delete = 180
+  timeout_clone  = 180
+  timeout_update = 180
 
   # Container initialization settings
   initialization {
@@ -96,8 +105,10 @@ resource "proxmox_virtual_environment_container" "container" {
   dynamic "mount_point" {
     for_each = var.mount_points
     content {
-      volume = mount_point.value.volume
-      path   = mount_point.value.path
+      volume    = mount_point.value.volume
+      path      = mount_point.value.path
+      acl       = true
+      replicate = false
     }
   }
 
@@ -128,25 +139,54 @@ resource "ssh_resource" "install_openssh" {
   # Use a script that checks for OpenSSH and installs it only if needed
   commands = [
     <<-EOT
-      # Check if OpenSSH is already installed
-      if pct exec ${var.vm_id} -- which sshd > /dev/null 2>&1; then
-        echo "OpenSSH is already installed on container ${var.vm_id}"
-      else
+      if ! pct exec ${var.vm_id} -- which sshd > /dev/null 2>&1; then
         echo "Installing OpenSSH on container ${var.vm_id}..."
-        pct exec ${var.vm_id} -- apk update && apk upgrade
+        pct exec ${var.vm_id} -- sh -c "apk update && apk upgrade"
         pct exec ${var.vm_id} -- apk add openssh
         pct exec ${var.vm_id} -- rc-update add sshd default
         pct exec ${var.vm_id} -- /etc/init.d/sshd start
         echo "OpenSSH installed and started in container ${var.vm_id}"
-        # Disable password authentication and only allow key-based authentication
-        echo "Disabling password-based login..."
-        pct exec ${var.vm_id} -- sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-        pct exec ${var.vm_id} -- sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
       fi
-      # Add alias
-      pct exec ${var.vm_id} -- /bin/sh -c "echo \"alias ll='ls -al'\" >> /etc/profile"
+      pct exec ${var.vm_id} -- mkdir -p /root/.ssh
+      pct exec ${var.vm_id} -- sh -c "echo '${file("${var.proxmox.ssh_key}.pub")}' >> /root/.ssh/authorized_keys"
+      pct exec ${var.vm_id} -- chmod 700 /root/.ssh
+      pct exec ${var.vm_id} -- chmod 600 /root/.ssh/authorized_keys
+      pct exec ${var.vm_id} -- sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+      pct exec ${var.vm_id} -- sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+      pct exec ${var.vm_id} -- rc-service sshd restart
     EOT
   ]
+
+  timeout = "1m"
+}
+
+resource "ssh_resource" "install_update_upgrade_scripts" {
+  depends_on = [ssh_resource.install_openssh]
+
+  # when = "create"
+
+  host        = var.ni_ip
+  user        = "root"
+  private_key = tls_private_key.ssh_key.private_key_pem
+
+  # Update script (will run in set intervals)
+  file {
+    source      = "${path.module}/files/${local.upgrade_alpine_script}"
+    destination = "/usr/local/bin/${local.update_alpine_script}"
+    permissions = "0755"
+  }
+
+  # Upgrade script (should be run manually in case an Alpine upgrade is needed)
+  file {
+    source      = "${path.module}/files/${local.upgrade_alpine_script}"
+    destination = "/usr/local/bin/${local.upgrade_alpine_script}"
+    permissions = "0755"
+  }
+
+  # Install crontab only if update_interval is not "never"
+  commands = var.update_interval != "never" ? ["echo '${var.update_interval} /usr/local/bin/${local.update_alpine_script}' | crontab -"] : []
+
+  timeout = "1m"
 }
 
 # Install necessary Alpine packages
@@ -161,8 +201,28 @@ resource "ssh_resource" "install_packages" {
 
   commands = [
     <<-EOT
-      # Install additional packages
+      set -e
       apk add --no-cache ${join(" ", var.packages)}
+      apk update
     EOT
   ]
+
+  timeout = "1m"
+}
+
+# Install default aliases
+resource "ssh_resource" "install_default_aliases" {
+  depends_on = [ssh_resource.install_openssh]
+
+  host        = var.ni_ip
+  user        = "root"
+  private_key = tls_private_key.ssh_key.private_key_pem
+
+  file {
+    source      = "${path.module}/files/default-aliases.sh"
+    destination = "/etc/profile.d/default-aliases.sh"
+    permissions = "0644"
+  }
+
+  timeout = "1m"
 }

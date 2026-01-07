@@ -1,0 +1,9 @@
+proxmox = {
+  name     = "sanctum"
+  host     = "192.168.178.25"
+  ssh_user = "root"
+  ssh_key  = "~/.ssh/id_rsa"
+  username = "root@pam"
+  password = "some-password"
+  insecure = false
+}
