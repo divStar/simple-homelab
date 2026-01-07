@@ -117,17 +117,19 @@ resource "ssh_resource" "revert_host" {
   user        = var.proxmox.ssh_user
   private_key = file(var.proxmox.ssh_key)
 
-  commands = [
-    <<-EOT
-      /tmp/${local.teardown_host_script} \
-        --proxmox-node-name ${var.proxmox.name} \
-        --acme-name ${var.acme.name} \
-        --log-file /tmp/${local.teardown_host_script}.$(date ${local.timestamp}).log
-      
-      # Remove the setup and teardown host scripts as they're not automatically deleted
-      rm -f /tmp/${local.setup_host_script} /tmp/${local.teardown_host_script}
-    EOT
-  ]
+  commands = flatten([
+    [
+      join(" ", [
+        "/tmp/${local.teardown_host_script}",
+        "--proxmox-node-name ${var.proxmox.name}",
+        "--acme-name ${var.acme.name}",
+        "--log-file /tmp/${local.teardown_host_script}.$(date ${local.timestamp}).log"
+      ])
+    ],
+    [
+      "rm -f /tmp/${local.setup_host_script} /tmp/${local.teardown_host_script}"
+    ]
+  ])
 
   timeout = "1m"
 }

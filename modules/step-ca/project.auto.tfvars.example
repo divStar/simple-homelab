@@ -1,13 +1,16 @@
-proxmox_endpoint  = "https://192.168.178.25:8006"
-proxmox_host      = "192.168.178.25"
-proxmox_node_name = "sanctum"
-proxmox_password  = "abcdef12"
-proxmox_ssh_user  = "root"
-proxmox_ssh_key   = "~/.ssh/id_rsa"
+proxmox = {
+  name     = "sanctum"
+  host     = "192.168.178.25"
+  ssh_user = "root"
+  ssh_key  = "~/.ssh/id_rsa"
+  username = "root@pam"
+  password = "some-password"
+  insecure = false
+}
 
-mount_points = [{
-  volume = "<step-ca-configuration-directory>"
-  path   = "/etc/step-ca"
-}]
-
-fingerprint_file = "secret_fingerprint"
+acme = {
+  contact         = "admin@my.world"
+  name            = "step-ca-acme"
+  proxmox_domains = ["sanctum.my.world"]
+}
+fingerprint_file = "/path/to/the/secret_fingerprint"
