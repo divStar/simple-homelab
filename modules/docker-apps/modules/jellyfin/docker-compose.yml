@@ -19,11 +19,13 @@ services:
       - /mnt/photo:/media/photo
       - /mnt/music:/media/music
       - /mnt/yuliia:/media/yuliia
+    extra_hosts:
+      - "zitadel.${BASE_DOMAIN}:host-gateway"
     networks:
       services-network:
         priority: 100
         gw_priority: 5
-      services-macvlan-network:
+      jellyfin-ipvlan-network:
         ipv4_address: 192.168.178.200
         priority: 50
         gw_priority: 1
@@ -48,8 +50,8 @@ networks:
   services-network:
     name: services-network
     external: true
-  services-macvlan-network:
-    name: services-macvlan-network
+  jellyfin-ipvlan-network:
+    name: jellyfin-ipvlan-network
     external: true
 
 volumes:

@@ -11,7 +11,7 @@ terraform {
   required_providers {
     zitadel = {
       source  = "zitadel/zitadel"
-      version = ">= 2.3.0"
+      version = ">= 2.5.0"
     }
   }
 }
@@ -39,7 +39,19 @@ module "traefik_dashboard_oidc" {
   grant_types               = ["OIDC_GRANT_TYPE_AUTHORIZATION_CODE"]
   post_logout_redirect_uris = ["https://traefik.my.world/oidc/logout"]
 
-  admin_user = "igor.voronin@my.world"
+  project_roles = {
+    "traefik_admin" = {
+      display_name = "Traefik admin"
+      group        = "traefik"
+    }
+  }
+
+  user_grants = {
+    "igor" = {
+      user_name = "igor.voronin@my.world"
+      role_keys = ["traefik_admin"]
+    }
+  }
 }
 
 # `client_id` for further use.

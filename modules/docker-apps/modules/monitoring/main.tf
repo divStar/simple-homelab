@@ -12,7 +12,7 @@ terraform {
   required_providers {
     zitadel = {
       source  = "zitadel/zitadel"
-      version = ">= 2.3.0"
+      version = ">= 2.5.0"
     }
   }
 }
@@ -44,7 +44,19 @@ module "prometheus_oidc" {
   grant_types               = ["OIDC_GRANT_TYPE_AUTHORIZATION_CODE"]
   post_logout_redirect_uris = ["https://prometheus.${local.base_domain}/oidc/logout"]
 
-  admin_user = "igor.voronin@${local.base_domain}"
+  project_roles = {
+    "prometheus_admin" = {
+      display_name = "Prometheus admin"
+      group        = "prometheus"
+    }
+  }
+
+  user_grants = {
+    "igor" = {
+      user_name = "igor.voronin@${local.base_domain}"
+      role_keys = ["prometheus_admin"]
+    }
+  }
 }
 
 # Call to the [OIDC module](../../../common/modules/oidc/README.md) to create the necessary resources in Zitadel.
@@ -62,7 +74,19 @@ module "grafana_alloy_oidc" {
   grant_types               = ["OIDC_GRANT_TYPE_AUTHORIZATION_CODE"]
   post_logout_redirect_uris = ["https://alloy.${local.base_domain}/oidc/logout"]
 
-  admin_user = "igor.voronin@${local.base_domain}"
+  project_roles = {
+    "alloy_admin" = {
+      display_name = "Grafana Alloy admin"
+      group        = "alloy"
+    }
+  }
+
+  user_grants = {
+    "igor" = {
+      user_name = "igor.voronin@${local.base_domain}"
+      role_keys = ["alloy_admin"]
+    }
+  }
 }
 
 # Zitadel application client-ID for further use.

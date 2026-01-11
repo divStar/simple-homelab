@@ -68,11 +68,13 @@ variable "post_logout_redirect_uris" {
   type        = list(string)
 }
 
-variable "admin_user" {
-  description = "Administrator of the project; user `user_name` or leave empty if unknown or set manually at a later point"
-  type        = string
-  nullable    = true
-  default     = null
+variable "user_grants" {
+  description = "Map of user grants - each entry grants specific roles to a user"
+  type = map(object({
+    user_name = string
+    role_keys = list(string)
+  }))
+  default = {}
 }
 
 variable "project_roles" {

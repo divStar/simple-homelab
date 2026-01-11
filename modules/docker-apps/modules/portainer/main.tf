@@ -11,7 +11,7 @@ terraform {
   required_providers {
     zitadel = {
       source  = "zitadel/zitadel"
-      version = ">= 2.3.0"
+      version = ">= 2.5.0"
     }
     restapi = {
       source  = "mastercard/restapi"
@@ -129,9 +129,9 @@ module "portainer_web_ui_oidc" {
   id_token_userinfo_assertion = true
 
   project_roles = {
-    "portainer_admin" : {
+    "portainer_admin" = {
       display_name = "Portainer admin"
-      group : "portainer"
+      group        = "portainer"
     }
   }
 
@@ -151,7 +151,12 @@ module "portainer_web_ui_oidc" {
     ]
   }]
 
-  admin_user = "igor.voronin@${local.base_domain}"
+  user_grants = {
+    "igor" = {
+      user_name = "igor.voronin@${local.base_domain}"
+      role_keys = ["portainer_admin"]
+    }
+  }
 }
 
 resource "restapi_object" "portainer_settings" {

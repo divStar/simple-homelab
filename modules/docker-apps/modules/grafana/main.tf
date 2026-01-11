@@ -11,7 +11,7 @@ terraform {
   required_providers {
     zitadel = {
       source  = "zitadel/zitadel"
-      version = ">= 2.3.0"
+      version = ">= 2.5.0"
     }
     grafana = {
       source  = "grafana/grafana"
@@ -71,16 +71,21 @@ module "grafana_web_ui_oidc" {
   id_token_role_assertion     = true
   id_token_userinfo_assertion = true
 
-  admin_user = "igor.voronin@${local.base_domain}"
-
   project_roles = {
-    "grafana_admin" : {
+    "grafana_admin" = {
       display_name = "Grafana admin"
-      group : "grafana"
+      group        = "grafana"
     }
-    "grafana_editor" : {
+    "grafana_editor" = {
       display_name = "Grafana editor"
-      group : "grafana"
+      group        = "grafana"
+    }
+  }
+
+  user_grants = {
+    "igor" = {
+      user_name = "igor.voronin@${local.base_domain}"
+      role_keys = ["grafana_admin"]
     }
   }
 }
