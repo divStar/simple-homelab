@@ -32,8 +32,6 @@ systemd:
 %{ endfor ~}
             After=mnt-data.mount
             Requires=mnt-data.mount
-            # Wait for initial certificate before starting
-            After=docker-cert.service
 
             [Install]
             WantedBy=multi-user.target
@@ -41,3 +39,15 @@ systemd:
           contents: |
             [Service]
             Environment="DOCKER_OPTS=--host=tcp://0.0.0.0:2376"
+        - name: 30-wait-for-certs.conf
+          contents: |
+            [Unit]
+            # Trigger the cert service on boot if Docker starts
+            Wants=docker-cert.service
+            After=docker-cert.service
+
+            [Service]
+            # Block until certs exist (handles the 1min timer delay or slow CA)
+            ExecStartPre=/usr/bin/bash -c 'for i in {1..120}; do [ -f /etc/docker/server.pem ] && exit 0; sleep 1; done; exit 1'
+            # Prevent systemd from killing Docker while waiting for the cert script
+            TimeoutStartSec=120

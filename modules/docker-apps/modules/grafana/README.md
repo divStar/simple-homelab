@@ -21,7 +21,7 @@ This module uses the [OIDC module](../../../common/modules/oidc/README.md) to cr
 ## Providers
 ![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
 ![grafana/grafana](https://img.shields.io/badge/grafana--grafana->=4.17.0-d1267b?logo=grafana)
-![zitadel](https://img.shields.io/badge/zitadel->=2.3.0-ee4398?logo=zitadel)
+![zitadel](https://img.shields.io/badge/zitadel->=2.5.0-ee4398?logo=zitadel)
 
 ## Modules
   
@@ -58,7 +58,7 @@ Call to the [OIDC module](../../../common/modules/oidc/README.md) to create the 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L88"><code>main.tf#L88</code></a></td>
+      <td><a href="./main.tf#L93"><code>main.tf#L93</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"grafana_sso_settings.name":end -->
@@ -108,5 +108,5 @@ Grafana admin username
 
 Grafana Client ID
 
-In file: <a href="./main.tf#L117"><code>main.tf#L117</code></a>
+In file: <a href="./main.tf#L122"><code>main.tf#L122</code></a>
 </blockquote><!-- output:"client_id":end -->

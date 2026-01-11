@@ -1,0 +1,54 @@
+admin_username = "jellyfin-admin"
+admin_password = "super-strong-password"
+
+libraries = {
+  "animated" = {
+    display_name     = "Animated"
+    group            = "video"
+    collection_type  = "movies"
+    path             = "/media/video/animated"
+    options_category = "movies_metadata"
+  }
+  "international_movies" = {
+    display_name     = "International movies"
+    group            = "video"
+    collection_type  = "movies"
+    path             = "/media/video/movies"
+    options_category = "movies_metadata"
+  }
+  "series" = {
+    display_name     = "TV series"
+    group            = "video"
+    collection_type  = "tvshows"
+    path             = "/media/video/series"
+    options_category = "tvshows_metadata"
+  }
+  "vacation-video" = {
+    display_name     = "Vacation videos"
+    group            = "video"
+    collection_type  = "homevideos"
+    path             = "/media/video/vacation"
+    options_category = "homevideos"
+  }
+  "igor-photo" = {
+    display_name     = "Igor's photos"
+    group            = "photo"
+    collection_type  = "homevideos"
+    path             = "/media/photo/igor"
+    options_category = "photos"
+  }
+  "vacation-photo" = {
+    display_name     = "Vacation photos"
+    group            = "photo"
+    collection_type  = "homevideos"
+    path             = "/media/photo/vacation"
+    options_category = "photos"
+  }
+  "music" = {
+    display_name     = "Music"
+    group            = "music"
+    collection_type  = "music"
+    path             = "/media/music"
+    options_category = "music"
+  }
+}

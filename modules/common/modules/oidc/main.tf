@@ -1,9 +1,7 @@
 /**
  * # OIDC (Zitadel) module
  *
- * This module creates a project and application and grants a specified admin user (if set) permissions to it.
- *
- * This module is as rigid as I need it, but of course it does not (yet?) allow for e.g. roles assignments etc. since I do not use them currently.
+ * This module creates a project and application and grants specified users permissions to it via role assignments.
  */
 
 locals {
@@ -84,24 +82,24 @@ resource "zitadel_project_role" "this" {
   group        = each.value.group
 }
 
-# Find user, that should be granted the project (if set)
-data "zitadel_machine_users" "this" {
-  count = var.admin_user == null ? 0 : 1
+# Find human users that should be granted project roles
+data "zitadel_human_users" "this" {
+  for_each = var.user_grants
 
   org_id           = local.organization_id
-  user_name        = var.admin_user
+  user_name        = each.value.user_name
   user_name_method = "TEXT_QUERY_METHOD_CONTAINS_IGNORE_CASE"
 }
 
-# Grant project to user (if set)
+# Grant project roles to users
 resource "zitadel_user_grant" "this" {
   depends_on = [zitadel_application_oidc.this]
-  count      = var.admin_user == null ? 0 : 1
+  for_each   = var.user_grants
 
   org_id     = local.organization_id
   project_id = zitadel_project.this.id
-  user_id    = data.zitadel_machine_users.this[0].user_ids[0]
-  role_keys  = keys(var.project_roles)
+  user_id    = data.zitadel_human_users.this[each.key].user_ids[0]
+  role_keys  = each.value.role_keys
 }
 
 # Create all actions

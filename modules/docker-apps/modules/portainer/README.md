@@ -25,7 +25,7 @@ This module uses the [OIDC module](../../../common/modules/oidc/README.md) to cr
 ## Providers
 ![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
 ![mastercard/restapi](https://img.shields.io/badge/mastercard--restapi->=2.0.1-f94ea3?logo=restapi)
-![zitadel](https://img.shields.io/badge/zitadel->=2.3.0-ee4398?logo=zitadel)
+![zitadel](https://img.shields.io/badge/zitadel->=2.5.0-ee4398?logo=zitadel)
 
 ## Modules
   
@@ -107,7 +107,7 @@ Call to the [OIDC module](../../../common/modules/oidc/README.md) to create the 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L157"><code>main.tf#L157</code></a></td>
+      <td><a href="./main.tf#L162"><code>main.tf#L162</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"restapi_object.portainer_settings":end -->
@@ -157,7 +157,7 @@ Portainer license key
 
 Portainer Client ID
 
-In file: <a href="./main.tf#L191"><code>main.tf#L191</code></a>
+In file: <a href="./main.tf#L196"><code>main.tf#L196</code></a>
 </blockquote><!-- output:"client_id":end -->
 <blockquote><!-- output:"client_secret":start -->
 
@@ -165,5 +165,5 @@ In file: <a href="./main.tf#L191"><code>main.tf#L191</code></a>
 
 Portainer Client ID
 
-In file: <a href="./main.tf#L198"><code>main.tf#L198</code></a>
+In file: <a href="./main.tf#L203"><code>main.tf#L203</code></a>
 </blockquote><!-- output:"client_secret":end -->
