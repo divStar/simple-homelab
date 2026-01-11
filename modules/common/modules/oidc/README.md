@@ -1,8 +1,6 @@
 # OIDC (Zitadel) module
 
-This module creates a project and application and grants a specified admin user (if set) permissions to it.
-
-This module is as rigid as I need it, but of course it does not (yet?) allow for e.g. roles assignments etc. since I do not use them currently.
+This module creates a project and application and grants specified users permissions to it via role assignments.
 
 ## Contents
 
@@ -29,10 +27,10 @@ This module is as rigid as I need it, but of course it does not (yet?) allow for
   - [access_token_role_assertion](#access_token_role_assertion-optional) (*Optional*)
   - [access_token_type](#access_token_type-optional) (*Optional*)
   - [actions](#actions-optional) (*Optional*)
-  - [admin_user](#admin_user-optional) (*Optional*)
   - [id_token_role_assertion](#id_token_role_assertion-optional) (*Optional*)
   - [id_token_userinfo_assertion](#id_token_userinfo_assertion-optional) (*Optional*)
   - [project_roles](#project_roles-optional) (*Optional*)
+  - [user_grants](#user_grants-optional) (*Optional*)
 - [Outputs](#outputs)
   - [client_id](#client_id)
   - [client_secret](#client_secret)
@@ -56,7 +54,7 @@ Create all actions
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L108"><code>main.tf#L108</code></a></td>
+      <td><a href="./main.tf#L106"><code>main.tf#L106</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"zitadel_action.this":end -->
@@ -72,7 +70,7 @@ Application to create in the newly created project.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L57"><code>main.tf#L57</code></a></td>
+      <td><a href="./main.tf#L55"><code>main.tf#L55</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"zitadel_application_oidc.this":end -->
@@ -88,7 +86,7 @@ Project to create in the organization found via the data source `zitadel_orgs`.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L49"><code>main.tf#L49</code></a></td>
+      <td><a href="./main.tf#L47"><code>main.tf#L47</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"zitadel_project.this":end -->
@@ -104,7 +102,7 @@ Project roles to create
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L75"><code>main.tf#L75</code></a></td>
+      <td><a href="./main.tf#L73"><code>main.tf#L73</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"zitadel_project_role.this":end -->
@@ -120,7 +118,7 @@ Assign actions to triggers
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L119"><code>main.tf#L119</code></a></td>
+      <td><a href="./main.tf#L117"><code>main.tf#L117</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"zitadel_trigger_actions.this":end -->
@@ -128,7 +126,7 @@ Assign actions to triggers
 
 ### _zitadel_user_grant_.`this`
 
-Grant project to user (if set)
+Grant project roles to users
   <table>
     <tr>
       <td>Provider</td>
@@ -136,7 +134,7 @@ Grant project to user (if set)
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L97"><code>main.tf#L97</code></a></td>
+      <td><a href="./main.tf#L95"><code>main.tf#L95</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"zitadel_user_grant.this":end -->
@@ -364,31 +362,10 @@ List of Zitadel actions to create and assign to flows
   ```json
   []
   ```
-  In file: <a href="./variables.tf#L88"><code>variables.tf#L88</code></a>
+  In file: <a href="./variables.tf#L90"><code>variables.tf#L90</code></a>
 
 </details>
 </blockquote><!-- variable:"actions":end -->
-<blockquote><!-- variable:"admin_user":start -->
-
-### `admin_user` (*Optional*)
-
-Administrator of the project; user `user_name` or leave empty if unknown or set manually at a later point
-
-<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
-  <summary>Show more...</summary>
-
-  **Type**:
-  ```hcl
-  string
-  ```
-  **Default**:
-  ```json
-  null
-  ```
-  In file: <a href="./variables.tf#L71"><code>variables.tf#L71</code></a>
-
-</details>
-</blockquote><!-- variable:"admin_user":end -->
 <blockquote><!-- variable:"id_token_role_assertion":start -->
 
 ### `id_token_role_assertion` (*Optional*)
@@ -451,10 +428,34 @@ Roles to create for the project in Zitadel (the key is the `role_key` name)
   ```json
   {}
   ```
-  In file: <a href="./variables.tf#L78"><code>variables.tf#L78</code></a>
+  In file: <a href="./variables.tf#L80"><code>variables.tf#L80</code></a>
 
 </details>
 </blockquote><!-- variable:"project_roles":end -->
+<blockquote><!-- variable:"user_grants":start -->
+
+### `user_grants` (*Optional*)
+
+Map of user grants - each entry grants specific roles to a user
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  map(object({
+    user_name = string
+    role_keys = list(string)
+  }))
+  ```
+  **Default**:
+  ```json
+  {}
+  ```
+  In file: <a href="./variables.tf#L71"><code>variables.tf#L71</code></a>
+
+</details>
+</blockquote><!-- variable:"user_grants":end -->
 
 ## Outputs
   

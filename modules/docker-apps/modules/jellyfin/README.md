@@ -59,7 +59,7 @@ Call to the OIDC module to create the necessary resources in Zitadel.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L325"><code>main.tf#L325</code></a></td>
+      <td><a href="./main.tf#L309"><code>main.tf#L309</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="../../../common/modules/oidc/README.md">README.md</a> <em>(experimental)</em></td>
@@ -81,7 +81,7 @@ Authenticate to get an access token
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L186"><code>main.tf#L186</code></a></td>
+      <td><a href="./main.tf#L176"><code>main.tf#L176</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terracurl_request.jellyfin_auth":end -->
@@ -97,7 +97,7 @@ Add the "Login with Zitadel" SSO button as a Login disclaimer branding configura
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L390"><code>main.tf#L390</code></a></td>
+      <td><a href="./main.tf#L374"><code>main.tf#L374</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terracurl_request.jellyfin_branding":end -->
@@ -113,7 +113,7 @@ Step 4: Complete the startup wizard
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L164"><code>main.tf#L164</code></a></td>
+      <td><a href="./main.tf#L154"><code>main.tf#L154</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terracurl_request.jellyfin_complete_wizard":end -->
@@ -129,7 +129,7 @@ Retrieve library IDs from Jellyfin
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L310"><code>main.tf#L310</code></a></td>
+      <td><a href="./main.tf#L294"><code>main.tf#L294</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terracurl_request.jellyfin_get_libraries":end -->
@@ -137,7 +137,7 @@ Retrieve library IDs from Jellyfin
 
 ### _terracurl_request_.`jellyfin_get_startup_user`
 
-Step 2: GET the startup user (this creates the initial user internally!)
+Step 2: GET the startup user (note: this creates the initial user internally!)
   <table>
     <tr>
       <td>Provider</td>
@@ -145,7 +145,7 @@ Step 2: GET the startup user (this creates the initial user internally!)
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L127"><code>main.tf#L127</code></a></td>
+      <td><a href="./main.tf#L117"><code>main.tf#L117</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terracurl_request.jellyfin_get_startup_user":end -->
@@ -161,14 +161,15 @@ Install Jellyfin plugins
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L225"><code>main.tf#L225</code></a></td>
+      <td><a href="./main.tf#L215"><code>main.tf#L215</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terracurl_request.jellyfin_install_plugins":end -->
 <blockquote><!-- resource:"terracurl_request.jellyfin_libraries":start -->
 
 ### _terracurl_request_.`jellyfin_libraries`
-      
+
+Create all desired libraries; look up the (library) options template via key and use it in request_body.
   <table>
     <tr>
       <td>Provider</td>
@@ -176,7 +177,7 @@ Install Jellyfin plugins
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L251"><code>main.tf#L251</code></a></td>
+      <td><a href="./main.tf#L235"><code>main.tf#L235</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terracurl_request.jellyfin_libraries":end -->
@@ -192,7 +193,7 @@ Restart Jellyfin
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L287"><code>main.tf#L287</code></a></td>
+      <td><a href="./main.tf#L271"><code>main.tf#L271</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terracurl_request.jellyfin_restart_issued":end -->
@@ -208,7 +209,7 @@ Initiate the scan of all created libraries
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L410"><code>main.tf#L410</code></a></td>
+      <td><a href="./main.tf#L394"><code>main.tf#L394</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terracurl_request.jellyfin_scan_libraries":end -->
@@ -224,7 +225,7 @@ Setup Jellyfin plugin repositories
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L207"><code>main.tf#L207</code></a></td>
+      <td><a href="./main.tf#L197"><code>main.tf#L197</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terracurl_request.jellyfin_setup_plugin_repositories":end -->
@@ -240,7 +241,7 @@ Configure the SSO plugin with Zitadel OIDC details
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L357"><code>main.tf#L357</code></a></td>
+      <td><a href="./main.tf#L341"><code>main.tf#L341</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terracurl_request.jellyfin_sso":end -->
@@ -256,7 +257,7 @@ Step 1: Set initial server configuration
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L106"><code>main.tf#L106</code></a></td>
+      <td><a href="./main.tf#L96"><code>main.tf#L96</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terracurl_request.jellyfin_startup_configuration":end -->
@@ -272,7 +273,7 @@ Step 3: Set the admin username and password
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L143"><code>main.tf#L143</code></a></td>
+      <td><a href="./main.tf#L133"><code>main.tf#L133</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terracurl_request.jellyfin_startup_user":end -->
@@ -287,7 +288,7 @@ Step 3: Set the admin username and password
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L303"><code>main.tf#L303</code></a></td>
+      <td><a href="./main.tf#L287"><code>main.tf#L287</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"time_sleep.jellyfin_restart_completed":end -->
@@ -362,113 +363,7 @@ options_category determines which LibraryOptions template to use:
   ```
   **Default**:
   ```json
-  {
-  "animated": {
-    "collection_type": "movies",
-    "display_name": "Animated",
-    "group": "video",
-    "options_category": "movies_metadata",
-    "path": "/media/video/animated"
-  },
-  "anime": {
-    "collection_type": "movies",
-    "display_name": "Anime",
-    "group": "video",
-    "options_category": "movies_metadata",
-    "path": "/media/video/anime"
-  },
-  "concerts": {
-    "collection_type": "homevideos",
-    "display_name": "Concerts",
-    "group": "video",
-    "options_category": "homevideos",
-    "path": "/media/video/concerts"
-  },
-  "e_movies": {
-    "collection_type": "movies",
-    "display_name": "E movies",
-    "group": "video",
-    "options_category": "movies_metadata",
-    "path": "/media/video/e-movies"
-  },
-  "igor-photo": {
-    "collection_type": "homevideos",
-    "display_name": "Igor's photos",
-    "group": "photo",
-    "options_category": "photos",
-    "path": "/media/photo/igor"
-  },
-  "international_movies": {
-    "collection_type": "movies",
-    "display_name": "International movies",
-    "group": "video",
-    "options_category": "movies_metadata",
-    "path": "/media/video/movies"
-  },
-  "mariia-photo": {
-    "collection_type": "homevideos",
-    "display_name": "Mariia's photos",
-    "group": "photo",
-    "options_category": "photos",
-    "path": "/media/photo/mariia"
-  },
-  "music": {
-    "collection_type": "music",
-    "display_name": "Music",
-    "group": "music",
-    "options_category": "music",
-    "path": "/media/music"
-  },
-  "r_movies": {
-    "collection_type": "movies",
-    "display_name": "Russian movies",
-    "group": "video",
-    "options_category": "movies_metadata",
-    "path": "/media/video/r-movies"
-  },
-  "series": {
-    "collection_type": "tvshows",
-    "display_name": "TV series",
-    "group": "video",
-    "options_category": "tvshows_metadata",
-    "path": "/media/video/series"
-  },
-  "vacation-photo": {
-    "collection_type": "homevideos",
-    "display_name": "Vacation photos",
-    "group": "photo",
-    "options_category": "photos",
-    "path": "/media/photo/vacation"
-  },
-  "vacation-video": {
-    "collection_type": "homevideos",
-    "display_name": "Vacation videos",
-    "group": "video",
-    "options_category": "homevideos",
-    "path": "/media/video/vacation"
-  },
-  "yuliia-photo": {
-    "collection_type": "homevideos",
-    "display_name": "Yuliia's photos",
-    "group": "photo",
-    "options_category": "photos",
-    "path": "/media/photo/yuliia"
-  },
-  "yuliia-pohudenije": {
-    "collection_type": "homevideos",
-    "display_name": "Yuliia похудение",
-    "group": "yuliia",
-    "options_category": "personal",
-    "path": "/media/yuliia/похудение"
-  },
-  "yuliia-raznoe": {
-    "collection_type": "homevideos",
-    "display_name": "Yuliia разное",
-    "group": "yuliia",
-    "options_category": "personal",
-    "path": "/media/yuliia/разное"
-  }
-}
+  {}
   ```
   In file: <a href="./variables.tf#L377"><code>variables.tf#L377</code></a>
 
@@ -877,7 +772,7 @@ Plugins to install
 
 Jellyfin MediaBrowser header
 
-In file: <a href="./main.tf#L445"><code>main.tf#L445</code></a>
+In file: <a href="./main.tf#L429"><code>main.tf#L429</code></a>
 </blockquote><!-- output:"auth_header":end -->
 <blockquote><!-- output:"client_id":start -->
 
@@ -885,7 +780,7 @@ In file: <a href="./main.tf#L445"><code>main.tf#L445</code></a>
 
 Jellyfin Client ID
 
-In file: <a href="./main.tf#L427"><code>main.tf#L427</code></a>
+In file: <a href="./main.tf#L411"><code>main.tf#L411</code></a>
 </blockquote><!-- output:"client_id":end -->
 <blockquote><!-- output:"folder_role_mapping":start -->
 
@@ -893,7 +788,7 @@ In file: <a href="./main.tf#L427"><code>main.tf#L427</code></a>
 
 Jellyfin folder-role-mapping
 
-In file: <a href="./main.tf#L439"><code>main.tf#L439</code></a>
+In file: <a href="./main.tf#L423"><code>main.tf#L423</code></a>
 </blockquote><!-- output:"folder_role_mapping":end -->
 <blockquote><!-- output:"library_ids":start -->
 
@@ -901,5 +796,5 @@ In file: <a href="./main.tf#L439"><code>main.tf#L439</code></a>
 
 Jellyfin library IDs
 
-In file: <a href="./main.tf#L433"><code>main.tf#L433</code></a>
+In file: <a href="./main.tf#L417"><code>main.tf#L417</code></a>
 </blockquote><!-- output:"library_ids":end -->

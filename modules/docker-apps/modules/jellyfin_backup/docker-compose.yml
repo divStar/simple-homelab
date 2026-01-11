@@ -1,0 +1,59 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    environment:
+      - DOMAIN_NAME
+    ports:
+      - "8096:8096"
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - jellyfin-config:/config
+      - jellyfin-cache:/cache
+      # Videos
+      - /mnt/video:/media/video
+      - /mnt/picture:/media/picture
+      - /mnt/photo:/media/photo
+      - /mnt/music:/media/music
+      - /mnt/yuliia:/media/yuliia
+    networks:
+      services-network:
+        priority: 100
+        gw_priority: 5
+      services-macvlan-network:
+        ipv4_address: 192.168.178.200
+        priority: 50
+        gw_priority: 1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=services-network"
+      # Web UI
+      - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.jellyfin.entrypoints=websecure"
+      - "traefik.http.routers.jellyfin.middlewares=jellyfin-redirect-to-web"
+      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
+      # Redirect to /web
+      - "traefik.http.middlewares.jellyfin-redirect-to-web.redirectregex.regex=^https:\\/\\/([^\\/]+)\\/?$$"
+      - "traefik.http.middlewares.jellyfin-redirect-to-web.redirectregex.replacement=https://$$1/web/index.html"
+    deploy:
+      resources:
+        limits:
+          cpus: 4
+          memory: 16g
+
+networks:
+  services-network:
+    name: services-network
+    external: true
+  services-macvlan-network:
+    name: services-macvlan-network
+    external: true
+
+volumes:
+  jellyfin-config:
+    external: true
+  jellyfin-cache:
+    external: true

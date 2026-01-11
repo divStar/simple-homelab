@@ -68,11 +68,14 @@ locals {
   # Parse library response and build folder role mapping (must be after jellyfin_get_libraries resource)
   jellyfin_libraries_response = jsondecode(terracurl_request.jellyfin_get_libraries.response)
 
+  # Populate the library (name) <-> ItemId map
   library_id_map = {
     for item in local.jellyfin_libraries_response :
     item.Name => item.ItemId
   }
 
+  # Create a mapping between the library key (from the var.libraries variable) and the library ItemId;
+  # This is necessary to populate the folderRoleMapping property in the 9p4 Jellyfin SSO provider configuration. 
   folder_role_mapping = [
     for key, lib in var.libraries : {
       role    = "library-${key}"
@@ -88,19 +91,6 @@ provider "zitadel" {
   port             = "443"
   jwt_profile_file = "${path.module}/../../admin_key.json"
 }
-
-# ==============================================================================
-# JELLYFIN STARTUP WIZARD
-# ==============================================================================
-# IMPORTANT: The wizard must be executed in this exact order:
-#   1. POST /Startup/Configuration - Set server settings
-#   2. GET  /Startup/User          - This creates the initial user internally!
-#   3. POST /Startup/User          - Set username and password for that user
-#   4. POST /Startup/Complete      - Finish the wizard
-#
-# The GET /Startup/User step is REQUIRED - without it, POST /Startup/User
-# returns 401 because no user exists yet. Yes, the GET has a side effect.
-# ==============================================================================
 
 # Step 1: Set initial server configuration
 resource "terracurl_request" "jellyfin_startup_configuration" {
@@ -123,7 +113,7 @@ resource "terracurl_request" "jellyfin_startup_configuration" {
   response_codes = [204]
 }
 
-# Step 2: GET the startup user (this creates the initial user internally!)
+# Step 2: GET the startup user (note: this creates the initial user internally!)
 resource "terracurl_request" "jellyfin_get_startup_user" {
   depends_on = [terracurl_request.jellyfin_startup_configuration]
 
@@ -241,18 +231,12 @@ resource "terracurl_request" "jellyfin_install_plugins" {
   response_codes = [204]
 }
 
-# ==============================================================================
-# LIBRARY CREATION WITH OPTIONS
-# ==============================================================================
-# The POST /Library/VirtualFolders endpoint accepts LibraryOptions in the body.
-# We look up the options_category from the library definition in variables.tf.
-# ==============================================================================
-
+# Create all desired libraries; look up the (library) options template via key and use it in request_body.
 resource "terracurl_request" "jellyfin_libraries" {
   depends_on = [terracurl_request.jellyfin_install_plugins]
-  for_each = var.libraries
+  for_each   = var.libraries
 
-  name   = "jellyfin_library_${each.key}"
+  name = "jellyfin_library_${each.key}"
 
   method = "POST"
   url    = "https://jellyfin.${local.base_domain}/Library/VirtualFolders?name=${urlencode(each.value.display_name)}&collectionType=${each.value.collection_type}&refreshLibrary=false"
@@ -287,7 +271,7 @@ resource "terracurl_request" "jellyfin_libraries" {
 resource "terracurl_request" "jellyfin_restart_issued" {
   depends_on = [terracurl_request.jellyfin_libraries]
 
-  name   = "jellyfin_restart_issued"
+  name = "jellyfin_restart_issued"
 
   method = "POST"
   url    = "https://jellyfin.${local.base_domain}/System/Restart"
@@ -296,13 +280,13 @@ resource "terracurl_request" "jellyfin_restart_issued" {
     "Authorization" = local.authenticated_auth_header
   }
   # Look up options_category from the library definition
-  request_body = "{}"
+  request_body   = "{}"
   response_codes = [204]
 }
 
 resource "time_sleep" "jellyfin_restart_completed" {
   depends_on = [terracurl_request.jellyfin_restart_issued]
-  
+
   create_duration = "1m"
 }
 
@@ -419,7 +403,7 @@ resource "terracurl_request" "jellyfin_scan_libraries" {
     "Authorization" = local.authenticated_auth_header
   }
 
-  request_body = "{}"
+  request_body   = "{}"
   response_codes = [204]
 }
 
