@@ -10,8 +10,9 @@
 resource "docker_network" "this" {
   for_each = var.networks
 
-  name   = each.key
-  driver = each.value.driver
+  name       = each.key
+  driver     = each.value.driver
+  attachable = each.value.attachable
 
   ipam_config {
     subnet   = each.value.subnet
@@ -30,7 +31,7 @@ resource "docker_network" "this" {
   }
 
   lifecycle {
-    ignore_changes = [labels]
+    ignore_changes = [labels, ipam_config]
   }
 }
 

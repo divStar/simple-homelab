@@ -1,0 +1,99 @@
+services:
+  outline-db:
+    image: postgres:18-alpine
+    container_name: outline-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    networks:
+      - outline-network
+    volumes:
+      - outline-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  outline-redis:
+    image: redis:8-alpine
+    container_name: outline-redis
+    restart: unless-stopped
+    expose:
+      - "6379"
+    networks:
+      - outline-network
+    # If you have a redis.conf file, use a bind mount:
+    # volumes:
+    #   - ./redis.conf:/redis.conf
+    # command: ["redis-server", "/redis.conf"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  outline:
+    image: docker.getoutline.com/outlinewiki/outline:latest
+    container_name: outline
+    restart: unless-stopped
+    environment:
+      - URL
+      - DATABASE_URL
+      - REDIS_URL
+      - SECRET_KEY
+      - UTILS_SECRET
+      - PGSSLMODE
+      # Storage
+      - AWS_REGION
+      - FILE_STORAGE
+      - FILE_STORAGE_LOCAL_ROOT_DIR
+      - FILE_STORAGE_UPLOAD_MAX_SIZE
+      - FILE_STORAGE_IMPORT_MAX_SIZE
+      - FILE_STORAGE_WORKSPACE_IMPORT_MAX_SIZE
+      # OIDC setup
+      - NODE_EXTRA_CA_CERTS
+      - EMAIL_LOGIN_ENABLED
+      - OIDC_CLIENT_ID
+      - OIDC_CLIENT_SECRET
+      - OIDC_AUTH_URI
+      - OIDC_TOKEN_URI
+      - OIDC_USERINFO_URI
+      - OIDC_LOGOUT_URI
+      - OIDC_SCOPES
+      - OIDC_DISABLE_REDIRECT
+    networks:
+      services-network:
+        priority: 100   # Primary network - used for Traefik/outbound routing
+      outline-network:
+        priority: 10    # Internal only - used to reach outline-db and outline-redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=services-network"
+      - "traefik.http.routers.outline.rule=Host(`outline.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.outline.entrypoints=websecure"
+      - "traefik.http.services.outline.loadbalancer.server.port=3000"
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      - outline-data:/var/lib/outline/data
+    depends_on:
+      outline-db:
+        condition: service_healthy
+      outline-redis:
+        condition: service_healthy
+
+networks:
+  services-network:
+    external: true
+  outline-network:
+    external: true
+
+volumes:
+  outline-data:
+    external: true
+  outline-db-data:
+    external: true
