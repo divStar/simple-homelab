@@ -47,25 +47,26 @@ services:
       # --- Server -------------------------------------------------------------
       - GITEA__server__DOMAIN
       - GITEA__server__ROOT_URL
-      - GITEA__server__HTTP_PORT=3000
+      - GITEA__server__HTTP_PORT
       - GITEA__server__SSH_DOMAIN
-      - GITEA__server__START_SSH_SERVER=true
-      - GITEA__server__SSH_LISTEN_PORT=2222
-      - GITEA__server__SSH_PORT=22
+      - GITEA__server__START_SSH_SERVER
+      - GITEA__server__SSH_LISTEN_PORT
+      - GITEA__server__SSH_PORT
+      - GITEA__oauth2__ACCESS_TOKEN_EXPIRATION_TIME
 
       # --- Security -----------------------------------------------------------
-      - GITEA__security__INSTALL_LOCK=true
+      - GITEA__security__INSTALL_LOCK
       - GITEA__security__SECRET_KEY
       - GITEA__security__INTERNAL_TOKEN
 
       # --- Service ------------------------------------------------------------
-      - GITEA__service__ALLOW_ONLY_EXTERNAL_REGISTRATION=false
+      - GITEA__service__ALLOW_ONLY_EXTERNAL_REGISTRATION
 
       # --- OAuth2 -------------------------------------------------------------
-      - GITEA__oauth2__ENABLED=true
+      - GITEA__oauth2__ENABLED
 
       # --- Actions ------------------------------------------------------------
-      - GITEA__actions__ENABLED=true
+      - GITEA__actions__ENABLED
 
       # --- Runner token pre-seed ---------------------------------------------
       # Gitea reads this on startup and registers it as the valid instance-level
@@ -94,12 +95,12 @@ services:
       start_period: 30s
 
   # ---------------------------------------------------------------------------
-  # Init container — runs once after Gitea is healthy, then exits.
+  # Init container - runs once after Gitea is healthy, then exits.
   # Handles everything that can't be done via env vars:
   #   1. Create the local admin user (fallback if Zitadel is unavailable)
   #   2. Register Zitadel as an OIDC authentication source
   # On subsequent `docker compose up` calls both commands fail silently (|| true)
-  # because the user/source already exist — safe to re-run.
+  # because the user/source already exist - safe to re-run.
   # ---------------------------------------------------------------------------
   gitea-init:
     image: gitea/gitea:latest

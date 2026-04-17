@@ -5,9 +5,9 @@ for Gitea to authenticate via Zitadel SSO.
 
 ## Deployment order
 
-  1. `tofu apply` — creates Zitadel project, app, roles, and grants
+  1. `tofu apply` - creates Zitadel project, app, roles, and grants
   2. Copy the `stack_env_guide` output values into `stack.env`
-  3. `docker compose up` — starts Gitea; `gitea-init` registers the auth
+  3. `docker compose up` - starts Gitea; `gitea-init` registers the auth
      source automatically using the values from `stack.env`
 
 ## Role mapping (via the `flatRoles` Zitadel Action)
