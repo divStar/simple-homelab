@@ -18,6 +18,14 @@ networks = {
       "com.docker-vm.description"   = "Zitadel's internal network"
     }
   }
+  "grist-network" = {
+    subnet  = "172.20.50.0/24"
+    gateway = "172.20.50.1"
+    labels = {
+      "com.docker-vm.managed-using" = "Terraform"
+      "com.docker-vm.description"   = "Grist's internal network"
+    }
+  }
 }
 
 volumes = {
@@ -33,6 +41,20 @@ volumes = {
       "com.docker-vm.managed-using" = "Terraform"
       "com.docker-vm.description"   = "Zitadel PostgreSQL Data volume"
       "com.docker-vm.tags"          = "zitadel"
+    }
+  }
+  "grist-data" = {
+    labels = {
+      "com.docker-vm.managed-using" = "Terraform"
+      "com.docker-vm.description"   = "Grist's Data volume (/persist)"
+      "com.docker-vm.tags"          = "grist"
+    }
+  }
+  "grist-db-data" = {
+    labels = {
+      "com.docker-vm.managed-using" = "Terraform"
+      "com.docker-vm.description"   = "Grist's PostgreSQL Data volume"
+      "com.docker-vm.tags"          = "grist,postgresql"
     }
   }
 }
