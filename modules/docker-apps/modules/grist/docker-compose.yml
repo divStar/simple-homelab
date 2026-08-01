@@ -1,0 +1,103 @@
+services:
+  grist-db:
+    # NOTE: Grist has no officially published Postgres compatibility matrix as of 2026.
+    # Postgres 18 has been chosen to match the other modules. If Grist fails to start
+    # with TypeORM/schema errors on PG18, revert to `postgres:16-alpine` AND remove
+    # the `grist-db-data` volume so a fresh cluster is initialized at the older version.
+    image: postgres:18-alpine
+    container_name: grist-db
+    restart: unless-stopped
+    # Grist 1.5+ disables JIT at connection time, but PG18's JIT is more aggressive;
+    # force `jit=off` cluster-wide as a safety net.
+    command: ["postgres", "-c", "jit=off"]
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    networks:
+      - grist-network
+    volumes:
+      - grist-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  grist-redis:
+    image: redis:8-alpine
+    container_name: grist-redis
+    restart: unless-stopped
+    expose:
+      - "6379"
+    networks:
+      - grist-network
+    # If you have a redis.conf file, use a bind mount:
+    # volumes:
+    #   - ./redis.conf:/redis.conf
+    # command: ["redis-server", "/redis.conf"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  grist:
+    image: gristlabs/grist:latest
+    container_name: grist
+    restart: unless-stopped
+    environment:
+      - APP_HOME_URL
+      - GRIST_DEFAULT_EMAIL
+      - GRIST_FORCE_LOGIN
+      - GRIST_SESSION_SECRET
+      - GRIST_SANDBOX_FLAVOR
+      - REDIS_URL
+      # Database (TypeORM)
+      - TYPEORM_TYPE
+      - TYPEORM_HOST
+      - TYPEORM_PORT
+      - TYPEORM_USERNAME
+      - TYPEORM_PASSWORD
+      - TYPEORM_DATABASE
+      # OIDC setup
+      - NODE_EXTRA_CA_CERTS
+      - GRIST_OIDC_IDP_ISSUER
+      - GRIST_OIDC_IDP_CLIENT_ID
+      - GRIST_OIDC_IDP_CLIENT_SECRET
+      - GRIST_OIDC_IDP_SCOPES
+      - GRIST_OIDC_SP_HOST
+      - GRIST_OIDC_IDP_ENABLED_PROTECTIONS
+    networks:
+      services-network:
+        priority: 100   # Primary network - used for Traefik/outbound routing
+      grist-network:
+        priority: 10    # Internal only - used to reach grist-db and grist-redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=services-network"
+      - "traefik.http.routers.grist.rule=Host(`grist.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.grist.entrypoints=websecure"
+      - "traefik.http.services.grist.loadbalancer.server.port=8484"
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      - grist-data:/persist
+    depends_on:
+      grist-db:
+        condition: service_healthy
+      grist-redis:
+        condition: service_healthy
+
+networks:
+  services-network:
+    external: true
+  grist-network:
+    external: true
+
+volumes:
+  grist-data:
+    external: true
+  grist-db-data:
+    external: true
