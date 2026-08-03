@@ -1,0 +1,248 @@
+/**
+ * # Debian LXC container setup
+ *
+ * This module creates a Debian LXC container on the Proxmox host,
+ * generates a `root_password` and a `ssh_key`, installs `openssh` as well as
+ * other Debian packages (if specified; `bash`, `curl`, `ca-certificates` and
+ * `cron` are installed by default).
+ */
+locals {
+  upgrade_debian_script = "upgrade-debian.sh"
+  update_debian_script  = "update-debian.sh"
+}
+
+# Downloads the `debian` image.
+resource "proxmox_virtual_environment_download_file" "template" {
+  content_type       = "vztmpl"
+  datastore_id       = var.imagestore_id
+  node_name          = var.proxmox.name
+  url                = var.debian_image.url
+  checksum           = var.debian_image.checksum
+  checksum_algorithm = var.debian_image.checksum_algorithm
+}
+
+# Generate SSH key for the container
+resource "tls_private_key" "ssh_key" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+# Generate a random password for the container
+resource "random_password" "root_password" {
+  length           = 16
+  special          = true
+  override_special = "_%@"
+}
+
+# Create Debian LXC container
+resource "proxmox_virtual_environment_container" "container" {
+  # Wait for the template to be downloaded before creating the container
+  depends_on = [proxmox_virtual_environment_download_file.template]
+
+  vm_id        = var.vm_id
+  node_name    = var.proxmox.name
+  description  = var.description
+  tags         = var.tags
+  unprivileged = var.unprivileged
+
+  timeout_create = 180
+  timeout_delete = 180
+  timeout_clone  = 180
+  timeout_update = 180
+
+  # Container initialization settings
+  initialization {
+    hostname = var.hostname
+
+    # Network configuration
+    ip_config {
+      ipv4 {
+        address = "${var.ni_ip}/${var.ni_subnet_mask}"
+        gateway = var.ni_gateway
+      }
+    }
+
+    # User authentication
+    user_account {
+      keys = [
+        trimspace(tls_private_key.ssh_key.public_key_openssh)
+      ]
+      password = random_password.root_password.result
+    }
+  }
+
+  # Network interface
+  network_interface {
+    name        = var.ni_name
+    bridge      = var.ni_bridge
+    mac_address = var.ni_mac_address
+  }
+
+  # Operating system - using Debian template
+  operating_system {
+    template_file_id = proxmox_virtual_environment_download_file.template.id
+    type             = "debian"
+  }
+
+  # CPU configuration
+  cpu {
+    cores = var.cpu_cores
+    units = var.cpu_units
+  }
+
+  # Memory configuration
+  memory {
+    dedicated = var.memory_dedicated
+    swap      = 0
+  }
+
+  # Disk configuration (default)
+  disk {
+    datastore_id = var.imagestore_id
+    size         = var.disk_size
+  }
+
+  # Dynamic mount points, passed into this script via variable
+  dynamic "mount_point" {
+    for_each = var.mount_points
+    content {
+      volume    = mount_point.value.volume
+      path      = mount_point.value.path
+      acl       = true
+      replicate = false
+    }
+  }
+
+  # Basic startup configuration
+  startup {
+    order      = var.startup_order
+    up_delay   = var.startup_up_delay
+    down_delay = var.startup_down_delay
+  }
+
+  features {
+    nesting = true
+  }
+}
+
+# Install OpenSSH into the Debian LXC container
+resource "ssh_resource" "install_openssh" {
+  depends_on = [proxmox_virtual_environment_container.container]
+
+  # Note: we are connecting to the Proxmox host here rather than the LXC container;
+  # this is necessary, because we have to install `openssh-server` via `pct` from the host.
+  host        = var.proxmox.host
+  user        = var.proxmox.ssh_user
+  private_key = file(var.proxmox.ssh_key)
+
+  # Use a script that checks for OpenSSH and installs it only if needed
+  commands = [
+    <<-EOT
+      if ! pct exec ${var.vm_id} -- which sshd > /dev/null 2>&1; then
+        echo "Installing OpenSSH on container ${var.vm_id}..."
+        pct exec ${var.vm_id} -- sh -c "DEBIAN_FRONTEND=noninteractive apt-get update"
+        pct exec ${var.vm_id} -- sh -c "DEBIAN_FRONTEND=noninteractive apt-get install -y openssh-server"
+        pct exec ${var.vm_id} -- systemctl enable ssh
+        pct exec ${var.vm_id} -- systemctl start ssh
+        echo "OpenSSH installed and started in container ${var.vm_id}"
+      fi
+      pct exec ${var.vm_id} -- mkdir -p /root/.ssh
+      pct exec ${var.vm_id} -- sh -c "echo '${file("${var.proxmox.ssh_key}.pub")}' >> /root/.ssh/authorized_keys"
+      pct exec ${var.vm_id} -- chmod 700 /root/.ssh
+      pct exec ${var.vm_id} -- chmod 600 /root/.ssh/authorized_keys
+      pct exec ${var.vm_id} -- sed -i -E 's/^#?\s*PasswordAuthentication\s+.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+      pct exec ${var.vm_id} -- sed -i -E 's/^#?\s*PubkeyAuthentication\s+.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+      pct exec ${var.vm_id} -- systemctl restart ssh
+    EOT
+  ]
+
+  timeout = "1m"
+}
+
+# Install necessary Debian packages (includes cron, needed for the update schedule below)
+resource "ssh_resource" "install_packages" {
+  depends_on = [ssh_resource.install_openssh]
+
+  host        = var.ni_ip
+  user        = "root"
+  private_key = tls_private_key.ssh_key.private_key_pem
+
+  commands = [
+    <<-EOT
+      set -e
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update
+      apt-get install -y ${join(" ", var.packages)}
+    EOT
+  ]
+
+  timeout = "1m"
+}
+
+resource "ssh_resource" "install_update_upgrade_scripts" {
+  depends_on = [ssh_resource.install_openssh]
+
+  host        = var.ni_ip
+  user        = "root"
+  private_key = tls_private_key.ssh_key.private_key_pem
+
+  # Update script (will run in set intervals)
+  file {
+    source      = "${path.module}/files/${local.update_debian_script}"
+    destination = "/usr/local/bin/${local.update_debian_script}"
+    permissions = "0755"
+  }
+
+  # Upgrade script (should be run manually in case a Debian major-version upgrade is needed)
+  file {
+    source      = "${path.module}/files/${local.upgrade_debian_script}"
+    destination = "/usr/local/bin/${local.upgrade_debian_script}"
+    permissions = "0755"
+  }
+
+  # Install and enable a systemd timer only if update_interval is not "never"
+  commands = var.update_interval != "never" ? [
+    <<-EOT
+      cat > /etc/systemd/system/debian-update.service <<'SERVICE_UNIT'
+      [Unit]
+      Description=Debian package update (managed by Terraform)
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/bin/${local.update_debian_script}
+      SERVICE_UNIT
+      cat > /etc/systemd/system/debian-update.timer <<'TIMER_UNIT'
+      [Unit]
+      Description=Run debian-update.service on a schedule (managed by Terraform)
+
+      [Timer]
+      OnCalendar=${var.update_interval}
+      Persistent=true
+
+      [Install]
+      WantedBy=timers.target
+      TIMER_UNIT
+      systemctl daemon-reload
+      systemctl enable --now debian-update.timer
+    EOT
+  ] : []
+
+  timeout = "1m"
+}
+
+# Install default aliases
+resource "ssh_resource" "install_default_aliases" {
+  depends_on = [ssh_resource.install_openssh]
+
+  host        = var.ni_ip
+  user        = "root"
+  private_key = tls_private_key.ssh_key.private_key_pem
+
+  file {
+    source      = "${path.module}/files/default-aliases.sh"
+    destination = "/etc/profile.d/default-aliases.sh"
+    permissions = "0644"
+  }
+
+  timeout = "1m"
+}

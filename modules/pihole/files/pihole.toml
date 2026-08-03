@@ -1,0 +1,94 @@
+# Seed configuration for Pi-hole v6, pushed once at container creation so the
+# unattended installer has a config to work with. Pi-hole's own UI/API is the
+# source of truth for everything after first boot - this file is not
+# reconciled by Terraform on subsequent applies (upstream DNS is the one
+# exception, managed separately via `pihole-FTL --config dns.upstreams`).
+
+[dns]
+  # Initial value; Terraform overwrites this from var.upstream_dns right after install.
+  upstreams = ["8.8.8.8", "8.8.4.4"]
+
+  # Forward reverse lookups for the local subnet to the FritzBox so Pi-hole can
+  # show real device names instead of bare IPs (Top Clients etc.).
+  revServers = ["true,192.168.178.0/24,192.168.178.1,fritz.box"]
+
+  # Required for revServers above to actually be reached instead of being
+  # short-circuited to NXDOMAIN first.
+  bogusPriv = false
+
+  # Accept queries on all interfaces/origins for now; tightening to the LAN
+  # subnet only is a tracked TODO.
+  listeningMode = "ALL"
+
+  # Local DNS records: anything with its own dedicated IP.
+  hosts = [
+    "192.168.178.157 pihole",
+    "192.168.178.157 pihole.my.world",
+    "192.168.178.25 sanctum.my.world",
+    "192.168.178.155 step-ca.my.world",
+    "192.168.178.120 docker-vm.my.world",
+    "192.168.178.156 sanctum-samba.my.world",
+    "192.168.178.33 kamar-taj.my.family"
+  ]
+
+  # CNAME records: everything that's really just an alias for a service
+  # living on one of the hosts above.
+  cnameRecords = [
+    "traefik.my.world,docker-vm.my.world",
+    "portainer.my.world,docker-vm.my.world",
+    "zitadel.my.world,docker-vm.my.world",
+    "watchtower.my.world,docker-vm.my.world",
+    "grafana.my.world,docker-vm.my.world",
+    "alloy.my.world,docker-vm.my.world",
+    "prometheus.my.world,docker-vm.my.world",
+    "jellyfin.my.world,docker-vm.my.world",
+    "outline.my.world,docker-vm.my.world",
+    "gitea.my.world,docker-vm.my.world",
+    "grist.my.world,docker-vm.my.world",
+    "pihole.my.family,kamar-taj.my.family",
+    "traefik.my.family,kamar-taj.my.family",
+    "cockpit.my.family,kamar-taj.my.family",
+    "portainer.my.family,kamar-taj.my.family",
+    "portainer-edge.my.family,kamar-taj.my.family",
+    "gitlab.my.family,kamar-taj.my.family",
+    "jellyfin.my.family,kamar-taj.my.family",
+    "authentik.my.family,kamar-taj.my.family",
+    "whoami-test.my.family,kamar-taj.my.family",
+    "nexus.my.family,kamar-taj.my.family",
+    "docker.nexus.my.family,kamar-taj.my.family",
+    "docker-snapshot.nexus.my.family,kamar-taj.my.family",
+    "docker-release.nexus.my.family,kamar-taj.my.family",
+    "mqtt.my.family,kamar-taj.my.family",
+    "grafana.my.family,kamar-taj.my.family",
+    "influxdb.my.family,kamar-taj.my.family",
+    "pma.my.family,kamar-taj.my.family",
+    "fetra.my.family,kamar-taj.my.family",
+    "directus.my.family,kamar-taj.my.family",
+    "pgadmin.my.family,kamar-taj.my.family",
+    "directus-mycv.my.family,kamar-taj.my.family",
+    "bookstack.my.family,kamar-taj.my.family",
+    "sync.my.family,kamar-taj.my.family"
+  ]
+
+# Unprivileged LXC containers can't get CAP_SYS_TIME, so FTL's own NTP client
+# fails with "Insufficient permissions" trying to adjust the clock - harmless
+# in practice since LXC shares the host's kernel clock directly (nothing to
+# actually adjust), but noisy. Disabling the NTP server role too (ipv4/ipv6)
+# since that needed disabling in practice as well.
+[ntp.ipv4]
+  active = false
+
+[ntp.ipv6]
+  active = false
+
+[ntp.sync]
+  active = false
+
+[webserver]
+  # HTTPS only, no port 80 at all. Safe because the certificate is provisioned
+  # by Step CA (see request_pihole_certificate) before Pi-hole is ever installed,
+  # so it exists from the very first start - no window where TLS isn't ready yet.
+  port = "443os"
+
+  [webserver.interface]
+    theme = "lcars"

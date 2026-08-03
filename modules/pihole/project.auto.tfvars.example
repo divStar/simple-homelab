@@ -1,0 +1,17 @@
+proxmox = {
+  name     = "sanctum"
+  host     = "sanctum.my.world"
+  ssh_user = "root"
+  ssh_key  = "~/.ssh/id_rsa"
+  username = "root@pam"
+  password = "some-password"
+  insecure = false
+}
+
+pihole_admin_password = "some-other-password"
+upstream_dns          = ["8.8.8.8", "8.8.4.4"]
+
+step_ca_domain               = "step-ca.my.world"
+step_ca_client_version       = "0.27.4"
+step_ca_provisioner          = "admin@my.world"
+step_ca_provisioner_password = "some-password"
