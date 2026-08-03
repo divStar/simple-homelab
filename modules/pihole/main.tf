@@ -238,3 +238,47 @@ resource "ssh_resource" "configure_cert_renewal_timer" {
 
   timeout = "1m"
 }
+
+# Update Pi-hole's own software (Core/FTL/Web) weekly, Sunday 6am - an hour
+# after the Debian package update timer so the two don't run at the same time.
+resource "ssh_resource" "configure_pihole_update_timer" {
+  depends_on = [ssh_resource.install_pihole]
+
+  host        = local.container_ip
+  user        = "root"
+  private_key = module.setup_container.ssh_private_key
+
+  file {
+    source      = "${path.module}/files/pihole-update.sh"
+    destination = "/usr/local/bin/pihole-update.sh"
+    permissions = "0755"
+  }
+
+  commands = [
+    <<-EOT
+      cat > /etc/systemd/system/pihole-update.service <<'SERVICE_UNIT'
+      [Unit]
+      Description=Update Pi-hole software (managed by Terraform)
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/bin/pihole-update.sh
+      SERVICE_UNIT
+      cat > /etc/systemd/system/pihole-update.timer <<'TIMER_UNIT'
+      [Unit]
+      Description=Run pihole-update.service on a schedule (managed by Terraform)
+
+      [Timer]
+      OnCalendar=Sun *-*-* 06:00:00
+      Persistent=true
+
+      [Install]
+      WantedBy=timers.target
+      TIMER_UNIT
+      systemctl daemon-reload
+      systemctl enable --now pihole-update.timer
+    EOT
+  ]
+
+  timeout = "1m"
+}

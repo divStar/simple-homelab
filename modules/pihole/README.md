@@ -12,6 +12,7 @@ This module sets up Pi-hole in a Debian LXC container using the provided informa
 - [Resources](#resources)
   - _ssh_resource_.[configure_admin_password](#ssh_resourceconfigure_admin_password)
   - _ssh_resource_.[configure_cert_renewal_timer](#ssh_resourceconfigure_cert_renewal_timer)
+  - _ssh_resource_.[configure_pihole_update_timer](#ssh_resourceconfigure_pihole_update_timer)
   - _ssh_resource_.[configure_provisioner_password](#ssh_resourceconfigure_provisioner_password)
   - _ssh_resource_.[configure_timezone](#ssh_resourceconfigure_timezone)
   - _ssh_resource_.[configure_upstream_dns](#ssh_resourceconfigure_upstream_dns)
@@ -97,6 +98,22 @@ Renew the certificate every 12 hours - Step CA issues 24h-lived certs, same cade
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_cert_renewal_timer":end -->
+<blockquote><!-- resource:"ssh_resource.configure_pihole_update_timer":start -->
+
+### _ssh_resource_.`configure_pihole_update_timer`
+
+Update Pi-hole's own software (Core/FTL/Web) weekly, Sunday 6am - an hour after the Debian package update timer so the two don't run at the same time.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>ssh (loafoe/ssh)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L244"><code>main.tf#L244</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"ssh_resource.configure_pihole_update_timer":end -->
 <blockquote><!-- resource:"ssh_resource.configure_provisioner_password":start -->
 
 ### _ssh_resource_.`configure_provisioner_password`

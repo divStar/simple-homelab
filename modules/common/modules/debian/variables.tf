@@ -175,7 +175,7 @@ variable "mount_points" {
 variable "update_interval" {
   type        = string
   description = "systemd OnCalendar expression for automatic updates, or 'never' to disable"
-  default     = "Mon *-*-* 05:00:00"
+  default     = "Sun *-*-* 05:00:00"
 
   validation {
     condition     = var.update_interval == "never" || length(var.update_interval) > 0

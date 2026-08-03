@@ -681,7 +681,7 @@ systemd OnCalendar expression for automatic updates, or 'never' to disable
   ```
   **Default**:
   ```json
-  "Mon *-*-* 05:00:00"
+  "Sun *-*-* 05:00:00"
   ```
   In file: <a href="./variables.tf#L175"><code>variables.tf#L175</code></a>
 
