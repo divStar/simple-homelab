@@ -10,8 +10,8 @@ other Alpine packages (if specified; `bash` is installed by default).
 
 - [Providers](#providers)
 - [Resources](#resources)
+  - _proxmox_download_file_.[template](#proxmox_download_filetemplate)
   - _proxmox_virtual_environment_container_.[container](#proxmox_virtual_environment_containercontainer)
-  - _proxmox_virtual_environment_download_file_.[template](#proxmox_virtual_environment_download_filetemplate)
   - _random_password_.[root_password](#random_passwordroot_password)
   - _ssh_resource_.[install_default_aliases](#ssh_resourceinstall_default_aliases)
   - _ssh_resource_.[install_openssh](#ssh_resourceinstall_openssh)
@@ -44,19 +44,36 @@ other Alpine packages (if specified; `bash` is installed by default).
   - [unprivileged](#unprivileged-optional) (*Optional*)
   - [update_interval](#update_interval-optional) (*Optional*)
 - [Outputs](#outputs)
+  - [container_id](#container_id)
   - [root_password](#root_password)
   - [ssh_private_key](#ssh_private_key)
 </blockquote><!-- contents:end -->
 
 ## Providers
 ![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-![bpg/proxmox](https://img.shields.io/badge/bpg--proxmox->=0.75.0-1e73c8?logo=proxmox)
-![hashicorp/random](https://img.shields.io/badge/hashicorp--random->=3.7.2-82d72c?logo=random)
+![bpg/proxmox](https://img.shields.io/badge/bpg--proxmox->=0.111.1-1e73c8?logo=proxmox)
+![hashicorp/random](https://img.shields.io/badge/hashicorp--random->=3.9.0-82d72c?logo=random)
 ![loafoe/ssh](https://img.shields.io/badge/loafoe--ssh->=2.7-4fa4f9?logo=ssh)
-![hashicorp/tls](https://img.shields.io/badge/hashicorp--tls->=4.1.0-54a9fe?logo=tls)
+![hashicorp/tls](https://img.shields.io/badge/hashicorp--tls->=4.3.0-54a9fe?logo=tls)
 
 ## Resources
   
+<blockquote><!-- resource:"proxmox_download_file.template":start -->
+
+### _proxmox_download_file_.`template`
+
+Downloads the `alpine` image.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>proxmox (bpg/proxmox)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L14"><code>main.tf#L14</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"proxmox_download_file.template":end -->
 <blockquote><!-- resource:"proxmox_virtual_environment_container.container":start -->
 
 ### _proxmox_virtual_environment_container_.`container`
@@ -73,22 +90,6 @@ Create Alpine LXC container
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_container.container":end -->
-<blockquote><!-- resource:"proxmox_virtual_environment_download_file.template":start -->
-
-### _proxmox_virtual_environment_download_file_.`template`
-
-Downloads the `alpine` image.
-  <table>
-    <tr>
-      <td>Provider</td>
-      <td><code>proxmox (bpg/proxmox)</code></td>
-    </tr>
-    <tr>
-      <td>In file</td>
-      <td><a href="./main.tf#L14"><code>main.tf#L14</code></a></td>
-    </tr>
-  </table>
-</blockquote><!-- resource:"proxmox_virtual_environment_download_file.template":end -->
 <blockquote><!-- resource:"random_password.root_password":start -->
 
 ### _random_password_.`root_password`
@@ -689,6 +690,14 @@ Cron expression for automatic updates, or 'never' to disable
 
 ## Outputs
   
+<blockquote><!-- output:"container_id":start -->
+
+#### `container_id`
+
+Container id - see comment for why this is exported
+
+In file: <a href="./outputs.tf#L25"><code>outputs.tf#L25</code></a>
+</blockquote><!-- output:"container_id":end -->
 <blockquote><!-- output:"root_password":start -->
 
 #### `root_password`

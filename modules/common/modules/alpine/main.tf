@@ -11,7 +11,7 @@ locals {
 }
 
 # Downloads the `alpine` image.
-resource "proxmox_virtual_environment_download_file" "template" {
+resource "proxmox_download_file" "template" {
   content_type       = "vztmpl"
   datastore_id       = var.imagestore_id
   node_name          = var.proxmox.name
@@ -36,7 +36,7 @@ resource "random_password" "root_password" {
 # Create Alpine LXC container
 resource "proxmox_virtual_environment_container" "container" {
   # Wait for the template to be downloaded before creating the container
-  depends_on = [proxmox_virtual_environment_download_file.template]
+  depends_on = [proxmox_download_file.template]
 
   vm_id        = var.vm_id
   node_name    = var.proxmox.name
@@ -79,7 +79,7 @@ resource "proxmox_virtual_environment_container" "container" {
 
   # Operating system - using Alpine template
   operating_system {
-    template_file_id = proxmox_virtual_environment_download_file.template.id
+    template_file_id = proxmox_download_file.template.id
     type             = "alpine"
   }
 

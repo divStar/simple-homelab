@@ -5,7 +5,7 @@ function print_usage() {
     echo "  PROXMOX_HOST    : Hostname/IP of your Proxmox server"
     echo ""
     echo "Options:"
-    echo "  --vm-id ID      : VM/LXC ID to cleanup (default: 800)"
+    echo "  --vm-id ID      : VM/LXC ID to cleanup (required - no default)"
     echo "  --dry-run       : Show what would be done without making changes"
     echo "  --tf-path PATH  : Path to Terraform files (default: current directory)"
     echo ""
@@ -29,7 +29,7 @@ shift  # Remove first argument, leaving any remaining flags
 # Initialize variables
 DRY_RUN=0
 TF_PATH="."
-VM_ID=800
+VM_ID=""
 
 # Parse remaining arguments
 while [[ $# -gt 0 ]]; do
@@ -66,6 +66,14 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# --vm-id is required - this used to silently default to 800, which meant an
+# invocation that forgot the flag would target whatever container/VM actually
+# has id 800 instead of failing loudly.
+if [[ -z "$VM_ID" ]]; then
+    echo "Error: --vm-id is required (no default)"
+    print_usage
+fi
 
 echo "Starting cleanup process..."
 echo "VM/LXC ID: ${VM_ID}"
