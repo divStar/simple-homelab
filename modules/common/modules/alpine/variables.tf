@@ -48,8 +48,8 @@ variable "alpine_image" {
     checksum_algorithm = string
   })
   default = {
-    url                = "http://download.proxmox.com/images/system/alpine-3.21-default_20241217_amd64.tar.xz"
-    checksum           = "211ac75f4b66494e78a6e72acc206b8ac490e0d174a778ae5be2970b0a1a57a8dddea8fc5880886a3794b8bb787fe93297a1cad3aee75d07623d8443ea9062e4"
+    url                = "http://download.proxmox.com/images/system/alpine-3.24-default_20260714_amd64.tar.xz"
+    checksum           = "9877b74de4c4878b70450502618f7b02952e792afdbc91f146f6cba507432dae516674d0bb3a306484d58edc722ff63db1ed3c4e5b0954fb2a2773ec8d8f33bd"
     checksum_algorithm = "sha512"
   }
   nullable = false

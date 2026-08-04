@@ -12,6 +12,7 @@ This module sets up Samba server in an Alpine LXC container using the provided i
 - [Resources](#resources)
   - _ssh_resource_.[configure_samba](#ssh_resourceconfigure_samba)
   - _ssh_resource_.[configure_users](#ssh_resourceconfigure_users)
+  - _terraform_data_.[container_trigger](#terraform_datacontainer_trigger)
   - _terraform_data_.[users_trigger](#terraform_datausers_trigger)
 - [Variables](#variables)
   - [proxmox](#proxmox-required) (**Required**)
@@ -23,10 +24,10 @@ This module sets up Samba server in an Alpine LXC container using the provided i
 
 ## Providers
 ![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-![proxmox](https://img.shields.io/badge/proxmox->=0.85.1-1e73c8?logo=proxmox)
-![random](https://img.shields.io/badge/random->=3.7.2-82d72c?logo=random)
+![proxmox](https://img.shields.io/badge/proxmox->=0.111.1-1e73c8?logo=proxmox)
+![random](https://img.shields.io/badge/random->=3.9.0-82d72c?logo=random)
 ![loafoe/ssh](https://img.shields.io/badge/loafoe--ssh->=2.7.0-4fa4f9?logo=ssh)
-![tls](https://img.shields.io/badge/tls->=4.1.0-54a9fe?logo=tls)
+![tls](https://img.shields.io/badge/tls->=4.3.0-54a9fe?logo=tls)
 
 ## Modules
   
@@ -64,7 +65,7 @@ Deploy Samba configuration
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L54"><code>main.tf#L54</code></a></td>
+      <td><a href="./main.tf#L62"><code>main.tf#L62</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_samba":end -->
@@ -72,7 +73,7 @@ Deploy Samba configuration
 
 ### _ssh_resource_.`configure_users`
 
-Create system users and set Samba passwords
+Create system users, set Samba passwords, and configure the shared write group
   <table>
     <tr>
       <td>Provider</td>
@@ -80,10 +81,26 @@ Create system users and set Samba passwords
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L75"><code>main.tf#L75</code></a></td>
+      <td><a href="./main.tf#L90"><code>main.tf#L90</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_users":end -->
+<blockquote><!-- resource:"terraform_data.container_trigger":start -->
+
+### _terraform_data_.`container_trigger`
+
+Trigger for container replacement - module outputs aren't valid replace_triggered_by references on their own (only resources are), hence wrapping it the same way users_trigger wraps var.samba_users above.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>terraform (hashicorp/terraform)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L57"><code>main.tf#L57</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"terraform_data.container_trigger":end -->
 <blockquote><!-- resource:"terraform_data.users_trigger":start -->
 
 ### _terraform_data_.`users_trigger`
@@ -96,7 +113,7 @@ Trigger for user list changes
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L49"><code>main.tf#L49</code></a></td>
+      <td><a href="./main.tf#L50"><code>main.tf#L50</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terraform_data.users_trigger":end -->
