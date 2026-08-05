@@ -41,13 +41,21 @@ module "setup_container" {
     { volume = "/mnt/storage/temp", path = "/mnt/temp" },
     { volume = "/mnt/storage/yuliia", path = "/mnt/yuliia" },
     { volume = "/mnt/backup/video", path = "/mnt/video" },
+    { volume = "/mnt/backup/backup/macbook-m1-pro", path = "/mnt/macbook-m1-pro" },
   ]
-  packages = ["bash", "curl", "ca-certificates", "samba", "samba-common-tools"]
+  packages = ["bash", "curl", "ca-certificates", "samba", "samba-common-tools", "iperf3"]
 }
 
 # Trigger for user list changes
 resource "terraform_data" "users_trigger" {
   input = jsonencode(var.samba_users)
+}
+
+# Trigger for container replacement - module outputs aren't valid
+# replace_triggered_by references on their own (only resources are), hence
+# wrapping it the same way users_trigger wraps var.samba_users above.
+resource "terraform_data" "container_trigger" {
+  input = module.setup_container.container_id
 }
 
 # Deploy Samba configuration
@@ -64,14 +72,21 @@ resource "ssh_resource" "configure_samba" {
     permissions = "0644"
   }
 
+  # Also replace whenever the container itself is replaced (e.g. a template
+  # change) - otherwise a fresh container would silently never get smb.conf
+  # pushed to it, since `depends_on` alone doesn't propagate replacement and
+  # this resource's `file{}` block isn't tracked as a diffable attribute.
   lifecycle {
-    replace_triggered_by = [terraform_data.users_trigger.id]
+    replace_triggered_by = [
+      terraform_data.users_trigger.id,
+      terraform_data.container_trigger.id,
+    ]
   }
 
   timeout = "1m"
 }
 
-# Create system users and set Samba passwords
+# Create system users, set Samba passwords, and configure the shared write group
 resource "ssh_resource" "configure_users" {
   depends_on = [ssh_resource.configure_samba]
 
@@ -87,14 +102,35 @@ resource "ssh_resource" "configure_users" {
         "smbpasswd -e ${user.username}"
       ]
     ],
+    # GID 1004 is pinned explicitly (not left to auto-assignment): the host-side
+    # share directories (/mnt/storage/*, /mnt/backup/*) are already chown'd to
+    # a matching host-side group (`fileshare`, also GID 1004 on `sanctum`
+    # itself). If this GID ever changes here, the host-side chgrp must be
+    # updated to match, or every share silently loses group write access again.
+    # Write access itself is differentiated per-share purely via smb.conf's
+    # `valid users`/`write list` - this group is intentionally the same broad
+    # membership for everyone, everywhere.
+    [
+      "addgroup -g 1004 smbwrite"
+    ],
+    [
+      for user in var.samba_users : [
+        "addgroup ${user.username} smbwrite"
+      ]
+    ],
     [
       "rc-service samba start",
       "rc-update add samba default"
     ]
   ])
 
+  # Also replace whenever the container itself is replaced - see the matching
+  # comment on ssh_resource.configure_samba above for why.
   lifecycle {
-    replace_triggered_by = [terraform_data.users_trigger.id]
+    replace_triggered_by = [
+      terraform_data.users_trigger.id,
+      terraform_data.container_trigger.id,
+    ]
   }
 
   timeout = "1m"

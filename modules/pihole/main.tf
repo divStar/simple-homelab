@@ -34,6 +34,18 @@ module "setup_container" {
   startup_order = 3
 }
 
+# Trigger for container replacement - module outputs aren't valid
+# replace_triggered_by references on their own (only resources are), hence
+# wrapping it in a terraform_data resource. Every ssh_resource below needs
+# this in its own lifecycle block (not just the ones depending directly on
+# module.setup_container) - replace_triggered_by doesn't cascade through
+# depends_on chains, and pihole has no mount_points at all, so a container
+# replace means every one of these needs to genuinely re-run, not just the
+# first resource in the chain.
+resource "terraform_data" "container_trigger" {
+  input = module.setup_container.container_id
+}
+
 # Set the container timezone
 resource "ssh_resource" "configure_timezone" {
   depends_on = [module.setup_container]
@@ -43,6 +55,10 @@ resource "ssh_resource" "configure_timezone" {
   private_key = module.setup_container.ssh_private_key
 
   commands = ["timedatectl set-timezone Europe/Berlin"]
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.container_trigger.id]
+  }
 
   timeout = "1m"
 }
@@ -56,6 +72,10 @@ resource "ssh_resource" "create_pihole_directory" {
   private_key = module.setup_container.ssh_private_key
 
   commands = ["mkdir -p /etc/pihole"]
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.container_trigger.id]
+  }
 
   timeout = "1m"
 }
@@ -77,6 +97,10 @@ resource "ssh_resource" "install_step_cli" {
 
   commands = ["/usr/local/bin/install-step.sh ${var.step_ca_domain} ${var.step_ca_client_version}"]
 
+  lifecycle {
+    replace_triggered_by = [terraform_data.container_trigger.id]
+  }
+
   timeout = "2m"
 }
 
@@ -92,6 +116,10 @@ resource "ssh_resource" "configure_provisioner_password" {
   commands = [
     "mkdir -p /root/.step && echo -n '${var.step_ca_provisioner_password}' > /root/.step/provisioner-password && chmod 600 /root/.step/provisioner-password"
   ]
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.container_trigger.id]
+  }
 
   timeout = "1m"
 }
@@ -116,6 +144,10 @@ resource "ssh_resource" "request_pihole_certificate" {
     "/usr/local/bin/pihole-cert.sh ${var.step_ca_domain} ${var.step_ca_provisioner} /root/.step/provisioner-password pihole pihole.my.world ${local.container_ip}"
   ]
 
+  lifecycle {
+    replace_triggered_by = [terraform_data.container_trigger.id]
+  }
+
   timeout = "1m"
 }
 
@@ -133,6 +165,10 @@ resource "ssh_resource" "seed_pihole_config" {
     source      = "${path.module}/files/pihole.toml"
     destination = "/etc/pihole/pihole.toml"
     permissions = "0644"
+  }
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.container_trigger.id]
   }
 
   timeout = "1m"
@@ -153,6 +189,10 @@ resource "ssh_resource" "install_pihole" {
     "export PIHOLE_SKIP_OS_CHECK=true && curl -sSL https://install.pi-hole.net | bash -s -- --unattended"
   ]
 
+  lifecycle {
+    replace_triggered_by = [terraform_data.container_trigger.id]
+  }
+
   timeout = "5m"
 }
 
@@ -165,6 +205,10 @@ resource "ssh_resource" "configure_admin_password" {
   private_key = module.setup_container.ssh_private_key
 
   commands = ["pihole setpassword '${var.pihole_admin_password}'"]
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.container_trigger.id]
+  }
 
   timeout = "1m"
 }
@@ -183,6 +227,10 @@ resource "ssh_resource" "run_gravity_update" {
 
   commands = ["pihole -g"]
 
+  lifecycle {
+    replace_triggered_by = [terraform_data.container_trigger.id]
+  }
+
   timeout = "2m"
 }
 
@@ -195,6 +243,10 @@ resource "ssh_resource" "configure_upstream_dns" {
   private_key = module.setup_container.ssh_private_key
 
   commands = ["pihole-FTL --config dns.upstreams '${jsonencode(var.upstream_dns)}'"]
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.container_trigger.id]
+  }
 
   timeout = "1m"
 }
@@ -235,6 +287,10 @@ resource "ssh_resource" "configure_cert_renewal_timer" {
       systemctl enable --now pihole-cert.timer
     EOT
   ]
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.container_trigger.id]
+  }
 
   timeout = "1m"
 }
@@ -279,6 +335,10 @@ resource "ssh_resource" "configure_pihole_update_timer" {
       systemctl enable --now pihole-update.timer
     EOT
   ]
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.container_trigger.id]
+  }
 
   timeout = "1m"
 }

@@ -39,6 +39,16 @@ module "setup_container" {
   packages = ["bash", "curl", "ca-certificates", "step-cli", "step-certificates"]
 }
 
+# Trigger for container replacement - module outputs aren't valid
+# replace_triggered_by references on their own (only resources are), hence
+# wrapping it in a terraform_data resource. Only configure_container needs
+# this: it's the only resource here that actually connects to the container
+# itself - configure_host/revert_host connect to the Proxmox host, and the CA's
+# own identity persists via mount_points regardless of container replacement.
+resource "terraform_data" "container_trigger" {
+  input = module.setup_container.container_id
+}
+
 # Configure Step-CA
 resource "ssh_resource" "configure_container" {
   # when = "create"
@@ -59,6 +69,10 @@ resource "ssh_resource" "configure_container" {
       "step ca bootstrap --ca-url https://${local.container_ip} --fingerprint $(echo \"${file(var.fingerprint_file)}\") --install --force"
     ]
   ])
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.container_trigger.id]
+  }
 
   timeout = "1m"
 }
