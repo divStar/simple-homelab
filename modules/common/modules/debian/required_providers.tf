@@ -4,7 +4,7 @@ terraform {
   required_providers {
     proxmox = {
       source  = "bpg/proxmox"
-      version = ">= 0.75.0"
+      version = ">= 0.111.1"
     }
     ssh = {
       source  = "loafoe/ssh"
@@ -12,11 +12,11 @@ terraform {
     }
     random = {
       source  = "hashicorp/random"
-      version = ">= 3.7.2"
+      version = ">= 3.9.0"
     }
     tls = {
       source  = "hashicorp/tls"
-      version = ">= 4.1.0"
+      version = ">= 4.3.0"
     }
   }
 }

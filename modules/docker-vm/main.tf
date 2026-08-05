@@ -69,7 +69,7 @@ resource "proxmox_virtual_environment_file" "ignition_config" {
 }
 
 # Download Flatcar stable image
-resource "proxmox_virtual_environment_download_file" "flatcar_image" {
+resource "proxmox_download_file" "flatcar_image" {
   node_name           = var.proxmox_node_name
   datastore_id        = var.flatcar_image_datastore_id
   content_type        = "import"
@@ -82,7 +82,7 @@ resource "proxmox_virtual_environment_download_file" "flatcar_image" {
 
 # Create the Flatcar VM
 resource "proxmox_virtual_environment_vm" "flatcar" {
-  depends_on     = [proxmox_virtual_environment_download_file.flatcar_image, proxmox_virtual_environment_file.ignition_config]
+  depends_on     = [proxmox_download_file.flatcar_image, proxmox_virtual_environment_file.ignition_config]
   timeout_create = 300
 
   name        = var.vm_hostname
@@ -124,7 +124,7 @@ resource "proxmox_virtual_environment_vm" "flatcar" {
     content {
       aio          = "native"
       datastore_id = disk.value.datastore_id
-      import_from  = disk.value.import_from == "FLATCAR_IMAGE" ? proxmox_virtual_environment_download_file.flatcar_image.id : disk.value.import_from
+      import_from  = disk.value.import_from == "FLATCAR_IMAGE" ? proxmox_download_file.flatcar_image.id : disk.value.import_from
       interface    = disk.value.interface
       iothread     = true
       discard      = "on"
