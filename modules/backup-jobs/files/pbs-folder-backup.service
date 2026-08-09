@@ -1,0 +1,6 @@
+[Unit]
+Description=PBS folder backup: %i
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/pbs-folder-backup.sh %i

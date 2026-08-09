@@ -1,0 +1,10 @@
+[Unit]
+Description=Run PBS folder backup for ${name}
+
+[Timer]
+OnCalendar=${schedule}
+Persistent=true
+Unit=pbs-folder-backup@${name}.service
+
+[Install]
+WantedBy=timers.target
