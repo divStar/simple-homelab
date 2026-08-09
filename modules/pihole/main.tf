@@ -32,6 +32,15 @@ module "setup_container" {
 
   imagestore_id = "pve-resources"
   startup_order = 3
+
+  # Persists /etc/pihole (config, gravity.db, everything Pi-hole's own UI/API
+  # accumulates over time) on the host, independent of the container's own
+  # lifecycle -- same pattern modules/step-ca already uses for /etc/step-ca.
+  # Migrated from the container's own rootfs to /mnt/temp/pihole 2026-08-09;
+  # see seed_pihole_config below for how the seed step adapts to this.
+  mount_points = [
+    { volume = "/mnt/temp/pihole", path = "/etc/pihole" },
+  ]
 }
 
 # Trigger for container replacement - module outputs aren't valid
@@ -41,9 +50,14 @@ module "setup_container" {
 # module.setup_container) - replace_triggered_by doesn't cascade through
 # depends_on chains, and pihole has no mount_points at all, so a container
 # replace means every one of these needs to genuinely re-run, not just the
-# first resource in the chain.
+# first resource in the chain. Uses triggers_replace, NOT input -- input-only
+# changes make terraform_data update in-place, which leaves its own .id
+# unchanged (only regenerated on a real create/replace of the terraform_data
+# resource itself), so every replace_triggered_by below would silently never
+# actually fire. Confirmed via `tofu plan -replace` while fixing the identical
+# bug in modules/pbs-lxc, 2026-08-09.
 resource "terraform_data" "container_trigger" {
-  input = module.setup_container.container_id
+  triggers_replace = module.setup_container.container_id
 }
 
 # Set the container timezone
@@ -151,9 +165,16 @@ resource "ssh_resource" "request_pihole_certificate" {
   timeout = "1m"
 }
 
-# Push the seed pihole.toml. This is a one-time bootstrap so the unattended
-# installer below has a config to work with - Pi-hole's own UI/API is the
-# source of truth for everything in it afterward.
+# Push the seed pihole.toml -- but only into place if /etc/pihole doesn't
+# already have a real one. /etc/pihole is now a persistent mount_point (see
+# module.setup_container above), so on this deployment there will always
+# already be a config from before, and this step must never overwrite it.
+# The file{} push itself is unconditional (it always stages to /tmp -- that's
+# harmless, since it never touches the real, mounted destination directly),
+# but the actual copy into /etc/pihole/pihole.toml only happens if nothing's
+# there yet. This is what makes the unattended installer below still work
+# correctly on a genuinely fresh deploy (empty mount, no prior instance) too,
+# without needing anyone to remember a manual first-run step.
 resource "ssh_resource" "seed_pihole_config" {
   depends_on = [ssh_resource.create_pihole_directory]
 
@@ -163,9 +184,13 @@ resource "ssh_resource" "seed_pihole_config" {
 
   file {
     source      = "${path.module}/files/pihole.toml"
-    destination = "/etc/pihole/pihole.toml"
+    destination = "/tmp/pihole.toml"
     permissions = "0644"
   }
+
+  commands = [
+    "[ -f /etc/pihole/pihole.toml ] || cp /tmp/pihole.toml /etc/pihole/pihole.toml"
+  ]
 
   lifecycle {
     replace_triggered_by = [terraform_data.container_trigger.id]

@@ -156,6 +156,17 @@ resource "ssh_resource" "install_openssh" {
     EOT
   ]
 
+  # depends_on above is ordering-only and doesn't propagate a container
+  # replacement (e.g. a template change forcing `must be replaced`) -- without
+  # this, a fresh container would silently never get OpenSSH provisioned.
+  # Every ssh_resource below needs its own copy of this, not just this first
+  # one in the chain -- replace_triggered_by doesn't cascade through
+  # depends_on (same reason modules/samba/main.tf's own trigger has to be
+  # applied to every one of its ssh_resources individually).
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_container.container.id]
+  }
+
   timeout = "1m"
 }
 
@@ -175,6 +186,11 @@ resource "ssh_resource" "install_packages" {
       apt-get install -y ${join(" ", var.packages)}
     EOT
   ]
+
+  # See install_openssh above for why this is needed.
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_container.container.id]
+  }
 
   timeout = "1m"
 }
@@ -227,6 +243,40 @@ resource "ssh_resource" "install_update_upgrade_scripts" {
     EOT
   ] : []
 
+  # See install_openssh above for why this is needed.
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_container.container.id]
+  }
+
+  timeout = "1m"
+}
+
+# Disable Debian's own default apt-daily.timer/apt-daily-upgrade.timer. Confirmed
+# via live inspection (2026-08-09, pbs-lxc) that on this image, with no
+# /etc/apt/apt.conf.d/20auto-upgrades or 10periodic present (the stock state),
+# apt.systemd.daily's own stamp-check logic already makes both timers pure
+# no-ops -- every APT::Periodic::* interval it checks defaults to 0 when unset,
+# so nothing they'd otherwise do (index refresh, unattended-upgrade) ever
+# actually runs. Disabling them costs nothing functionally; it just removes two
+# enabled-but-inert timers cluttering `systemctl list-timers` and the confusion
+# of two update-shaped timers next to debian-update.timer above, which is the
+# one that actually performs upgrades.
+resource "ssh_resource" "disable_default_apt_timers" {
+  depends_on = [ssh_resource.install_openssh]
+
+  host        = var.ni_ip
+  user        = "root"
+  private_key = tls_private_key.ssh_key.private_key_pem
+
+  commands = [
+    "systemctl disable --now apt-daily.timer apt-daily-upgrade.timer",
+  ]
+
+  # See install_openssh above for why this is needed.
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_container.container.id]
+  }
+
   timeout = "1m"
 }
 
@@ -242,6 +292,11 @@ resource "ssh_resource" "install_default_aliases" {
     source      = "${path.module}/files/default-aliases.sh"
     destination = "/etc/profile.d/default-aliases.sh"
     permissions = "0644"
+  }
+
+  # See install_openssh above for why this is needed.
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_container.container.id]
   }
 
   timeout = "1m"

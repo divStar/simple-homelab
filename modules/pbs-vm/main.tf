@@ -58,6 +58,15 @@ resource "proxmox_virtual_environment_vm" "pbs" {
   on_boot     = true
   boot_order  = ["virtio0"]
 
+  # Guards the `tofu`-driven path only (accidental `tofu destroy`, or a config
+  # change that would force a replace) -- destroying currently-attached disks,
+  # including the backup datastore, along with the VM. Does NOT cover a raw
+  # `qm destroy` run outside Terraform (see scripts/destroy-vmlxc.sh's own
+  # PROTECTED_IDS guard for that path).
+  lifecycle {
+    prevent_destroy = true
+  }
+
   machine = "q35"
   bios    = "ovmf"
 
@@ -101,6 +110,9 @@ resource "proxmox_virtual_environment_vm" "pbs" {
   # PBS datastore disk -- blank, carved from the new /mnt/backup-backed storage.
   # ssd=false because the underlying media genuinely is spinning HDD (RAID1 mirror),
   # unlike docker-vm's disks which are all on NVMe.
+  #
+  # backup=false: this VM will itself be a backup-jobs target (OS disk only) --
+  # without this, PBS would try to back its own multi-TB datastore up into itself.
   disk {
     aio          = "native"
     datastore_id = var.datastore_disk_datastore_id
@@ -111,6 +123,7 @@ resource "proxmox_virtual_environment_vm" "pbs" {
     ssd          = false
     file_format  = "raw"
     size         = var.datastore_disk_size_gb
+    backup       = false
   }
 
   network_device {
@@ -180,6 +193,14 @@ resource "ssh_resource" "install_pbs" {
     "echo '${local.root_chpasswd_line_b64}' | base64 -d | sudo chpasswd",
   ]
 
+  # depends_on above is ordering-only and doesn't propagate a VM replacement
+  # (e.g. an image/config change forcing `must be replaced`) -- without this,
+  # a fresh VM would silently never get PBS installed on it. Reference
+  # pattern: modules/samba/main.tf.
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_vm.pbs.id]
+  }
+
   timeout = "2m"
 }
 
@@ -205,6 +226,11 @@ resource "ssh_resource" "setup_datastore" {
       "--datastore-name ${var.pbs_datastore_name}",
     ])
   ]
+
+  # See install_pbs above for why this is needed.
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_vm.pbs.id]
+  }
 
   timeout = "2m"
 }
@@ -234,6 +260,11 @@ resource "ssh_resource" "setup_acme" {
     ])
   ]
 
+  # See install_pbs above for why this is needed.
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_vm.pbs.id]
+  }
+
   timeout = "2m"
 }
 
@@ -261,6 +292,11 @@ resource "ssh_resource" "retime_daily_update" {
     ]),
     "sudo systemctl daemon-reload",
   ]
+
+  # See install_pbs above for why this is needed.
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_vm.pbs.id]
+  }
 
   timeout = "1m"
 }

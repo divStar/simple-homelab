@@ -118,7 +118,7 @@ variable "datastore_disk_datastore_id" {
 variable "datastore_disk_size_gb" {
   description = "PBS datastore disk size in GB -- thin-provisioned, only consumes real space as data is written"
   type        = number
-  default     = 4000
+  default     = 8000
 }
 
 # PBS-specific

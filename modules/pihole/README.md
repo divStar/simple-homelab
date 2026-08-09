@@ -22,6 +22,7 @@ This module sets up Pi-hole in a Debian LXC container using the provided informa
   - _ssh_resource_.[request_pihole_certificate](#ssh_resourcerequest_pihole_certificate)
   - _ssh_resource_.[run_gravity_update](#ssh_resourcerun_gravity_update)
   - _ssh_resource_.[seed_pihole_config](#ssh_resourceseed_pihole_config)
+  - _terraform_data_.[container_trigger](#terraform_datacontainer_trigger)
 - [Variables](#variables)
   - [pihole_admin_password](#pihole_admin_password-required) (**Required**)
   - [proxmox](#proxmox-required) (**Required**)
@@ -37,10 +38,10 @@ This module sets up Pi-hole in a Debian LXC container using the provided informa
 
 ## Providers
 ![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-![proxmox](https://img.shields.io/badge/proxmox->=0.85.1-1e73c8?logo=proxmox)
-![random](https://img.shields.io/badge/random->=3.7.2-82d72c?logo=random)
+![proxmox](https://img.shields.io/badge/proxmox->=0.111.1-1e73c8?logo=proxmox)
+![random](https://img.shields.io/badge/random->=3.9.0-82d72c?logo=random)
 ![loafoe/ssh](https://img.shields.io/badge/loafoe--ssh->=2.7.0-4fa4f9?logo=ssh)
-![tls](https://img.shields.io/badge/tls->=4.1.0-54a9fe?logo=tls)
+![tls](https://img.shields.io/badge/tls->=4.3.0-54a9fe?logo=tls)
 
 ## Modules
   
@@ -78,7 +79,7 @@ Set the admin password via the CLI so it gets hashed correctly
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L160"><code>main.tf#L160</code></a></td>
+      <td><a href="./main.tf#L225"><code>main.tf#L225</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_admin_password":end -->
@@ -94,7 +95,7 @@ Renew the certificate every 12 hours - Step CA issues 24h-lived certs, same cade
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L205"><code>main.tf#L205</code></a></td>
+      <td><a href="./main.tf#L282"><code>main.tf#L282</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_cert_renewal_timer":end -->
@@ -110,7 +111,7 @@ Update Pi-hole's own software (Core/FTL/Web) weekly, Sunday 6am - an hour after 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L244"><code>main.tf#L244</code></a></td>
+      <td><a href="./main.tf#L325"><code>main.tf#L325</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_pihole_update_timer":end -->
@@ -126,7 +127,7 @@ Store the provisioner password in a file rather than passing it as a raw CLI arg
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L85"><code>main.tf#L85</code></a></td>
+      <td><a href="./main.tf#L123"><code>main.tf#L123</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_provisioner_password":end -->
@@ -142,7 +143,7 @@ Set the container timezone
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L38"><code>main.tf#L38</code></a></td>
+      <td><a href="./main.tf#L64"><code>main.tf#L64</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_timezone":end -->
@@ -158,7 +159,7 @@ Upstream DNS servers - the one setting Terraform keeps managing after first boot
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L190"><code>main.tf#L190</code></a></td>
+      <td><a href="./main.tf#L263"><code>main.tf#L263</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_upstream_dns":end -->
@@ -174,7 +175,7 @@ Ensure /etc/pihole exists before the certificate and seed config are pushed into
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L51"><code>main.tf#L51</code></a></td>
+      <td><a href="./main.tf#L81"><code>main.tf#L81</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.create_pihole_directory":end -->
@@ -190,7 +191,7 @@ Run the official Pi-hole installer, unattended. The pre-seeded pihole.toml above
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L145"><code>main.tf#L145</code></a></td>
+      <td><a href="./main.tf#L206"><code>main.tf#L206</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_pihole":end -->
@@ -206,7 +207,7 @@ Install the step CLI and bootstrap trust in Step CA, so Pi-hole's own webserver 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L65"><code>main.tf#L65</code></a></td>
+      <td><a href="./main.tf#L99"><code>main.tf#L99</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_step_cli":end -->
@@ -222,7 +223,7 @@ Request the certificate for Pi-hole's webserver *before* Pi-hole itself is insta
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L102"><code>main.tf#L102</code></a></td>
+      <td><a href="./main.tf#L144"><code>main.tf#L144</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.request_pihole_certificate":end -->
@@ -238,7 +239,7 @@ One-time resource: the installer sets up cron and its own weekly gravity update 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L177"><code>main.tf#L177</code></a></td>
+      <td><a href="./main.tf#L246"><code>main.tf#L246</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.run_gravity_update":end -->
@@ -246,7 +247,7 @@ One-time resource: the installer sets up cron and its own weekly gravity update 
 
 ### _ssh_resource_.`seed_pihole_config`
 
-Push the seed pihole.toml. This is a one-time bootstrap so the unattended installer below has a config to work with - Pi-hole's own UI/API is the source of truth for everything in it afterward.
+Push the seed pihole.toml -- but only into place if /etc/pihole doesn't already have a real one. /etc/pihole is now a persistent mount_point (see module.setup_container above), so on this deployment there will always already be a config from before, and this step must never overwrite it. The file{} push itself is unconditional (it always stages to /tmp -- that's harmless, since it never touches the real, mounted destination directly), but the actual copy into /etc/pihole/pihole.toml only happens if nothing's there yet. This is what makes the unattended installer below still work correctly on a genuinely fresh deploy (empty mount, no prior instance) too, without needing anyone to remember a manual first-run step.
   <table>
     <tr>
       <td>Provider</td>
@@ -254,10 +255,26 @@ Push the seed pihole.toml. This is a one-time bootstrap so the unattended instal
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L125"><code>main.tf#L125</code></a></td>
+      <td><a href="./main.tf#L178"><code>main.tf#L178</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.seed_pihole_config":end -->
+<blockquote><!-- resource:"terraform_data.container_trigger":start -->
+
+### _terraform_data_.`container_trigger`
+
+Trigger for container replacement - module outputs aren't valid replace_triggered_by references on their own (only resources are), hence wrapping it in a terraform_data resource. Every ssh_resource below needs this in its own lifecycle block (not just the ones depending directly on module.setup_container) - replace_triggered_by doesn't cascade through depends_on chains, and pihole has no mount_points at all, so a container replace means every one of these needs to genuinely re-run, not just the first resource in the chain. Uses triggers_replace, NOT input -- input-only changes make terraform_data update in-place, which leaves its own .id unchanged (only regenerated on a real create/replace of the terraform_data resource itself), so every replace_triggered_by below would silently never actually fire. Confirmed via `tofu plan -replace` while fixing the identical bug in modules/pbs-lxc, 2026-08-09.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>terraform (hashicorp/terraform)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L59"><code>main.tf#L59</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"terraform_data.container_trigger":end -->
 
 ## Variables
   

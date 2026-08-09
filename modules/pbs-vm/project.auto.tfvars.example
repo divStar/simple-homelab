@@ -22,7 +22,7 @@ os_disk_size_gb      = 32
 
 # Backed by the new /mnt/backup/proxmox-backup dir storage (see modules/host's storage_directories)
 datastore_disk_datastore_id = "backup-hdd"
-datastore_disk_size_gb      = 4000
+datastore_disk_size_gb      = 8000
 
 pbs_datastore_name = "main"
 

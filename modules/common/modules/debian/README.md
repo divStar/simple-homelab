@@ -11,9 +11,10 @@ other Debian packages (if specified; `bash`, `curl`, `ca-certificates` and
 
 - [Providers](#providers)
 - [Resources](#resources)
+  - _proxmox_download_file_.[template](#proxmox_download_filetemplate)
   - _proxmox_virtual_environment_container_.[container](#proxmox_virtual_environment_containercontainer)
-  - _proxmox_virtual_environment_download_file_.[template](#proxmox_virtual_environment_download_filetemplate)
   - _random_password_.[root_password](#random_passwordroot_password)
+  - _ssh_resource_.[disable_default_apt_timers](#ssh_resourcedisable_default_apt_timers)
   - _ssh_resource_.[install_default_aliases](#ssh_resourceinstall_default_aliases)
   - _ssh_resource_.[install_openssh](#ssh_resourceinstall_openssh)
   - _ssh_resource_.[install_packages](#ssh_resourceinstall_packages)
@@ -45,19 +46,36 @@ other Debian packages (if specified; `bash`, `curl`, `ca-certificates` and
   - [unprivileged](#unprivileged-optional) (*Optional*)
   - [update_interval](#update_interval-optional) (*Optional*)
 - [Outputs](#outputs)
+  - [container_id](#container_id)
   - [root_password](#root_password)
   - [ssh_private_key](#ssh_private_key)
 </blockquote><!-- contents:end -->
 
 ## Providers
 ![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-![bpg/proxmox](https://img.shields.io/badge/bpg--proxmox->=0.75.0-1e73c8?logo=proxmox)
-![hashicorp/random](https://img.shields.io/badge/hashicorp--random->=3.7.2-82d72c?logo=random)
+![bpg/proxmox](https://img.shields.io/badge/bpg--proxmox->=0.111.1-1e73c8?logo=proxmox)
+![hashicorp/random](https://img.shields.io/badge/hashicorp--random->=3.9.0-82d72c?logo=random)
 ![loafoe/ssh](https://img.shields.io/badge/loafoe--ssh->=2.7-4fa4f9?logo=ssh)
-![hashicorp/tls](https://img.shields.io/badge/hashicorp--tls->=4.1.0-54a9fe?logo=tls)
+![hashicorp/tls](https://img.shields.io/badge/hashicorp--tls->=4.3.0-54a9fe?logo=tls)
 
 ## Resources
   
+<blockquote><!-- resource:"proxmox_download_file.template":start -->
+
+### _proxmox_download_file_.`template`
+
+Downloads the `debian` image.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>proxmox (bpg/proxmox)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L15"><code>main.tf#L15</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"proxmox_download_file.template":end -->
 <blockquote><!-- resource:"proxmox_virtual_environment_container.container":start -->
 
 ### _proxmox_virtual_environment_container_.`container`
@@ -74,22 +92,6 @@ Create Debian LXC container
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_container.container":end -->
-<blockquote><!-- resource:"proxmox_virtual_environment_download_file.template":start -->
-
-### _proxmox_virtual_environment_download_file_.`template`
-
-Downloads the `debian` image.
-  <table>
-    <tr>
-      <td>Provider</td>
-      <td><code>proxmox (bpg/proxmox)</code></td>
-    </tr>
-    <tr>
-      <td>In file</td>
-      <td><a href="./main.tf#L15"><code>main.tf#L15</code></a></td>
-    </tr>
-  </table>
-</blockquote><!-- resource:"proxmox_virtual_environment_download_file.template":end -->
 <blockquote><!-- resource:"random_password.root_password":start -->
 
 ### _random_password_.`root_password`
@@ -106,6 +108,22 @@ Generate a random password for the container
     </tr>
   </table>
 </blockquote><!-- resource:"random_password.root_password":end -->
+<blockquote><!-- resource:"ssh_resource.disable_default_apt_timers":start -->
+
+### _ssh_resource_.`disable_default_apt_timers`
+
+Disable Debian's own default apt-daily.timer/apt-daily-upgrade.timer. Confirmed via live inspection (2026-08-09, pbs-lxc) that on this image, with no /etc/apt/apt.conf.d/20auto-upgrades or 10periodic present (the stock state), apt.systemd.daily's own stamp-check logic already makes both timers pure no-ops -- every APT::Periodic::* interval it checks defaults to 0 when unset, so nothing they'd otherwise do (index refresh, unattended-upgrade) ever actually runs. Disabling them costs nothing functionally; it just removes two enabled-but-inert timers cluttering `systemctl list-timers` and the confusion of two update-shaped timers next to debian-update.timer above, which is the one that actually performs upgrades.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>ssh (loafoe/ssh)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L243"><code>main.tf#L243</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"ssh_resource.disable_default_apt_timers":end -->
 <blockquote><!-- resource:"ssh_resource.install_default_aliases":start -->
 
 ### _ssh_resource_.`install_default_aliases`
@@ -118,7 +136,7 @@ Install default aliases
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L234"><code>main.tf#L234</code></a></td>
+      <td><a href="./main.tf#L258"><code>main.tf#L258</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_default_aliases":end -->
@@ -690,6 +708,14 @@ systemd OnCalendar expression for automatic updates, or 'never' to disable
 
 ## Outputs
   
+<blockquote><!-- output:"container_id":start -->
+
+#### `container_id`
+
+Container id - see comment for why this is exported
+
+In file: <a href="./outputs.tf#L23"><code>outputs.tf#L23</code></a>
+</blockquote><!-- output:"container_id":end -->
 <blockquote><!-- output:"root_password":start -->
 
 #### `root_password`

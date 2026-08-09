@@ -157,6 +157,17 @@ resource "ssh_resource" "install_openssh" {
     EOT
   ]
 
+  # depends_on above is ordering-only and doesn't propagate a container
+  # replacement (e.g. a template change forcing `must be replaced`) -- without
+  # this, a fresh container would silently never get OpenSSH provisioned.
+  # Every ssh_resource below needs its own copy of this, not just this first
+  # one in the chain -- replace_triggered_by doesn't cascade through
+  # depends_on (same reason modules/samba/main.tf's own trigger has to be
+  # applied to every one of its ssh_resources individually).
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_container.container.id]
+  }
+
   timeout = "1m"
 }
 
@@ -186,6 +197,11 @@ resource "ssh_resource" "install_update_upgrade_scripts" {
   # Install crontab only if update_interval is not "never"
   commands = var.update_interval != "never" ? ["echo '${var.update_interval} /usr/local/bin/${local.update_alpine_script}' | crontab -"] : []
 
+  # See install_openssh above for why this is needed.
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_container.container.id]
+  }
+
   timeout = "1m"
 }
 
@@ -207,6 +223,11 @@ resource "ssh_resource" "install_packages" {
     EOT
   ]
 
+  # See install_openssh above for why this is needed.
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_container.container.id]
+  }
+
   timeout = "1m"
 }
 
@@ -222,6 +243,11 @@ resource "ssh_resource" "install_default_aliases" {
     source      = "${path.module}/files/default-aliases.sh"
     destination = "/etc/profile.d/default-aliases.sh"
     permissions = "0644"
+  }
+
+  # See install_openssh above for why this is needed.
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_container.container.id]
   }
 
   timeout = "1m"

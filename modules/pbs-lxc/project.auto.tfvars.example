@@ -1,0 +1,16 @@
+proxmox = {
+  name     = "sanctum"
+  host     = "sanctum.my.world"
+  ssh_user = "root"
+  ssh_key  = "~/.ssh/id_rsa"
+  username = "root@pam"
+  password = "some-password"
+  insecure = false
+}
+
+pbs_datastore_name = "primary"
+
+step_ca_domain            = "step-ca.my.world"
+step_ca_client_version    = "0.30.6"
+step_ca_acme_account_name = "step-ca-acme"
+step_ca_acme_contact      = "admin@my.world"
