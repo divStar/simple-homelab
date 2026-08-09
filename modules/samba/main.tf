@@ -46,16 +46,23 @@ module "setup_container" {
   packages = ["bash", "curl", "ca-certificates", "samba", "samba-common-tools", "iperf3"]
 }
 
-# Trigger for user list changes
+# Trigger for user list changes. Uses triggers_replace, NOT input -- input-only
+# changes make terraform_data update in-place, which leaves its own .id
+# unchanged (only regenerated on a real create/replace of the terraform_data
+# resource itself). Since every replace_triggered_by below references .id,
+# using plain `input` here meant a samba_users change silently never actually
+# triggered reprovisioning -- confirmed via `tofu plan -replace` while fixing
+# the identical bug in modules/pbs-lxc's container_trigger, 2026-08-09.
 resource "terraform_data" "users_trigger" {
-  input = jsonencode(var.samba_users)
+  triggers_replace = jsonencode(var.samba_users)
 }
 
 # Trigger for container replacement - module outputs aren't valid
 # replace_triggered_by references on their own (only resources are), hence
-# wrapping it the same way users_trigger wraps var.samba_users above.
+# wrapping it the same way users_trigger wraps var.samba_users above. Same
+# triggers_replace requirement as users_trigger above, for the same reason.
 resource "terraform_data" "container_trigger" {
-  input = module.setup_container.container_id
+  triggers_replace = module.setup_container.container_id
 }
 
 # Deploy Samba configuration
@@ -94,10 +101,17 @@ resource "ssh_resource" "configure_users" {
   user        = "root"
   private_key = module.setup_container.ssh_private_key
 
+  # Existence-checked before adduser/addgroup -- unlike smbpasswd -a/-e (which
+  # are idempotent by nature, safe to re-run against an existing user), Alpine's
+  # adduser/addgroup error out if the target already exists. This resource's
+  # container isn't necessarily fresh when it re-runs (replace_triggered_by can
+  # fire without the container itself being replaced, e.g. a samba_users edit),
+  # so every step here needs to tolerate running against an already-provisioned
+  # system, not just a blank one.
   commands = flatten([
     [
       for user in var.samba_users : [
-        "adduser -D -H -s /sbin/nologin ${user.username}",
+        "id -u ${user.username} >/dev/null 2>&1 || adduser -D -H -s /sbin/nologin ${user.username}",
         "(echo '${user.password}'; echo '${user.password}') | smbpasswd -a -s ${user.username}",
         "smbpasswd -e ${user.username}"
       ]
@@ -111,11 +125,11 @@ resource "ssh_resource" "configure_users" {
     # `valid users`/`write list` - this group is intentionally the same broad
     # membership for everyone, everywhere.
     [
-      "addgroup -g 1004 smbwrite"
+      "getent group smbwrite >/dev/null 2>&1 || addgroup -g 1004 smbwrite"
     ],
     [
       for user in var.samba_users : [
-        "addgroup ${user.username} smbwrite"
+        "id -nG ${user.username} 2>/dev/null | grep -qw smbwrite || addgroup ${user.username} smbwrite"
       ]
     ],
     [

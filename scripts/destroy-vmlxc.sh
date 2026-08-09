@@ -5,9 +5,10 @@ function print_usage() {
     echo "  PROXMOX_HOST    : Hostname/IP of your Proxmox server"
     echo ""
     echo "Options:"
-    echo "  --vm-id ID      : VM/LXC ID to cleanup (required - no default)"
-    echo "  --dry-run       : Show what would be done without making changes"
-    echo "  --tf-path PATH  : Path to Terraform files (default: current directory)"
+    echo "  --vm-id ID          : VM/LXC ID to cleanup (required - no default)"
+    echo "  --dry-run           : Show what would be done without making changes"
+    echo "  --tf-path PATH      : Path to Terraform files (default: current directory)"
+    echo "  --force-protected   : Required to target a protected ID (see below)"
     echo ""
     echo "Examples:"
     echo "  $0 proxmox.local --vm-id 900"
@@ -15,8 +16,20 @@ function print_usage() {
     echo "  $0 proxmox.local --vm-id 700 --tf-path /path/to/terraform"
     echo ""
     echo "Note: Script automatically detects whether ID is a VM or LXC container"
+    echo ""
+    echo "Protected IDs (${PROTECTED_IDS[*]}): destroying these also destroys any"
+    echo "currently-attached disks, including data with no independent backup of"
+    echo "its own. Detach any such disk first (qm set <id> --delete <interface>),"
+    echo "then re-run with --force-protected."
     exit 1
 }
+
+# IDs whose destruction would take non-recreatable data down with them (e.g. the
+# PBS VM's datastore disk, which holds backup history with no separate copy).
+# qm destroy always purges currently-attached disks regardless of any Terraform
+# lifecycle setting -- this script bypasses Terraform entirely (raw `qm destroy`
+# over SSH), so `prevent_destroy` on the VM resource does not cover this path.
+PROTECTED_IDS=(801)
 
 # Check if host argument is provided
 if [ $# -lt 1 ]; then
@@ -30,6 +43,7 @@ shift  # Remove first argument, leaving any remaining flags
 DRY_RUN=0
 TF_PATH="."
 VM_ID=""
+FORCE_PROTECTED=0
 
 # Parse remaining arguments
 while [[ $# -gt 0 ]]; do
@@ -60,6 +74,10 @@ while [[ $# -gt 0 ]]; do
             TF_PATH="$2"
             shift 2
             ;;
+        --force-protected)
+            FORCE_PROTECTED=1
+            shift
+            ;;
         *)
             echo "Error: Unknown option $1"
             print_usage
@@ -74,6 +92,22 @@ if [[ -z "$VM_ID" ]]; then
     echo "Error: --vm-id is required (no default)"
     print_usage
 fi
+
+# Refuse to touch a protected ID's disks (referenced disks are always destroyed
+# by `qm destroy`, regardless of `--dry-run` being off) unless the operator has
+# already dealt with it -- see PROTECTED_IDS above for why.
+for protected_id in "${PROTECTED_IDS[@]}"; do
+    if [[ "$VM_ID" == "$protected_id" ]] && [[ $FORCE_PROTECTED -ne 1 ]] && [[ $DRY_RUN -ne 1 ]]; then
+        echo "Error: ${VM_ID} is a protected ID."
+        echo "Destroying it will also destroy any currently-attached disks -- for"
+        echo "VM 801 (pbs-vm) that includes the PBS backup datastore, which has no"
+        echo "independent copy of its own."
+        echo ""
+        echo "If you have already detached the disk(s) you need to keep"
+        echo "(qm set ${VM_ID} --delete <interface>), re-run with --force-protected."
+        exit 1
+    fi
+done
 
 echo "Starting cleanup process..."
 echo "VM/LXC ID: ${VM_ID}"

@@ -1,0 +1,31 @@
+proxmox_endpoint  = "https://sanctum.my.world:8006"
+proxmox_node_name = "sanctum"
+proxmox_password  = "<root-password>" # sadly this is necessary for VM deployment with -fw_args
+proxmox_ssh_user  = "root"
+proxmox_ssh_key   = "~/.ssh/id_rsa"
+
+vm_id         = 801
+vm_hostname   = "sanctum-pbs"
+vm_domain     = "my.world"
+vm_ip         = "192.168.178.121"
+vm_gateway_ip = "192.168.178.1"
+vm_dns_ip     = "192.168.178.33"
+
+debian_image_datastore_id = "pve-resources"
+debian_image_file_name    = "debian-13-genericcloud-amd64.qcow2"
+debian_image_release      = "trixie"
+
+efi_disk_datastore_id = "pve-resources"
+
+os_disk_datastore_id = "pve-resources"
+os_disk_size_gb      = 32
+
+# Backed by the new /mnt/backup/proxmox-backup dir storage (see modules/host's storage_directories)
+datastore_disk_datastore_id = "backup-hdd"
+datastore_disk_size_gb      = 8000
+
+pbs_datastore_name = "main"
+
+step_ca_domain            = "step-ca.my.world"
+step_ca_acme_account_name = "step-ca-acme"
+step_ca_acme_contact      = "<admin-email>"

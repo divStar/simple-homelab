@@ -45,8 +45,13 @@ module "setup_container" {
 # this: it's the only resource here that actually connects to the container
 # itself - configure_host/revert_host connect to the Proxmox host, and the CA's
 # own identity persists via mount_points regardless of container replacement.
+# Uses triggers_replace, NOT input -- input-only changes make terraform_data
+# update in-place, which leaves its own .id unchanged (only regenerated on a
+# real create/replace of the terraform_data resource itself), so the
+# replace_triggered_by below would silently never actually fire. Confirmed via
+# `tofu plan -replace` while fixing the identical bug in modules/pbs-lxc, 2026-08-09.
 resource "terraform_data" "container_trigger" {
-  input = module.setup_container.container_id
+  triggers_replace = module.setup_container.container_id
 }
 
 # Configure Step-CA
