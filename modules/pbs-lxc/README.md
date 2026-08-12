@@ -77,7 +77,7 @@ systemd drop-in directories are never auto-created (a convention admins/ tooling
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L212"><code>main.tf#L212</code></a></td>
+      <td><a href="./main.tf#L240"><code>main.tf#L240</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.create_daily_update_override_directory":end -->
@@ -93,7 +93,7 @@ Install PBS itself (deb822 apt source + package). Connects as root directly, no 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L107"><code>main.tf#L107</code></a></td>
+      <td><a href="./main.tf#L127"><code>main.tf#L127</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_pbs":end -->
@@ -125,7 +125,7 @@ Retime PBS's own daily-update service (package updates + ACME cert renewal -- th
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L235"><code>main.tf#L235</code></a></td>
+      <td><a href="./main.tf#L263"><code>main.tf#L263</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.retime_daily_update":end -->
@@ -141,7 +141,7 @@ Get PBS a trusted cert from Step CA via ACME -- identical to modules/pbs-vm, the
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L175"><code>main.tf#L175</code></a></td>
+      <td><a href="./main.tf#L203"><code>main.tf#L203</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.setup_acme":end -->
@@ -157,7 +157,7 @@ Register (or re-register) the PBS datastore at the mount_point path -- see files
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L141"><code>main.tf#L141</code></a></td>
+      <td><a href="./main.tf#L169"><code>main.tf#L169</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.setup_datastore":end -->
@@ -165,7 +165,7 @@ Register (or re-register) the PBS datastore at the mount_point path -- see files
 
 ### _terraform_data_.`container_trigger`
 
-Trigger for container replacement - module outputs aren't valid replace_triggered_by references on their own (only resources are), hence wrapping it in a terraform_data resource. Same pattern pihole/samba use.
+Trigger for container replacement - module outputs aren't valid replace_triggered_by references on their own (only resources are; confirmed via `tofu validate`: "Only resources, count.index, and each.key may be used in replace_triggered_by"), hence wrapping it in a terraform_data resource. Uses triggers_replace, NOT input -- confirmed via `tofu plan -replace` that terraform_data's .id stays stable across a plain input-only update (only regenerated when the terraform_data resource itself is destroyed/recreated). triggers_replace is the argument specifically documented to force that full replacement whenever its value changes, which is what actually makes .id change and propagate. modules/samba and modules/pihole both currently use `input = ...` for this same pattern, which means their own replace_triggered_by chains have this identical latent bug -- worth fixing there too.
   <table>
     <tr>
       <td>Provider</td>
@@ -173,7 +173,7 @@ Trigger for container replacement - module outputs aren't valid replace_triggere
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L95"><code>main.tf#L95</code></a></td>
+      <td><a href="./main.tf#L115"><code>main.tf#L115</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terraform_data.container_trigger":end -->

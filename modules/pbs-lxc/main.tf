@@ -74,6 +74,17 @@ module "setup_container" {
   tags         = ["debian", "backup", "lxc", "pve-resources"]
   unprivileged = true
 
+  # Base module's default (1024) OOM-killed proxmox-backup-proxy the first
+  # time backup-jobs' folder-backup track fired 3 concurrent multi-GB
+  # uploads at once (confirmed via `journalctl -k`: "Failed with result
+  # 'oom-kill'", right as 3 uploads were mid-transfer) - bumped for real
+  # headroom under concurrent load, not just single-guest backups. PBS's own
+  # docs put even eval-only minimums at 2 cores / 2GB, recommended production
+  # at 4+ cores / 4GB+1GB-per-TB - the base module's defaults (1 core, 1GB)
+  # were under the eval floor, not just thin for our workload.
+  cpu_cores        = 2
+  memory_dedicated = 4096
+
   ni_mac_address = "06:2A:97:E1:5C:83"
   ni_ip          = local.container_ip
   ni_gateway     = "192.168.178.1"
@@ -132,6 +143,14 @@ resource "ssh_resource" "install_pbs" {
       "Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg",
       "EOF"
     ]),
+    # proxmox-backup-server itself ships /etc/apt/sources.list.d/pbs-
+    # enterprise.sources (confirmed via `dpkg -S`) - doesn't exist yet on a
+    # truly fresh bootstrap (hence apt-get update succeeding the first time),
+    # but reappears on every reinstall/reprovision once the package is
+    # already present, and requires a paid subscription to actually reach -
+    # 401 Unauthorized without one, which fails apt-get update outright since
+    # apt treats a single bad repo as fatal. rm -f is safe either way.
+    "rm -f /etc/apt/sources.list.d/pbs-enterprise.sources",
     "apt-get update",
     "env DEBIAN_FRONTEND=noninteractive apt-get install -y proxmox-backup-server",
   ]
