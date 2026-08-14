@@ -437,10 +437,11 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
       "pihole.pxar:/mnt/temp/pihole"
     ],
     "prune_backups": {
+      "keep-daily": "7",
       "keep-monthly": "6",
       "keep-weekly": "4"
     },
-    "schedule": "sun 01:00"
+    "schedule": "00:30"
   },
   "pve-host": {
     "archives": [
@@ -486,7 +487,7 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
   }
 }
   ```
-  In file: <a href="./variables.tf#L168"><code>variables.tf#L168</code></a>
+  In file: <a href="./variables.tf#L173"><code>variables.tf#L173</code></a>
 
 </details>
 </blockquote><!-- variable:"folders":end -->

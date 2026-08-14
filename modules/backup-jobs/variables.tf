@@ -158,10 +158,15 @@ variable "guests" {
 # Grouped into 4 "tiers" of shared schedule+retention (values are repeated
 # per entry rather than centrally defined, matching var.guests' style - no
 # cross-referencing abstraction for 13 entries):
-#   short     (00:30 daily)                    - pve-host, document, photo, kyocera-scan, temp
-#   mid       (sun 01:00 weekly)                - backup, pihole, step-ca
+#   short     (00:30 daily)                    - pve-host, document, photo, kyocera-scan, temp, pihole
+#   mid       (sun 01:00 weekly)                - backup, step-ca
 #   long      (1st 02:30 monthly)               - yuliia, music
 #   very long (1st 09:00, odd months/bimonthly) - application, game, picture
+# pihole moved short in this session (2026-08-14): its mounted config
+# (whitelist/blacklist/custom DNS/gravity.db) genuinely changes at times,
+# unlike step-ca's mountpoint (keys/CA state), which stays mid since it
+# almost never changes. Cost of the extra frequency is negligible - these
+# backups are tiny.
 # "very long" uses keep-last instead of keep-monthly deliberately - a job
 # that only runs every 2 months doesn't map cleanly onto calendar-month
 # buckets, keep-last just keeps the N most recent runs regardless of cadence.
@@ -206,8 +211,8 @@ variable "folders" {
     }
     "pihole" = {
       archives      = ["pihole.pxar:/mnt/temp/pihole"]
-      schedule      = "sun 01:00"
-      prune_backups = { "keep-weekly" = "4", "keep-monthly" = "6" }
+      schedule      = "00:30"
+      prune_backups = { "keep-daily" = "7", "keep-weekly" = "4", "keep-monthly" = "6" }
     }
     "step-ca" = {
       archives      = ["step-ca.pxar:/mnt/temp/step-ca"]
