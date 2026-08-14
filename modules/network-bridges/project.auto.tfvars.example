@@ -1,0 +1,20 @@
+proxmox = {
+  name     = "sanctum"
+  host     = "sanctum.my.world"
+  ssh_user = "root"
+  ssh_key  = "~/.ssh/id_rsa"
+  username = "root@pam"
+  password = "some-password"
+  insecure = false
+}
+
+proxmox_node_name = "sanctum"
+
+bridges = [
+  {
+    name       = "vmbr1"
+    ports      = ["enp193s0f0", "enp193s0f1", "enp69s0f0"]
+    vlan_aware = true
+    comment    = "LAN bridge - per-room links (physically isolated, no shared switch), OPNsense-managed"
+  }
+]

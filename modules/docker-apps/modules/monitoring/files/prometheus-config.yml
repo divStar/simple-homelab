@@ -25,6 +25,11 @@ scrape_configs:
     static_configs:
       - targets: ['proxmox:9633']
 
+  # Scrape host-level metrics (CPU, memory, network interfaces, etc.)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['proxmox:9100']
+
   # Grafana Alloy self-monitoring
   - job_name: 'alloy'
     static_configs:

@@ -12,6 +12,7 @@ This module and its sub-modules setup the Proxmox host.
   - [copy_configs](#copy_configs)
   - [directory_mappings](#directory_mappings)
   - [gitops_user](#gitops_user)
+  - [node_exporter](#node_exporter)
   - [packages](#packages)
   - [proxmox_storage_import](#proxmox_storage_import)
   - [repositories](#repositories)
@@ -43,6 +44,7 @@ This module and its sub-modules setup the Proxmox host.
   - [installed_packages](#installed_packages)
   - [installed_scripts](#installed_scripts)
   - [no_subscription](#no_subscription)
+  - [node_exporter_version](#node_exporter_version)
   - [share_user](#share_user)
   - [smartctl_exporter_version](#smartctl_exporter_version)
   - [storage_pools](#storage_pools)
@@ -52,7 +54,7 @@ This module and its sub-modules setup the Proxmox host.
 ## Providers
 ![ssh](https://img.shields.io/badge/ssh-~>2.7-4fa4f9?logo=ssh)
 ![time](https://img.shields.io/badge/time->=0.13.0-b0055a?logo=time)
-![tls](https://img.shields.io/badge/tls->=4.0.6-54a9fe?logo=tls)
+![tls](https://img.shields.io/badge/tls->=4.3.0-54a9fe?logo=tls)
 
 ## Modules
   
@@ -68,7 +70,7 @@ Handles adding the SSH key of the machine running this script to the gitops user
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L124"><code>main.tf#L124</code></a></td>
+      <td><a href="./main.tf#L131"><code>main.tf#L131</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/authorized-keys-appender/README.md">README.md</a> <em>(experimental)</em></td>
@@ -106,7 +108,7 @@ Handles mapping directories for future use (e.g. file sharing via `virtiofs` int
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L101"><code>main.tf#L101</code></a></td>
+      <td><a href="./main.tf#L108"><code>main.tf#L108</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/directory-mappings/README.md">README.md</a> <em>(experimental)</em></td>
@@ -125,13 +127,32 @@ Handles creating a gitops user, providing it with access to the gitops git repos
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L116"><code>main.tf#L116</code></a></td>
+      <td><a href="./main.tf#L123"><code>main.tf#L123</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/gitops-user/README.md">README.md</a> <em>(experimental)</em></td>
     </tr>
   </table>
 </blockquote><!-- module:"gitops_user":end -->
+<blockquote><!-- module:"node_exporter":start -->
+
+### `node_exporter`
+
+Handles the installation of `node-exporter`.
+  <table>
+    <tr>
+      <td>Module location</td>
+      <td><code>./modules/node-exporter</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L83"><code>main.tf#L83</code></a></td>
+    </tr>
+    <tr>
+      <td colspan="2"><a href="./modules/node-exporter/README.md">README.md</a> <em>(experimental)</em></td>
+    </tr>
+  </table>
+</blockquote><!-- module:"node_exporter":end -->
 <blockquote><!-- module:"packages":start -->
 
 ### `packages`
@@ -144,7 +165,7 @@ Handles the installation of additional `apt` packages.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L92"><code>main.tf#L92</code></a></td>
+      <td><a href="./main.tf#L99"><code>main.tf#L99</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/packages/README.md">README.md</a> <em>(experimental)</em></td>
@@ -163,7 +184,7 @@ Handles the import of directories into Proxmox.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L83"><code>main.tf#L83</code></a></td>
+      <td><a href="./main.tf#L90"><code>main.tf#L90</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/proxmox-storage-import/README.md">README.md</a> <em>(experimental)</em></td>
@@ -708,6 +729,14 @@ States, whether a no-subscription repository was used (and some further details)
 
 In file: <a href="./outputs.tf#L21"><code>outputs.tf#L21</code></a>
 </blockquote><!-- output:"no_subscription":end -->
+<blockquote><!-- output:"node_exporter_version":start -->
+
+#### `node_exporter_version`
+
+Version of `node-exporter`, that was installed
+
+In file: <a href="./outputs.tf#L70"><code>outputs.tf#L70</code></a>
+</blockquote><!-- output:"node_exporter_version":end -->
 <blockquote><!-- output:"share_user":start -->
 
 #### `share_user`

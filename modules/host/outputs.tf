@@ -66,3 +66,8 @@ output "smartctl_exporter_version" {
   description = "Version of `smartctl-exporter`, that was installed"
   value       = module.smartctl_exporter.smartctl_exporter_version
 }
+
+output "node_exporter_version" {
+  description = "Version of `node-exporter`, that was installed"
+  value       = module.node_exporter.node_exporter_version
+}

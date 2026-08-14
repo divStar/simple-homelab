@@ -79,6 +79,13 @@ module "smartctl_exporter" {
   ssh = var.ssh
 }
 
+# Handles the installation of `node-exporter`.
+module "node_exporter" {
+  source = "./modules/node-exporter"
+
+  ssh = var.ssh
+}
+
 # Handles the import of directories into Proxmox.
 module "proxmox_storage_import" {
   source     = "./modules/proxmox-storage-import"
