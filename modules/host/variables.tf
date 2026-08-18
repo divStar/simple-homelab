@@ -188,6 +188,17 @@ variable "storage_directories" {
   default = {}
 }
 
+variable "nic_link_advertise" {
+  description = "NICs that should have specific ethtool link modes force-advertised via a persistent /etc/network/interfaces.d/ drop-in - works around NIC drivers (e.g. ixgbe/X550) that don't advertise their full hardware-supported mode set by default, silently capping negotiated speed even with a good cable and a capable link partner."
+  # @field interface Interface name (e.g. "enp193s0f1") - stable on Debian/Proxmox, derived from PCI topology rather than enumeration order
+  # @field modes      Ordered list of ethtool link mode names to advertise (e.g. ["100baseT/Full", "1000baseT/Full", "2500baseT/Full", "5000baseT/Full", "10000baseT/Full"])
+  type = list(object({
+    interface = string
+    modes     = list(string)
+  }))
+  default = []
+}
+
 variable "directory_mappings" {
   description = "Directory mappings for the Proxmox node"
   # @field id name of the directory-mapping

@@ -1,0 +1,25 @@
+proxmox = {
+  name     = "sanctum"
+  host     = "sanctum.my.world"
+  ssh_user = "root"
+  ssh_key  = "~/.ssh/id_rsa"
+  username = "root@pam"
+  password = "some-password"
+  insecure = false
+}
+
+proxmox_node_name = "sanctum"
+
+vm_id   = 801
+vm_name = "opnsense"
+
+opnsense_version = "26.7"
+
+wan_bridge = "vmbr0"
+lan_bridge = "vmbr1"
+
+cpu_cores = 4
+memory    = 8192
+disk_size = 24
+
+boot_from_installer = true

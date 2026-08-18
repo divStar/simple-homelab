@@ -1,3 +1,5 @@
+opnsense-flint2-vlan-status.md filter=crypt diff=crypt merge=crypt
+opnsense-rebuild-runbook.md filter=crypt diff=crypt merge=crypt
 *.tfvars filter=crypt diff=crypt merge=crypt
 *.secret.* filter=crypt diff=crypt merge=crypt
 *.crt filter=crypt diff=crypt merge=crypt
