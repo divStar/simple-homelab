@@ -1,138 +1,169 @@
-# sanctum disaster recovery
-
-Recovery steps for "router is gone" up to "`sanctum` needs full rebuild from bare metal." Verify
-IPs/VLAN assignments below against current reality before acting on them - this repo evolves.
-
-## Facts to know before starting
-
-- Every core service has a static IP (`step-ca`, `sanctum-samba`, `pihole`, `pbs-lxc`,
-  `docker-vm`) - no DHCP server needed to reach any of them.
-- Proxmox (`pveproxy`/`pvedaemon`) runs LAN-only, no internet/DNS required. Internet is only
-  needed for `proxmox_download_file` (LXC templates, VM images, ISOs).
-- Pi-hole's local `.my.world` records resolve without internet - only forwarding to public DNS
-  (`8.8.8.8`/`8.8.4.4`) needs a real upstream.
-
-## `transcrypt` decryption password
-
-Required to read this repo's secrets. Lives only in local git config
-(`git config transcrypt.password`), never pushed to GitHub. Three copies exist: this machine, its
-Time Machine backup, a paper copy. GitHub remote: `divStar/simple-homelab`.
-
-## Getting physically connected to `sanctum`
-
-> [!NOTE]
-> Use `divStar-AP05` (hidden SSID, VLAN 5) for disaster recovery. Wired alternative: macOS
-> `System Settings → Network → Manage Virtual Interfaces` → add VLAN, tag `5`, bind to the
-> physical port in use.
-
-- Wired: USB-Ethernet adapter into a free NIC on `sanctum`.
-- Fallback, if Flint 2/OPNsense's VLAN layer is itself unavailable: Flint 2 in AP mode, wired into
-  a free NIC. Works standalone, no OPNsense dependency. Known unreliable in AP mode (UI becomes
-  inaccessible, ethernet/internet passthrough issues) - test this ahead of time, not for the first
-  time mid-incident.
-
-## Addressing
-
-`sanctum`, `pihole`, `step-ca`, and Flint 2 itself: `10.0.5.x` (Management, `vmbr1`). `samba` and
-`docker-vm`: `10.0.10.x` (Services, `vmbr1`). `10.0.20.x` (Trusted), `10.0.30.x` (Guest),
-`10.0.40.x` (IoT) - client-facing only. Full VLAN/rule detail: `opnsense-flint2-vlan-status.md`.
-
-Without OPNsense: VLAN tagging, static IPs within a VLAN, same-VLAN device-to-device all work
-(plain L2, no router needed). Needs OPNsense: crossing VLANs, firewall enforcement, internet
-access for any VLAN.
-
-Rebuilding OPNsense itself needs `proxmox_download_file` to fetch its ISO, which needs internet -
-requires a temporary router/WAN patch, or a pre-staged local ISO.
-
-## If the Flint 2 itself dies
-
-Any VLAN-capable router/AP can replace it - reconfigure the same SSID→VLAN mappings. Full
-bridge-vlan table, wireless config, OPNsense rule set to reconfigure from:
-`opnsense-flint2-vlan-status.md`.
-
-## Scenario A: `sanctum` survives, only the router is gone
-
-1. Point `sanctum`'s resolver at Pi-hole if not already.
-2. Get physically connected (above). `.my.world` resolves via Pi-hole - no DHCP/internet needed.
-3. For fresh downloads (`tofu apply` pulling templates/ISOs): temporarily patch the ISP
-   modem into a free `sanctum` NIC for real internet. FritzBox only - the Vigor is a bare PPPoE
-   modem, this won't grant internet without a configured PPPoE client. Not yet resolved.
-
-## Scenario B: `sanctum` needs full rebuild
-
-### Disk layout
-
-- `/mnt/storage` = `md0`, mdadm RAID10, 4 NVMe drives, ~7TB usable.
-- `/mnt/backup` = `md1`, mdadm RAID1, 2 drives, ~20TB. PBS's own datastore lives here.
-- Boot drives (`rpool`): ZFS, 2 SSDs, currently a plain stripe (not a mirror) - confirm via
-  `zpool status`: both disks must show under one `mirror-0` group, not as independent top-level
-  members. `copies=3` is set (protects against partial/bad-sector corruption only, not disk loss).
-- Reimport via `mdadm --assemble --scan` (not `zpool import` - `storage`/`backup` are not ZFS,
-  despite a stale `zfs_storage`/`storage-pool` reference in `host`'s Terraform config). Use
-  `--scan`, not specific device paths - device names aren't stable across reboots/reinstalls.
-- No offsite/off-host copy of `/mnt/backup` exists. Total machine loss (fire, theft) = PBS
-  datastore gone too. This plan only covers "OS/boot problem, arrays survive."
-
-### Reinstalling Proxmox
-
-Fresh Proxmox has no VLAN awareness - this bootstrap currently runs on `vmbr0`/`192.168.178.x`
-(FritzBox-era addressing) until `network-bridges` and per-LXC VLAN interfaces are reapplied.
-
-> [!WARNING]
-> Once the DrayTek Vigor replaces the FritzBox, `vmbr0` becomes a pure WAN/PPPoE uplink with no
-> LAN-style addressing - `192.168.178.x` below stops applying, and `sanctum` has no internet until
-> OPNsense is running and handling PPPoE. Plan: fetch the OPNsense ISO on another
-> internet-connected device (e.g. phone hotspot on the Mac), transfer it to `sanctum`, install/
-> restore OPNsense from it first - real internet, and everything downstream, flows through
-> OPNsense normally from that point on. **Open question**: whether `sanctum` is reachable via
-> `divStar-AP05` at all on a *freshly reinstalled* box, since `vmbr1`/Management doesn't exist
-> until `network-bridges` has already been applied once - see note under Rebuild order.
-
-- Default install onto the 2 boot SSDs.
-- Hostname must be `sanctum`.
-- ZFS boot pool: choose RAID1 (mirror) explicitly in the installer, set `copies=3`. Verify with
-  `zpool status` immediately after install that both disks show under `mirror-0` - don't trust
-  the installer selection alone.
-- Match `sanctum`'s static IP to current reality (today: `192.168.178.25` on `vmbr0` - check
-  current state, this may have changed).
-- Match `vmbr0`'s existing static IP - `sanctum.my.world` must resolve to the same address.
-- Installer only sets root password, no SSH key - add the existing public key to
-  `/root/.ssh/authorized_keys` before any `ssh_resource` provisioning can run.
-- `vmbr1` (VLAN-aware, 3 ports) is not part of any default install - reapply
-  `modules/network-bridges` afterward.
-
-### Rebuild order
-
-1. Reinstall Proxmox, reimport mdadm arrays.
-2. Get physically connected. On a freshly reinstalled box, `divStar-AP05` reachability is an open
-   question (see warning above) - `vmbr1`/Management doesn't exist until `network-bridges` has
-   already been applied once, so the very first connection may need to be wired directly into a
-   free `sanctum` NIC instead, bypassing both `vmbr0` and the not-yet-existing `vmbr1`.
-3. Temporary static IP on your own machine matching whatever bootstrap link is actually in use (no
-   DHCP server exists yet).
-4. Temporary `/etc/hosts` entry pointing `sanctum.my.world` at `sanctum`'s bootstrap IP - lets
-   `tofu apply` reach the Proxmox API with no working DNS.
-5. FritzBox era: temporary WAN patch (modem into a free NIC) unblocks template/ISO downloads
-   directly. Vigor era: no direct internet on `sanctum` - fetch the OPNsense ISO on another
-   internet-connected device (e.g. phone hotspot on the Mac), transfer it to `sanctum`, install
-   OPNsense and restore its config first, before anything else needing internet.
-6. Wipe Terraform state, reapply fresh (don't try to reconcile old state against a wiped host).
-   Host directories are bind-mounted into containers, not stored in-container - once arrays are
-   reimported to their expected paths, fresh containers see existing data through the same bind
-   mounts, no separate restore step.
-   - Secrets regenerate (PBS token, Samba users, etc.) - update anything external holding old
-     values.
-   - Arrays must be reimported before `tofu apply` for anything that bind-mounts them - some
-     modules seed-once on creation (Pi-hole), seeding against an empty path first then restoring
-     data after causes a conflict.
-7. Rebuild `host`, then `pihole`.
-8. Once Pi-hole is serving `.my.world` again: switch `sanctum`'s resolver back to Pi-hole, remove
-   the temporary `/etc/hosts` override.
-9. Rebuild the rest (`step-ca`, `samba`, `docker-vm`, ...) normally. FritzBox era only:
-   `opnsense` is part of this step too, not done earlier.
-
-## Trusting `step-ca` from a fresh OPNsense (or anything new)
-
-Fetch `step-ca`'s root cert via its static IP (`192.168.178.155`), never its hostname - works
-regardless of DNS state. Don't use ACME for this - deferred, OPNsense+step-ca ACME has known
-reliability issues.
+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
