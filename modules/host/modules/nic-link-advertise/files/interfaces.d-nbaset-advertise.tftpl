@@ -1,0 +1,2 @@
+iface ${interface} inet manual
+    post-up /sbin/ethtool -s ${interface} autoneg on advertise ${join(" ", [for mode in modes : "${mode} on"])}

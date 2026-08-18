@@ -49,6 +49,13 @@ storage_directories = {
   }
 }
 
+nic_link_advertise = [
+  {
+    interface = "enp1s0f0"
+    modes     = ["100baseT/Full", "1000baseT/Full", "2500baseT/Full", "5000baseT/Full", "10000baseT/Full"]
+  }
+]
+
 directory_mappings = [
   {
     id      = "backups-storage"

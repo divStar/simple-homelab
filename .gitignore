@@ -74,6 +74,7 @@ secret_fingerprint
 
 # Claude code
 .claude
+OPNsense.internal_claude-readonly_apikey.txt
 
 # Default key
 admin_key.json

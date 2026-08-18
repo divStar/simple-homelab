@@ -10,7 +10,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-REMOTE_HOST="core@docker-vm"
+REMOTE_HOST="core@docker-vm.my.world"
 REMOTE_PATH="/mnt/data/monitoring"
 DEFAULT_INPUT_DIR="./files"
 

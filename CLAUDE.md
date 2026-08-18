@@ -1,95 +1,528 @@
-# simple-homelab
-
-Terraform/OpenTofu-managed infrastructure for the user's Proxmox homelab (host `sanctum`). Provisions LXC containers and VMs and their in-guest configuration directly via SSH — there is no separate configuration-management layer (no Ansible etc.), provisioning happens through `ssh_resource` blocks in the same Terraform run that creates the container.
-
-## Tooling
-
-- Use **`tofu`**, not `terraform` — this repo targets OpenTofu (`required_version >= 1.10.5`). Both binaries happen to be installed locally; always use `tofu`.
-- Providers: `bpg/proxmox` (container/VM/download-file resources), `loafoe/ssh` (in-guest provisioning via SSH), `hashicorp/random`, `hashicorp/tls`.
-- Docs are generated, not hand-written: `bash scripts/generate-docs.sh <module-path>` (wraps `terraform-docs`, config at `.terraform-docs.yml`). **Always regenerate after any `.tf` file change** — module READMEs should never drift from the actual code.
-- `scripts/destroy-vmlxc.sh`, `scripts/upload-configs.sh`, `scripts/portainer-get-token.sh` exist for other workflows in this repo; not covered here.
-
-## Module layout
-
-```
-modules/
-├── common/modules/{alpine,debian}   # reusable base OS modules
-├── host/                            # Proxmox host itself (packages, storage, users, ACME/repos)
-├── samba/, step-ca/, pihole/        # single-purpose LXC service modules, each built on a base OS module
-├── docker-vm/                       # Flatcar + Docker VM, hosts Traefik-fronted apps
-├── pbs-lxc/, pbs-vm/                # Proxmox Backup Server - pbs-lxc is the live one, pbs-vm a dormant fallback
-├── backup-jobs/                     # PBS storage registration + guest backup jobs + host-level folder backups
-├── docker-apps/                     # Portainer-managed docker-compose stacks that live on docker-vm
-└── service-configs/                 # stack.env / docker-compose.yml per docker-apps service
-```
-
-### Base OS modules (`common/modules/{alpine,debian}`)
-
-Each one: downloads an LXC template (`proxmox_virtual_environment_download_file`, pinned by URL + checksum), creates the container, installs OpenSSH via `pct exec` from the Proxmox host (fresh templates don't have it), installs a package list, sets up an OS-native recurring update mechanism, and pushes default shell aliases.
-
-- **Alpine**: `apk` / OpenRC / cron. `update_interval` is a **cron expression**.
-- **Debian**: `apt` / systemd. `update_interval` is a **systemd `OnCalendar` expression**, not cron — deliberately different formats between the two modules, matching each OS's native idiom rather than forcing one convention. Debian's own update job is a systemd timer (`debian-update.timer`/`.service`), not cron — cron was tried first, then deliberately dropped in favor of systemd since Debian isn't Alpine and already has it.
-- Both output `root_password` and `ssh_private_key` (sensitive), used by the calling module to provision further.
-
-When adding a third base OS: match this shape, but let the update mechanism be whatever's native to that OS, not a copy-paste of Alpine's or Debian's specific implementation.
-
-### Service modules (`samba`, `step-ca`, `pihole`)
-
-Each is a standalone root module: its own `providers.tf`, `variables.tf` (always includes a `proxmox` object var — `name/host/ssh_user/ssh_key/insecure/username/password`, `sensitive = true`), `outputs.tf` (`root_password`, `ssh_private_key`), `project.auto.tfvars` + `.example`, and a `main.tf` that calls a base OS module via `module "setup_container"` then layers service-specific `ssh_resource` provisioning on top.
-
-**Fixed everywhere as of 2026-08-09** - `step-ca`, `pihole`, `samba`, and `pbs-lxc` all carry this fix (`terraform_data.container_trigger` + `replace_triggered_by` on every provisioning `ssh_resource`), verified via `tofu plan -replace` on all four. `docker-vm`/`pbs-vm` don't use this `ssh_resource`-provisioning pattern at all (docker-vm bakes config into Ignition at first boot; pbs-vm is a dormant fallback) - not applicable there.
-
-A service module's `ssh_resource` provisioning steps (config push, account creation, etc.) are linked to their base container only via `depends_on`, which is ordering-only — it does *not* propagate replacement. If the container is ever destroyed and recreated (e.g. a template/image change forcing `must be replaced`), those `ssh_resource`s see no attribute change of their own and silently do **not** re-run against the fresh container — `tofu apply` reports success, but the new container ends up with no config on it. Confirmed via `tofu plan` while migrating `samba` off the deprecated `proxmox_virtual_environment_download_file`: the container correctly showed `must be replaced`, but `configure_samba`/`configure_users` showed zero diff until this was fixed.
-
-Fix (reference implementation: `modules/samba/main.tf` + `modules/common/modules/alpine/outputs.tf`): the base OS module needs to export a `container_id` output (the container resource's own `id` — not useful for identifying the container, since callers already know `vm_id`, but its value goes to "known after apply" whenever the container is replaced, which is what actually matters here). Module outputs aren't valid `replace_triggered_by` references on their own though (only resources are, confirmed the hard way via a `tofu plan` error) — wrap it in a `terraform_data` resource first, same pattern the existing `users_trigger`-style triggers already use for other values, then add that `terraform_data`'s `.id` to every provisioning `ssh_resource`'s `lifecycle.replace_triggered_by` list, alongside whatever trigger(s) it already has.
-
-**`proxmox.host` must be a hostname (e.g. `sanctum.my.world`), never the raw IP.** Proxmox's real TLS cert is issued via this repo's own Step CA for the hostname, not the IP — connecting via IP fails certificate validation (`x509: cannot validate certificate ... doesn't contain any IP SANs`). All working `project.auto.tfvars` files use the hostname; if you ever see an IP in one, that's a bug, not a valid alternative. (Side note: the cert doesn't lack an IP SAN by choice — Proxmox's built-in ACME client has a known bug, [Bugzilla #4687](https://bugzilla.proxmox.com/show_bug.cgi?id=4687), that mangles IP addresses into the DNS SAN field instead of the IP SAN field, referenced already in `modules/step-ca/files/setup-host.sh`. Not fixable from this repo's side.)
-
-### tfvars and secrets
-
-`*.tfvars` files show as gitignored (`.gitignore` lists them) but **are actually committed, encrypted** — `.gitattributes` has `*.tfvars filter=crypt diff=crypt merge=crypt` (transcrypt). The `.gitignore` entry only stops an accidental unencrypted `git add .`; real values are force-added and transparently encrypted at rest. Don't be surprised to find a real `project.auto.tfvars` sitting next to its `.example` twin — that's the intended setup, not a leak.
-
-### Before ever deploying this fresh
-
-Nothing here gets exercised again until an actual from-scratch deploy happens, which isn't imminent — so treat this as a pre-flight checklist for that day, not a standing task:
-- Pinned template URLs/checksums (`alpine_image`, `debian_image` defaults) may be stale by then — verify against what Proxmox's `pveam available`/apl-info cache actually offers.
-- `proxmox_virtual_environment_download_file` is deprecated in favor of `proxmox_download_file` (shows up as a warning on every `plan`/`apply` already, in both `alpine` and `debian`) — worth migrating *then*, since a fresh deploy is the one time a resource-type change (which likely forces recreating the container, given `template_file_id` is probably create-time-only) doesn't cost anything extra.
-- Provider version constraints (`bpg/proxmox`, `loafoe/ssh`, etc.) may have newer releases worth bumping to at that point too.
-
-## Working conventions in this repo
-
-- **Always show a plan and get confirmation before `apply`** — even for single-resource changes. `tofu plan` first, walk through what's changing, then apply.
-- **Never run `git add`/`commit`/`push`** unless explicitly asked — the user handles git themselves.
-- Prefer changing a **shared default** (e.g. a base module's variable default) over adding a **per-consumer override**, when the override would just match the sensible default and there's only one consumer today.
-- When a `ssh_resource`'s `commands` embeds a Terraform-interpolated value directly (e.g. `OnCalendar=${var.update_interval}`), changing that variable *will* re-diff and re-apply cleanly on the next `tofu apply`. When a `ssh_resource` only references a *file* via `file { source = ... }`, changing that file's content on disk does **not** get picked up by a future `apply` — the provider doesn't appear to track file content as a diffable attribute. Propagating a source-file change to an already-applied resource means pushing/re-running it manually over SSH; don't assume `tofu apply` alone will do it.
-- Before assuming a Pi-hole/Debian/systemd behavior (unattended-install flags, restart-after-update behavior, config defaults), check the actual installed version's source on the live box (`ssh <host> "cat /path/to/script"`) rather than trust general knowledge or a secondhand summary — this repo's history includes at least one case where that secondhand-summary approach was wrong (`PIHOLE_SKIP_OS_CHECK` necessity) and one where an initial primary-source check missed something a deeper search found (the same flag, and separately the `pi.hole` cert SAN requirement).
-
-## Design decisions worth knowing before changing the `step-ca` module
-
-- **The `step-ca` system user/group is a hidden side effect of `apk add step-certificates`, not anything Terraform creates.** Confirmed 2026-08-05 by extracting `/lib/apk/db/scripts.tar` on the live container: `step-certificates` ships a `.pre-install` trigger script (invisible to `apk info -L`, which only lists regular files) that runs `addgroup -S step-ca` then `adduser -S -D -h /etc/step-ca -s /bin/sh -G step-ca -g "step-ca user" step-ca`. As long as `step-certificates` stays installed via `apk` (current decision, see below), this keeps happening automatically and needs no separate Terraform provisioning.
-- **Correction, 2026-08-09: `/etc/init.d/step-ca` is reproducible after all — the original "genuinely untracked" finding below was based on an incomplete investigation.** Re-checked live: `apk info | grep step` shows a *separate* `step-certificates-openrc` package installed alongside `step-certificates` (which by itself only ships `usr/bin/step-ca`, confirmed via `apk info -L step-certificates`). `apk info -L step-certificates-openrc` shows it owns exactly `etc/init.d/step-ca` and `etc/conf.d/step-ca`. This sub-package isn't in `/etc/apk/world` (never explicitly requested) and isn't a listed dependency in either direction (`apk info --depends step-certificates` doesn't mention it) — the signature of Alpine's `install_if` mechanism, where a package auto-installs whenever certain *other* packages (here: `step-certificates` + the always-present `openrc` base) are already present. That means any fresh Alpine container running this repo's exact `apk add step-certificates` line gets `step-certificates-openrc` pulled in automatically too, same as the live container did — **a `step-ca` container rebuild does not need a separate Terraform-managed `file{}` push for the init script; it's already reproduced by the existing `apk add step-certificates` step.** (Original note, now superseded, kept for context: checked `scripts.tar` for step-related trigger entries and found only the `.pre-install` user/group script above, concluding the init script was unreproduced — that check never looked at the separate `-openrc` sub-package.)
-- **Decision, 2026-08-05: keep installing both `step-cli` and `step-certificates` via `apk`, not Smallstep's own curl'd release tarballs.** Was seriously considered (Smallstep does publish a generic `step-ca_linux_VERSION_amd64.tar.gz`, matching the CLI's existing tarball pattern used elsewhere) specifically to get one consistent version-controlled-by-Terraform-variable install mechanism across client and server, matching how `pihole`/`docker-vm` already install the client via `install-step.sh`. Deferred, not rejected - if revisited, remember: switching away from `apk` for `step-certificates` means losing the automatic user/group creation above for free, so that trigger script's exact commands would need to be replicated explicitly as their own provisioning step.
-- The persisted CA state (`/mnt/temp/step-ca` on the host, mounted to `/etc/step-ca` in the container) is owned by uid/gid `100101`/`100102` on the host - confirms this is an *unprivileged* LXC (`unprivileged = true` in `step-ca/main.tf`, unlike `sanctum-samba`) with Proxmox's standard `100000 + N` UID-shift offset (container-side `step-ca` user is uid 101/gid 102). Relevant if the user/group ever needs recreating with a pinned id to match existing on-disk ownership, same principle as `sanctum-samba`'s `fileshare`/`smbwrite` GID pinning.
-
-## Design decisions worth knowing before changing the `docker-vm` module
-
-- **Any change to the Ignition/Butane config forces a full VM replace, not an in-place update - this is structural, not a bug.** Unlike the LXC service modules' `ssh_resource`-based provisioning (which can selectively re-run just the affected steps), `docker-vm` bakes all its configuration into a Butane/Ignition file applied once at first boot via `initialization.user_data_file_id`. Ignition has no mechanism to re-apply to an already-running VM, so OpenTofu's only option for *any* templated value change (confirmed 2026-08-05 via a `step_ca_client_version` bump alone) is `proxmox_virtual_environment_vm.flatcar must be replaced` - full destroy and recreate, taking every Traefik-fronted service on it down and back up. Before touching anything that flows into the Butane templates, expect this consequence, not a quiet in-place diff.
-- Recovering from that replace is by design, not a data-loss risk: the module is built so redeploying just needs the VM's existing virtual disk files present in the import directory under their expected names - it reuses them rather than starting from empty disks. (User's own description, 2026-08-05, not independently verified against the actual disk-import config - worth confirming the exact mechanism if this is ever relied on for real.)
-
-## Design decisions worth knowing before changing the `pihole` module
-
-- **"Seed once, UI is source of truth"**: `files/pihole.toml` is pushed once at container creation. Local DNS records, CNAME records, theme, NTP settings, etc. all live in that one-time seed; further changes go through Pi-hole's own web UI/CLI, not Terraform. The one deliberate exception is `upstream_dns` (a real tfvar, applied via a separate `pihole-FTL --config dns.upstreams` resource) since the user specifically wants that one to stay a one-line Terraform-adjustable lever.
-- **TLS via Step CA, not Traefik/Let's Encrypt** — adapted from `docker-vm`'s own pattern (see `modules/docker-vm/files/docker-cert.config.yaml.tftpl` for the original this was based on). `step` CLI installed as a static binary (not an apt package), trust bootstrapped via the CA's `/roots.pem` fingerprint, cert requested via `step ca certificate` with a provisioner, renewed on a 12h systemd timer (Step CA issues 24h-lived certs). Cert issuance happens *before* Pi-hole is installed, so the seed config can declare HTTPS-only (`webserver.port = "443os"`, no port 80 at all) from the very first boot. SAN list must include `pi.hole` specifically (Pi-hole's own hardcoded `webserver.domain` default) alongside the real hostname/FQDN/IP, or Pi-hole logs a cert-mismatch warning even though normal access still works.
-- Unprivileged LXC containers can't get `CAP_SYS_TIME` — Pi-hole's own NTP client fails trying to adjust the clock. Harmless (LXC shares the host's kernel clock directly, nothing to actually adjust), fixed by disabling `ntp.ipv4.active`/`ntp.ipv6.active`/`ntp.sync.active` in the seed config rather than granting the capability.
-- Pi-hole's unattended installer needs a pre-existing `pihole.toml` to actually skip prompts (a documented upstream quirk, not obvious from the flag name), and does *not* run gravity (`pihole -g`) itself even though it sets up the weekly auto-refresh cron job — both are why gravity is run as an explicit one-time step after install.
-
-## Design decisions worth knowing before changing the `backup-jobs` module
-
-- **Two separate SSH targets, don't confuse them**: `local.pbs_ssh` (the PBS box, `pbs-lxc`) is only for one-time bootstrap (user/token/ACL, verify-job). `local.sanctum_ssh` (the PVE host itself) is where the folder-backup track's systemd units actually live and run ongoing - `proxmox-backup-client` runs from the box being backed up, same shape vzdump itself uses, not from PBS.
-- **PBS intersects a token's effective permissions with its parent user's own permissions** - granting a role to only the token leaves it with zero effective access until the plain user gets the same grant too (undocumented outside one line in PBS's own user-management docs). Both `grant_pbs_user_acl` and `grant_pbs_token_acl` exist because of this, and `grant_pbs_token_acl` must `depends_on` the user grant too, not just the token - otherwise nothing guarantees the user grant lands before a resource that needs it.
-- **Role is `DatastoreAdmin`, not the more obvious `DatastorePowerUser`** (Backup+Prune+Read+Audit only) - the folder-backup track needs `Datastore.Modify` too, to create its per-folder namespaces. `DatastoreAdmin` is a confirmed superset, one role covers both tracks.
-- **`proxmox-backup-manager user generate-token` doesn't support `--output-format`** (unlike `user list`/`list-tokens`) - its default output is `Result: {...}` which needs the prefix stripped before `jsondecode()`. Also: a token's secret is shown exactly once, ever - `create_pbs_token`'s idempotency is delete-then-recreate, not skip-if-exists, since a rerun can't recover a lost secret any other way.
-- **PBS namespaces need explicit creation** (`proxmox-backup-client namespace create <ns>`) - unlike backup groups, they don't auto-create on first push (`Error: namespace not found`). The create call itself is idempotent (safe to call every run), and requires `Datastore.Modify` (see above). One verify-job at the root namespace with default recursion depth covers every namespace underneath automatically - no per-namespace verify-jobs needed.
-- **Folder-level backups can't be a `proxmox_backup_job`** - that resource only targets PVE guests (VMs/LXCs), there's no host-path equivalent, hence the systemd-timer + `proxmox-backup-client` track. Also unlike vzdump, `proxmox-backup-client backup` has no inline `--prune-backups` - pruning is a separate `proxmox-backup-client prune <group>` call, which `pbs-folder-backup.sh` runs right after each backup.
-- Namespaces are always the folder name (one per entry in `var.folders`), deliberately *not* per-tier - the "short/mid/long/very-long" tiers are only a Terraform-side convenience for grouping shared schedule/retention values, with no PBS-side identity of their own.
-- **Deferred, not built**: piping PBS's native metrics into Grafana (already running on `docker-vm`) for schedule/last-run visibility beyond what `systemctl list-timers`/the PBS UI already give. PBS only pushes metrics via the InfluxDB wire protocol (no native Prometheus endpoint) - VictoriaMetrics accepts that same protocol natively, so it's the likely path if this gets built, without needing real InfluxDB (which the user wants to move away from anyway).
+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
+38ru3iNfhtWLCnj0xKYjYODq9TdC4Sufv9sldvSshfx47K6kLrk4bNKXkfTD58j3
+G46yWbhCoPUc9XOrT8UePXnMA8z0QIXZrtFgXK3ULuHszgd5M11qpUnnWo76q9N7
+ew12K4q2SSQ2gLIiazb4eDek7MtfjNe5Gzv7bAMUjQb+7sJ2e4OV06IFm0gxdX6h
+FYMya+84jgJ0hmwm6MWXQxcFSrdHANiYGIdDlm0alMkbZYbmSvolnHWb43197xnH
+nj6uVyBA2z2qgw4IHs/MFqyW0EAZF2VkTaMMGEGUZwExoFQsv1B1z9QDIYarksGC
+wVMZqjKZBlPiEtvBogPGnsqTBDyyC1MXhwnk4gPnc6sthJaWxJj7Hq9PPDi+cjYZ
+FVWJXO7QW+SX4R+sLgUMTAaWzWIcSoAUZDCZvfJ7Clb15IcdO/ByXgB12VFgoIJD
+cRzyf/VLV29Nce7Lyl+U62phfMsNdxzaHVa3lY792FQT9JNzCaHr3/Hq8KIQYLNG
+T6QrdWxClP8SRB+qPYaPT5AV9QRbRr0XzqUzx9DwoQnhzKDA6PfO2Tc7xuDAcyI5
++3W4QLr89llEVSpXq4TquElIiDeRFvBK7FEw93y0O7uiHvaKogGWqiNuyKkRU2Vy
+RPmZReMATRftHD7rog/0G84ht6n8LJpDILUjFJugmJNzTNglRCW7ERAAioyGVrJH
+fVAVJFMNQKU8h6DP6HTYEYv1IsFbt6UiNmGDzJBZ5tnrfVPTCZUADfSk/gJuvzCZ
+AEfjHxVQA7paRWJC4yXtAGUKdsYyrpA7W3VyujDOCBIyoeIEcCtnscxwdhVqHuwM
+kSXNAIIc8UscY8t6k3L2wmrB9cA+zncKeSXEPBWLyLwYkCO9yjOlNH0z+OYI8s6C
+awZVJe//v6WQVfwKBLHt4Ff5cJv6X2oDePIKJX++HgqmAKEqcJVrvxvrtWS+K4uI
+I0XNN8B5Cl2k6EQq8xCzuJFLsyavy80mCHi0oC75X9DUHCztBVV1/2exwnSpIbOr
+K2y0unH50/mkyHIaYvAI8M/Abnf1h2FKoT6AxqsmlUwM45BpB6DYd3mP5jFkOYH7
+1S+KNGsO/qW0mbUr/aqK+hROdBCL0PorVtw+X7CiFQ2fLoQ4PBz2NnE1vmSmtx68
+VC3U1pH+DDbW+joeTQiYa2YUlqPfB8L8Z6B5SDBBQLX66w91LMnqm7c7BNxVPpLy
+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
+6/rOR7Laor79e4yPZrIjGg==

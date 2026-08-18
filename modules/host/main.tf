@@ -14,6 +14,7 @@ locals {
   org_source_repo_owner = var.org_source_repo_owner
   storage               = var.storage_pools
   token                 = module.terraform_user.token
+  nic_link_advertise    = var.nic_link_advertise
 }
 
 # Handles the creation of a Terraform user and API token.
@@ -77,6 +78,21 @@ module "smartctl_exporter" {
   source = "./modules/smartctl-exporter"
 
   ssh = var.ssh
+}
+
+# Handles the installation of `node-exporter`.
+module "node_exporter" {
+  source = "./modules/node-exporter"
+
+  ssh = var.ssh
+}
+
+# Handles persisting ethtool advertised link modes for specific NICs via /etc/network/interfaces.d/ drop-ins.
+module "nic_link_advertise" {
+  source = "./modules/nic-link-advertise"
+
+  ssh                = var.ssh
+  nic_link_advertise = local.nic_link_advertise
 }
 
 # Handles the import of directories into Proxmox.
