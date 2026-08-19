@@ -1,0 +1,3 @@
+iface ${interface} inet static
+    post-up ip route add default via ${gateway} dev ${interface} table ${table_name}
+    post-up ip rule add from ${source_address} lookup ${table_name} priority ${priority}

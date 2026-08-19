@@ -16,6 +16,98 @@ variable "proxmox_node_name" {
   type        = string
 }
 
+variable "proxmox" {
+  description = "Proxmox API connection details, separate from the SSH-based `ssh` variable - needed for `bpg/proxmox`-backed resources such as network bridges/VLANs"
+  sensitive   = true
+  nullable    = false
+  type = object({
+    name     = string
+    host     = string
+    ssh_user = string
+    ssh_key  = string
+    insecure = bool
+    username = string
+    password = string
+  })
+}
+
+variable "bridges" {
+  description = "Linux bridges to create on the Proxmox host"
+  # @field name Bridge interface name (e.g. "vmbr1")
+  # @field ports Physical NIC(s) to attach as bridge members - each port should lead to a physically separate, non-interconnected destination (e.g. a different room); this module configures no STP/bonding, so two ports reaching the same switch will loop
+  # @field vlan_aware Whether to enable 802.1Q VLAN tagging support on this bridge
+  # @field vids Space-separated list of VLAN IDs and/or hyphenated ranges allowed on this bridge; only relevant when vlan_aware is true
+  # @field comment Optional comment for the bridge
+  # @field address Optional IPv4 address (CIDR) for the bridge itself, if the host needs a presence on it
+  # @field autostart Whether the bridge should come up automatically on boot
+  type = list(object({
+    name       = string
+    ports      = list(string)
+    vlan_aware = optional(bool, false)
+    vids       = optional(string, "2-4094")
+    comment    = optional(string, "")
+    address    = optional(string)
+    autostart  = optional(bool, true)
+  }))
+  default = []
+}
+
+variable "vlan_interfaces" {
+  description = "VLAN-tagged sub-interfaces to create on the Proxmox host, giving it a presence on a specific VLAN over an existing VLAN-aware bridge"
+  # @field name      Interface name as "<bridge>.<vlan>" (e.g. "vmbr1.5") - the VLAN tag is inferred from the name, the parent bridge must already exist
+  # @field address   IPv4 address (CIDR) for the host on this VLAN
+  # @field gateway   Optional default gateway - leave unset to avoid creating a second default route on a dual-homed host
+  # @field comment   Optional comment
+  # @field autostart Whether the interface comes up automatically on boot
+  type = list(object({
+    name      = string
+    address   = string
+    gateway   = optional(string)
+    comment   = optional(string, "")
+    autostart = optional(bool, true)
+  }))
+  default = []
+}
+
+variable "response_routes" {
+  description = "Per-interface source-based routing: traffic sourced from a specific address uses its own gateway, without disturbing the system's main default route - needed for dual-homed hosts where a secondary interface has no gateway of its own. Governs only how sanctum's own replies get routed back out; it has no bearing on who's allowed to reach it in the first place - that's OPNsense's firewall's job entirely."
+  # @field interface      Interface name whose bring-up should trigger this (e.g. "vmbr1.5")
+  # @field source_address The source IP that should be routed via this table (e.g. "10.0.5.3")
+  # @field gateway         Gateway for this source's traffic (e.g. "10.0.5.1")
+  # @field table_id        Numeric routing table ID to register in /etc/iproute2/rt_tables (must be unique across all entries)
+  # @field table_name      Name for that routing table (must be unique across all entries)
+  # @field priority        ip rule priority - lower is evaluated first, must be unique across all entries
+  type = list(object({
+    interface      = string
+    source_address = string
+    gateway        = string
+    table_id       = number
+    table_name     = string
+    priority       = optional(number, 100)
+  }))
+  default = []
+
+  validation {
+    condition     = length(distinct([for route in var.response_routes : route.interface])) == length(var.response_routes)
+    error_message = "Each response_routes entry must have a unique interface - it's used as a map key, so a duplicate would silently drop one entry instead of erroring."
+  }
+
+  validation {
+    condition     = length(distinct([for route in var.response_routes : route.table_id])) == length(var.response_routes)
+    error_message = "Each response_routes entry must have a unique table_id."
+  }
+
+  validation {
+    condition     = length(distinct([for route in var.response_routes : route.table_name])) == length(var.response_routes)
+    error_message = "Each response_routes entry must have a unique table_name."
+  }
+
+  validation {
+    condition     = length(distinct([for route in var.response_routes : route.priority])) == length(var.response_routes)
+    error_message = "Each response_routes entry must have a unique priority."
+  }
+}
+
 variable "configuration_files" {
   description = "Configuration files to copy to the host"
   # @field item.source Source of the file on the system, that OpenTofu / Terraform is running on

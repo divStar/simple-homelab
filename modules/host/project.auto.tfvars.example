@@ -5,6 +5,44 @@ ssh = {
   user = "root"
 }
 
+proxmox = {
+  name     = "sanctum"
+  host     = "sanctum.my.world"
+  ssh_user = "root"
+  ssh_key  = "~/.ssh/id_rsa"
+  username = "root@pam"
+  password = "some-password"
+  insecure = false
+}
+
+bridges = [
+  {
+    name       = "vmbr1"
+    ports      = ["enp1s0f0", "enp1s0f1"]
+    vlan_aware = true
+    comment    = "LAN bridge"
+  }
+]
+
+vlan_interfaces = [
+  {
+    name    = "vmbr1.99"
+    address = "192.168.99.10/24"
+    comment = "Host presence on some VLAN"
+  }
+]
+
+response_routes = [
+  {
+    interface      = "vmbr1.99"
+    source_address = "192.168.99.10"
+    gateway        = "192.168.99.1"
+    table_id       = 10
+    table_name     = "example"
+    priority       = 100
+  }
+]
+
 configuration_files = [
   {
     source      = "./files/.vimrc"

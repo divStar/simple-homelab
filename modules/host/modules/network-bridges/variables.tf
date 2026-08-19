@@ -1,18 +1,3 @@
-variable "proxmox" {
-  description = "Proxmox host configuration"
-  sensitive   = true
-  nullable    = false
-  type = object({
-    name     = string
-    host     = string
-    ssh_user = string
-    ssh_key  = string
-    insecure = bool
-    username = string
-    password = string
-  })
-}
-
 variable "proxmox_node_name" {
   description = "Proxmox node name"
   type        = string

@@ -18,3 +18,11 @@ bridges = [
     comment    = "LAN bridge - per-room links (physically isolated, no shared switch), OPNsense-managed"
   }
 ]
+
+vlan_interfaces = [
+  {
+    name    = "vmbr1.99"
+    address = "192.168.99.10/24"
+    comment = "Host presence on some VLAN"
+  }
+]

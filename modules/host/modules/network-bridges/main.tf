@@ -1,12 +1,10 @@
 /**
  * # Network Bridges
  *
- * Handles the creation of Linux bridges and VLAN interfaces on the Proxmox host.
+ * Handles the creation of Linux bridges and VLAN interfaces on the Proxmox host. Uses the
+ * `proxmox` provider inherited from the parent `host` module - no provider configuration of its
+ * own.
  */
-locals {
-  proxmox_endpoint = "https://${var.proxmox.host}:8006"
-}
-
 resource "proxmox_network_linux_bridge" "this" {
   for_each = { for bridge in var.bridges : bridge.name => bridge }
 

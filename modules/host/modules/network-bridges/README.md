@@ -1,6 +1,8 @@
 # Network Bridges
 
-Handles the creation of Linux bridges and VLAN interfaces on the Proxmox host.
+Handles the creation of Linux bridges and VLAN interfaces on the Proxmox host. Uses the
+`proxmox` provider inherited from the parent `host` module - no provider configuration of its
+own.
 
 ## Contents
 
@@ -11,7 +13,6 @@ Handles the creation of Linux bridges and VLAN interfaces on the Proxmox host.
   - _proxmox_network_linux_bridge_.[this](#proxmox_network_linux_bridgethis)
   - _proxmox_network_linux_vlan_.[this](#proxmox_network_linux_vlanthis)
 - [Variables](#variables)
-  - [proxmox](#proxmox-required) (**Required**)
   - [proxmox_node_name](#proxmox_node_name-required) (**Required**)
   - [bridges](#bridges-optional) (*Optional*)
   - [vlan_interfaces](#vlan_interfaces-optional) (*Optional*)
@@ -22,7 +23,6 @@ Handles the creation of Linux bridges and VLAN interfaces on the Proxmox host.
 
 ## Providers
 ![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-![bpg/proxmox](https://img.shields.io/badge/bpg--proxmox->=0.111.1-1e73c8?logo=proxmox)
 
 ## Resources
   
@@ -37,7 +37,7 @@ Handles the creation of Linux bridges and VLAN interfaces on the Proxmox host.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L10"><code>main.tf#L10</code></a></td>
+      <td><a href="./main.tf#L8"><code>main.tf#L8</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_network_linux_bridge.this":end -->
@@ -53,38 +53,13 @@ Depends on every bridge, not just the one a given VLAN interface's name implies,
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L28"><code>main.tf#L28</code></a></td>
+      <td><a href="./main.tf#L26"><code>main.tf#L26</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_network_linux_vlan.this":end -->
 
 ## Variables
   
-<blockquote><!-- variable:"proxmox":start -->
-
-### `proxmox` (**Required**)
-
-Proxmox host configuration
-
-<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
-  <summary>Show more...</summary>
-
-  **Type**:
-  ```hcl
-  object({
-    name     = string
-    host     = string
-    ssh_user = string
-    ssh_key  = string
-    insecure = bool
-    username = string
-    password = string
-  })
-  ```
-  In file: <a href="./variables.tf#L1"><code>variables.tf#L1</code></a>
-
-</details>
-</blockquote><!-- variable:"proxmox":end -->
 <blockquote><!-- variable:"proxmox_node_name":start -->
 
 ### `proxmox_node_name` (**Required**)
@@ -98,7 +73,7 @@ Proxmox node name
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L16"><code>variables.tf#L16</code></a>
+  In file: <a href="./variables.tf#L1"><code>variables.tf#L1</code></a>
 
 </details>
 </blockquote><!-- variable:"proxmox_node_name":end -->
@@ -127,7 +102,7 @@ Linux bridges to create on the Proxmox host
   ```json
   []
   ```
-  In file: <a href="./variables.tf#L21"><code>variables.tf#L21</code></a>
+  In file: <a href="./variables.tf#L6"><code>variables.tf#L6</code></a>
 
 </details>
 </blockquote><!-- variable:"bridges":end -->
@@ -154,7 +129,7 @@ VLAN-tagged sub-interfaces to create on the Proxmox host, giving it a presence o
   ```json
   []
   ```
-  In file: <a href="./variables.tf#L42"><code>variables.tf#L42</code></a>
+  In file: <a href="./variables.tf#L27"><code>variables.tf#L27</code></a>
 
 </details>
 </blockquote><!-- variable:"vlan_interfaces":end -->
