@@ -15,6 +15,7 @@ locals {
   storage               = var.storage_pools
   token                 = module.terraform_user.token
   nic_link_advertise    = var.nic_link_advertise
+  proxmox_endpoint      = "https://${var.proxmox.host}:8006"
 }
 
 # Handles the creation of a Terraform user and API token.
@@ -87,12 +88,25 @@ module "node_exporter" {
   ssh = var.ssh
 }
 
-# Handles persisting ethtool advertised link modes for specific NICs via /etc/network/interfaces.d/ drop-ins.
-module "nic_link_advertise" {
-  source = "./modules/nic-link-advertise"
+# Handles the creation of Linux bridges and VLAN interfaces on the Proxmox host.
+module "network_bridges" {
+  source = "./modules/network-bridges"
+
+  proxmox_node_name = var.proxmox_node_name
+  bridges           = var.bridges
+  vlan_interfaces   = var.vlan_interfaces
+}
+
+# Handles persisting ethtool advertised link modes and source-based routing for specific
+# interfaces via /etc/network/interfaces.d/ drop-ins. Depends on network_bridges since
+# response_routes entries generally target VLAN interfaces that module creates.
+module "interface_adjustments" {
+  source     = "./modules/interface-adjustments"
+  depends_on = [module.network_bridges]
 
   ssh                = var.ssh
   nic_link_advertise = local.nic_link_advertise
+  response_routes    = var.response_routes
 }
 
 # Handles the import of directories into Proxmox.

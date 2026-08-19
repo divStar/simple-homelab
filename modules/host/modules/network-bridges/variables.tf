@@ -1,18 +1,3 @@
-variable "proxmox" {
-  description = "Proxmox host configuration"
-  sensitive   = true
-  nullable    = false
-  type = object({
-    name     = string
-    host     = string
-    ssh_user = string
-    ssh_key  = string
-    insecure = bool
-    username = string
-    password = string
-  })
-}
-
 variable "proxmox_node_name" {
   description = "Proxmox node name"
   type        = string
@@ -35,6 +20,23 @@ variable "bridges" {
     comment    = optional(string, "")
     address    = optional(string)
     autostart  = optional(bool, true)
+  }))
+  default = []
+}
+
+variable "vlan_interfaces" {
+  description = "VLAN-tagged sub-interfaces to create on the Proxmox host, giving it a presence on a specific VLAN over an existing VLAN-aware bridge"
+  # @field name      Interface name as "<bridge>.<vlan>" (e.g. "vmbr1.5") - the VLAN tag is inferred from the name, the parent bridge must already exist
+  # @field address   IPv4 address (CIDR) for the host on this VLAN
+  # @field gateway   Optional default gateway - leave unset to avoid creating a second default route on a dual-homed host
+  # @field comment   Optional comment
+  # @field autostart Whether the interface comes up automatically on boot
+  type = list(object({
+    name      = string
+    address   = string
+    gateway   = optional(string)
+    comment   = optional(string, "")
+    autostart = optional(bool, true)
   }))
   default = []
 }
