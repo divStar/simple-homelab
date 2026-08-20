@@ -310,52 +310,49 @@ _replace_generated_blocks() {
     printf '%s' "$out" > "$file"
 }
 
-# _escape_table_cell TEXT
-# Escapes "|" so TEXT is safe inside a GFM table cell - purpose text pulled from real prose can contain it.
-_escape_table_cell() {
-    printf '%s' "${1//|/\\|}"
-}
-
-# _render_table_row ORDER PATH TITLE PURPOSE ICON
-# One GFM table row: icon cell if any, title linking to that module's own README, escaped purpose text.
-_render_table_row() {
-    local path="$2" title icon="$5" icon_cell=""
-    title="$(_escape_table_cell "$3")"
-    local purpose; purpose="$(_escape_table_cell "$4")"
-    if [[ -n "$icon" ]]; then
-        icon_cell="$(_icon_img_tag "$icon" "$title")"
-    fi
-    printf '| %s | [%s](%s/README.md) | %s |\n' "$icon_cell" "$title" "$path" "$purpose"
+# _render_card_row ORDER PATH TITLE PURPOSE ICON
+# One row of a single-column GFM table: icon(s) (align="right", so title+purpose text flows beside them rather
+# than below) then bold title then purpose, all inside ONE cell. GitHub draws real borders around table
+# rows/cells natively (no CSS/class needed, both get stripped by its sanitizer anyway) - so this reads as one
+# bordered "card" per module. Deliberately not a normal multi-column table row: splitting icon/title/purpose
+# into separate columns is what caused multiple <img> tags to shrink and stack vertically instead of sitting
+# side by side - putting everything in one cell avoids that column-width fight entirely.
+_render_card_row() {
+    local path="$2" title="$3" purpose="$4" icon="$5" icon_cell=""
+    [[ -n "$icon" ]] && icon_cell="$(_icon_img_tag "$icon" "$title")"
+    printf -- '| %s**[%s](%s/README.md)**%s |\n' "$icon_cell" "$title" "$path" "${purpose:+<br>$purpose}"
 }
 
 # render_readme
-# Walks MODULES_DIR, computes the three module tables, and patches them into the existing README.md via
+# Walks MODULES_DIR, computes the three module lists, and patches them into the existing README.md via
 # _replace_generated_blocks - everything else in the file is left untouched. README.md must already exist with
 # the three <!-- generated:*:start/end --> markers placed somewhere by hand; there's no template or seed text.
 render_readme() {
+    # Every list is a single-column GFM table (see _render_card_row) - needs a header + separator row for GFM
+    # to recognize it as a table at all, kept visually blank since a real header would just be noise here.
     local table_header
-    table_header="$(printf '| | Module | Purpose |\n|---|---|---|')"
+    table_header="$(printf '|  |\n|---|')"
 
     local order_key order path title purpose icon
-    local top_rows="" app_rows="" appendix_rows="" row
+    local top_items="" app_items="" appendix_items="" item
     while IFS=$'\t' read -r order_key order path title purpose icon; do
         [[ -z "$order_key" ]] && continue
-        # $(...) strips *all* trailing newlines, including the one _render_table_row printed - re-add it here
+        # $(...) strips *all* trailing newlines, including the one _render_card_row printed - re-add it here
         # or every row ends up concatenated onto the same line with nothing between them.
-        row="$(_render_table_row "$order" "$path" "$title" "$purpose" "$icon")"$'\n'
+        item="$(_render_card_row "$order" "$path" "$title" "$purpose" "$icon")"$'\n'
         if [[ "$order_key" == "~~~" ]]; then
-            appendix_rows+="$row"
+            appendix_items+="$item"
         elif [[ "$path" == modules/docker-apps/modules/* ]]; then
-            app_rows+="$row"
+            app_items+="$item"
         else
-            top_rows+="$row"
+            top_items+="$item"
         fi
     done < <(walk_modules "$MODULES_DIR" | sort -t $'\t' -k1,1 -k3,3)
 
     local -A generated=(
-        [modules-table]="$table_header"$'\n'"$top_rows"
-        [docker-apps-table]="$table_header"$'\n'"$app_rows"
-        [appendix-table]="$table_header"$'\n'"$appendix_rows"
+        [modules-list]="$table_header"$'\n'"$top_items"
+        [docker-apps-list]="$table_header"$'\n'"$app_items"
+        [appendix-list]="$table_header"$'\n'"$appendix_items"
     )
     _replace_generated_blocks "$README_PATH" generated
 }
@@ -403,7 +400,7 @@ _icon_img_tag() {
     local -a paths
     IFS=',' read -ra paths <<< "$icon_rel_list"
     for icon_rel in "${paths[@]}"; do
-        out+="<img src=\"$icon_rel\" width=\"$ICON_MAX_SIZE\" height=\"$ICON_MAX_SIZE\" alt=\"$alt\"> "
+        out+="<img src=\"$icon_rel\" width=\"$ICON_MAX_SIZE\" height=\"$ICON_MAX_SIZE\" align=\"right\" alt=\"$alt\"> "
     done
     printf '%s' "${out% }"
 }
