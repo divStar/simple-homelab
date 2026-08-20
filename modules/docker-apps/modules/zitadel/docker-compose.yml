@@ -1,3 +1,6 @@
+# docs-title: Zitadel
+# docs-purpose: Identity and access management (SSO/OIDC) used by every other docker-apps service
+# docs-meta: order=120 icon=zitadel,postgres
 services:
   zitadel-db:
     image: postgres:18-alpine

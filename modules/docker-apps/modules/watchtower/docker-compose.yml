@@ -1,4 +1,7 @@
 # This Watchtower's documentation: https://watchtower.devcdn.net/
+# docs-title: Watchtower
+# docs-purpose: Automatically restarts containers when a newer image is pushed
+# docs-meta: order=200 icon=watchtower
 services:
   watchtower:
     image: beatkind/watchtower:latest

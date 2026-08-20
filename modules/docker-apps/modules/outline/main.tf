@@ -2,6 +2,8 @@
  * # Outline OIDC
  *
  * This module uses the [OIDC module](../../../common/modules/oidc/README.md) to create the necessary `client_id` and `client_secret` to set up OIDC/OAuth in Outline with Zitadel.
+ *
+ * <!-- docs-meta: order=170 icon=outline,postgres,redis -->
  */
 
 # Terraform and provider setup.

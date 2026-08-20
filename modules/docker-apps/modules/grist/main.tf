@@ -4,6 +4,8 @@
  * This module uses the [OIDC module](../../../common/modules/oidc/README.md) to create the necessary `client_id` and `client_secret` to set up OIDC/OAuth in Grist with Zitadel.
  *
  * Grist is fully env-var driven; no post-boot API setup is required (unlike Portainer/Jellyfin). All OIDC config produced here flows into the module's `stack.env` via the `grist_oidc_env_vars` output.
+ *
+ * <!-- docs-meta: order=190 icon=grist,postgres,redis -->
  */
 
 # Terraform and provider setup.

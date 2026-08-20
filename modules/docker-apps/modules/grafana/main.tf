@@ -2,6 +2,8 @@
  * # Grafana OIDC
  *
  * This module uses the [OIDC module](../../../common/modules/oidc/README.md) to create the necessary `client_id` to set up OIDC/OAuth in Grafana with Zitadel.
+ *
+ * <!-- docs-meta: order=160 icon=grafana -->
  */
 
 # Terraform and provider setup.

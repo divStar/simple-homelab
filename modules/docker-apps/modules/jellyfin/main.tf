@@ -3,6 +3,8 @@
  *
  * This module uses the [OIDC module](../../../common/modules/oidc/README.md) to create the necessary `client_id`
  * to set up OIDC/OAuth for Jellyfin (dashboard) with Zitadel.
+ *
+ * <!-- docs-meta: order=180 icon=jellyfin -->
  */
 
 # Terraform and provider setup.

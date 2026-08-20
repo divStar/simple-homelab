@@ -3,6 +3,8 @@
  *
  * This module uses the [OIDC module](../../../common/modules/oidc/README.md) to create the necessary `client_id`
  * to set up OIDC/OAuth for Grafana Alloy and Prometheus with Zitadel.
+ *
+ * <!-- docs-meta: order=150 icon=grafana-alloy,prometheus,loki -->
  */
 
 # Terraform and provider setup.

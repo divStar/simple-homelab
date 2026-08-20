@@ -6,6 +6,8 @@
  * folder backup per entry in var.folders (real data the guest-level jobs
  * never touch - bind-mounted LXC state, the family file shares, PVE's own
  * recovery-relevant config).
+ *
+ * <!-- docs-meta: order=70 icon=pbs -->
  */
 locals {
   proxmox_endpoint = "https://${var.proxmox.host}:8006"

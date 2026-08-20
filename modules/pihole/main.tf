@@ -2,6 +2,8 @@
  * # Pi-hole Setup
  *
  * This module sets up Pi-hole in a Debian LXC container using the provided information.
+ *
+ * <!-- docs-meta: order=40 icon=pihole -->
  */
 
 locals {

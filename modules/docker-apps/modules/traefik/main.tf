@@ -2,6 +2,8 @@
  * # Traefik dashboard OIDC
  *
  * This module uses the [OIDC module](../../../common/modules/oidc/README.md) to create the necessary `client_id` to set up OIDC/OAuth for Traefik (dashboard) with Zitadel.
+ *
+ * <!-- docs-meta: order=110 icon=traefik -->
  */
 
 # Terraform and provider setup.

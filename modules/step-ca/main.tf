@@ -2,6 +2,8 @@
  * # Step-CA Setup
  *
  * This module sets up Step-CA in an Alpine LXC container using the provided information.
+ *
+ * <!-- docs-meta: order=30 icon=step-ca -->
  */
 locals {
   proxmox_endpoint = "https://${var.proxmox.host}:8006"

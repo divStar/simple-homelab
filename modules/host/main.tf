@@ -2,6 +2,8 @@
  * # Host Setup
  *
  * This module and its sub-modules setup the Proxmox host.
+ *
+ * <!-- docs-meta: order=10 icon=proxmox -->
  */
 locals {
   ssh                   = var.ssh

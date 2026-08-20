@@ -6,6 +6,8 @@
  * Replaces modules/pbs-vm as the deployed PBS instance -- that module is kept
  * in the repo as a fallback option, but no longer applied. Reuses that VM's
  * former IP/MAC so sanctum-pbs.my.world keeps working unchanged.
+ *
+ * <!-- docs-meta: order=50 icon=pbs -->
  */
 
 locals {
