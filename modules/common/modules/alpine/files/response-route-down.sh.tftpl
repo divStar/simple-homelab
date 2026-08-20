@@ -1,0 +1,5 @@
+#!/bin/sh
+[ "$IFACE" = "${interface}" ] || exit 0
+
+ip rule del from ${source_address} table ${table_id} priority ${priority} 2>/dev/null || true
+ip route flush table ${table_id} 2>/dev/null || true

@@ -2,6 +2,8 @@
 
 This module sets up Step-CA in an Alpine LXC container using the provided information.
 
+<!-- docs-meta: order=30 icon=step-ca -->
+
 ## Contents
 
 <blockquote><!-- contents:start -->
@@ -13,6 +15,7 @@ This module sets up Step-CA in an Alpine LXC container using the provided inform
   - _ssh_resource_.[configure_container](#ssh_resourceconfigure_container)
   - _ssh_resource_.[configure_host](#ssh_resourceconfigure_host)
   - _ssh_resource_.[revert_host](#ssh_resourcerevert_host)
+  - _terraform_data_.[container_trigger](#terraform_datacontainer_trigger)
 - [Variables](#variables)
   - [acme](#acme-required) (**Required**)
   - [proxmox](#proxmox-required) (**Required**)
@@ -24,10 +27,10 @@ This module sets up Step-CA in an Alpine LXC container using the provided inform
 
 ## Providers
 ![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
-![proxmox](https://img.shields.io/badge/proxmox->=0.85.1-1e73c8?logo=proxmox)
-![random](https://img.shields.io/badge/random->=3.7.2-82d72c?logo=random)
+![proxmox](https://img.shields.io/badge/proxmox->=0.111.1-1e73c8?logo=proxmox)
+![random](https://img.shields.io/badge/random->=3.9.0-82d72c?logo=random)
 ![loafoe/ssh](https://img.shields.io/badge/loafoe--ssh->=2.7.0-4fa4f9?logo=ssh)
-![tls](https://img.shields.io/badge/tls->=4.1.0-54a9fe?logo=tls)
+![tls](https://img.shields.io/badge/tls->=4.3.0-54a9fe?logo=tls)
 
 ## Modules
   
@@ -43,7 +46,7 @@ Alpine LXC container setup
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L17"><code>main.tf#L17</code></a></td>
+      <td><a href="./main.tf#L45"><code>main.tf#L45</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="../common/modules/alpine/README.md">README.md</a> <em>(experimental)</em></td>
@@ -65,7 +68,7 @@ Configure Step-CA
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L43"><code>main.tf#L43</code></a></td>
+      <td><a href="./main.tf#L74"><code>main.tf#L74</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_container":end -->
@@ -81,7 +84,7 @@ Configure ACME domain and order certificates
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L67"><code>main.tf#L67</code></a></td>
+      <td><a href="./main.tf#L105"><code>main.tf#L105</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_host":end -->
@@ -97,10 +100,26 @@ ACME Cleanup on destroy
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L107"><code>main.tf#L107</code></a></td>
+      <td><a href="./main.tf#L145"><code>main.tf#L145</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.revert_host":end -->
+<blockquote><!-- resource:"terraform_data.container_trigger":start -->
+
+### _terraform_data_.`container_trigger`
+
+Wraps container_id into a valid replace_triggered_by target (module outputs alone aren't). Only configure_container needs it - configure_host/revert_host hit the Proxmox host, not the container.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>terraform (hashicorp/terraform)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L69"><code>main.tf#L69</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"terraform_data.container_trigger":end -->
 
 ## Variables
   

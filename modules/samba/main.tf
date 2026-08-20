@@ -23,12 +23,16 @@ module "setup_container" {
   tags         = ["alpine", "lxc", "pve-resources"]
   unprivileged = false
 
-  ni_mac_address = "EA:31:0E:A5:D8:4D"
-  ni_ip          = local.container_ip
-  ni_gateway     = "192.168.178.1"
-  ni_subnet_mask = 24
-  ni_name        = "eth0"
-  ni_bridge      = "vmbr0"
+  network_interfaces = [
+    {
+      name        = "eth0"
+      bridge      = "vmbr0"
+      mac_address = "EA:31:0E:A5:D8:4D"
+      ip          = local.container_ip
+      subnet_mask = 24
+      gateway     = "192.168.178.1"
+    }
+  ]
 
   imagestore_id = "pve-resources"
   startup_order = 2

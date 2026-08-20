@@ -1,0 +1,5 @@
+#!/bin/sh
+[ "$IFACE" = "${interface}" ] || exit 0
+
+ip route replace default via ${gateway} dev ${interface} table ${table_id}
+ip rule show | grep -q "from ${source_address} lookup ${table_id}" || ip rule add from ${source_address} table ${table_id} priority ${priority}
