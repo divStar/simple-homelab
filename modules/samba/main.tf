@@ -2,6 +2,8 @@
  * # Samba Setup
  *
  * This module sets up Samba server in an Alpine LXC container using the provided information.
+ *
+ * <!-- docs-meta: order=30 icon=samba -->
  */
 
 locals {

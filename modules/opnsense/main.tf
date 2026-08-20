@@ -13,6 +13,8 @@
  * this module deliberately does not wire up a full-VM PBS backup job, since the config is backed
  * up separately (see project notes) and a full-disk backup of an otherwise-reproducible install
  * isn't needed.
+ *
+ * <!-- docs-meta: order=20 icon=opnsense -->
  */
 locals {
   proxmox_endpoint = "https://${var.proxmox.host}:8006"

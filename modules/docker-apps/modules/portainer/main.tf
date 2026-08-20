@@ -2,6 +2,8 @@
  * # Portainer OIDC
  *
  * This module uses the [OIDC module](../../../common/modules/oidc/README.md) to create the necessary `client_id` and `client_secret` to set up OIDC/OAuth in Portainer with Zitadel.
+ *
+ * <!-- docs-meta: order=130 icon=portainer -->
  */
 
 # Terraform and provider setup.

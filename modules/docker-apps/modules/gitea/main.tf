@@ -18,6 +18,8 @@
  *   Gitea reads this via --group-claim-name=roles and maps:
  *     gitea_admin  →  Gitea administrator
  *     gitea_user   →  regular Gitea user (default for any authenticated user)
+ *
+ * <!-- docs-meta: order=140 icon=gitea,postgres -->
  */
 
 terraform {

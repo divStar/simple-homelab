@@ -4,6 +4,8 @@
  * This module creates resources, that are not supposed to be part of a `docker-compose.yml`.
  *
  * It e.g. creates networks and volumes, that should not be removed if a docker compose stack is undeployed.
+ *
+ * <!-- docs-meta: order=100 icon=docker -->
  */
 
 # Set up Docker networks, which will be used as `external` networks
