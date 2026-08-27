@@ -189,7 +189,7 @@ variable "folders" {
   nullable = false
   default = {
     "pve-host" = {
-      archives      = ["etc-pve.pxar:/etc/pve", "root.pxar:/root"]
+      archives      = ["etc-pve.pxar:/etc/pve", "etc-network.pxar:/etc/network", "root.pxar:/root"]
       schedule      = "00:30"
       prune_backups = { "keep-daily" = "7", "keep-weekly" = "4", "keep-monthly" = "6" }
     }

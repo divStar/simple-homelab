@@ -34,6 +34,7 @@ services:
       - WATCHTOWER_NOTIFICATION_EMAIL_DELAY
     labels:
       - "traefik.enable=true"
+      - "traefik-tier=management"
       # Dashboard
       - "traefik.http.routers.watchtower-secure.rule=Host(`watchtower.my.world`)"
       - "traefik.http.routers.watchtower-secure.entrypoints=websecure"
@@ -41,5 +42,5 @@ services:
 
 networks:
   default:
-    name: "services-network"
+    name: "management-network"
     external: true

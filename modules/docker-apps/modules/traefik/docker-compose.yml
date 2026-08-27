@@ -1,10 +1,22 @@
+networks:
+  management-network:
+    external: true
+  service-network:
+    external: true
+
 services:
-  traefik:
-    image: traefik:v3
-    container_name: traefik
+  # Traefik instance for the Management tier (vmbr1.5 / 10.0.5.7). Only picks up containers
+  # carrying the `traefik-tier=management` label (see TRAEFIK_PROVIDERS_DOCKER_CONSTRAINTS below) -
+  # add that label to a service's own docker-compose.yml to have this instance front it.
+  traefik-management:
+    image: traefik:v3.0
+    container_name: traefik-management
     restart: unless-stopped
+    privileged: true
     security_opt:
       - no-new-privileges:true
+    networks:
+      - management-network
     environment:
       - TZ
       - TRAEFIK_LOG_LEVEL
@@ -15,6 +27,7 @@ services:
       - TRAEFIK_PROVIDERS_DOCKER
       - TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT
       - TRAEFIK_PROVIDERS_DOCKER_NETWORK
+      - TRAEFIK_PROVIDERS_DOCKER_CONSTRAINTS
       - TRAEFIK_ENTRYPOINTS_WEB_ADDRESS
       - TRAEFIK_ENTRYPOINTS_WEBSECURE_ADDRESS
       - TRAEFIK_ENTRYPOINTS_MQTT_ADDRESS
@@ -33,49 +46,132 @@ services:
       - TRAEFIK_EXPERIMENTAL_PLUGINS_TRAEFIK-OIDC-AUTH_MODULENAME
       - TRAEFIK_EXPERIMENTAL_PLUGINS_TRAEFIK-OIDC-AUTH_VERSION
     ports:
-      # Traefik web
-      - 80:80 # web port
-      - 443:443 # websecure port
+      - 10.0.5.7:80:80 # web port
+      - 10.0.5.7:443:443 # websecure port
       # MQTT
-      - 1883:1883 # mqtt port
-      - 9001:9001 # mqttws port
+      - 10.0.5.7:1883:1883 # mqtt port
+      - 10.0.5.7:9001:9001 # mqttws port
       # PostgreSQL
-      - 5432:5432 # postgres-db port
+      - 10.0.5.7:5432:5432 # postgres-db port
     volumes:
-      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
       - /var/run:/var/run/:ro
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
       - /mnt/data/traefik/:/certs/
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=services-network"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.${BASE_DOMAIN}`)"
-      - "traefik.http.routers.traefik.entrypoints=websecure"
-      - "traefik.http.routers.traefik.service=api@internal"
-      - "traefik.http.routers.traefik.middlewares=redirect-to-dashboard,oidc-traefik-dashboard@docker" # remove ",oidc-traefik-dashboard@docker" if Zitadel is NOT installed yet and you need access
-      - "traefik.http.middlewares.redirect-to-dashboard.redirectregex.regex=^/$"
-      - "traefik.http.middlewares.redirect-to-dashboard.redirectregex.replacement=/dashboard/"
+      - "traefik-tier=management"
+      - "traefik.docker.network=management-network"
+      - "traefik.http.routers.traefik-management.rule=Host(`traefik-management.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.traefik-management.entrypoints=websecure"
+      - "traefik.http.routers.traefik-management.service=api@internal"
+      - "traefik.http.routers.traefik-management.middlewares=redirect-to-dashboard-management" # add ',oidc-traefik-dashboard@docker' for OIDC auth when Zitadel is ready
+      - "traefik.http.middlewares.redirect-to-dashboard-management.redirectregex.regex=^/$"
+      - "traefik.http.middlewares.redirect-to-dashboard-management.redirectregex.replacement=/dashboard/"
       # Protect endpoint using OIDC middleware
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Secret=${TRAEFIK_OIDC_AUTH_SECRET}"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Secret=hHVCfQE6cJ8+rwQvMh6IGzkf1Hwp8aWO"
       # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.LogLevel=DEBUG"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.CallbackUri=/oidc/callback"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.LogoutUri=/oidc/logout"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.SessionCookie.Domain=.${BASE_DOMAIN}"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Provider.Url=https://zitadel.${BASE_DOMAIN}"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Provider.ClientId=${ZITADEL_APPLICATION_CLIENT_ID}"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Provider.UsePkce=true"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Scopes[0]=openid"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Scopes[1]=profile"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Scopes[2]=email"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[0].Name=X-Oidc-Username"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[0].Value={{ .claims.preferred_username }}"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[1].Name=X-Oidc-Subject"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[1].Value=sub"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[2].Name=X-Oidc-Roles"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[2].Value={{ .claims.roles }}"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[3].Name=Authorization"
-      - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[3].Value=Bearer {{ .accessToken }}"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.CallbackUri=/oidc/callback"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.LogoutUri=/oidc/logout"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.SessionCookie.Domain=.my.world"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Provider.Url=https://zitadel.my.world"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Provider.ClientId=320323122081366029"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Provider.UsePkce=true"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Scopes[0]=openid"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Scopes[1]=profile"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Scopes[2]=email"
+      #- "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.BypassAuthenticationRule=HeaderRegexp(`X-Real-Ip`, `^10\\.1\\.`) || HeaderRegexp(`X-Real-Ip`, `^172\\.`) || HeaderRegexp(`X-Real-Ip`, `^127\\.0\\.`)"
+      # - 'traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[0].Name=X-Oidc-Username'
+      # - 'traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[0].Value={{ .claims.preferred_username }}'
+      # - 'traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[1].Name=X-Oidc-Subject'
+      # - 'traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[1].Value=sub'
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[2].Name=X-Oidc-Roles"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[2].Value={{ .claims.roles }}"
+      # - 'traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[3].Name=Authorization'
+      # - 'traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[3].Value=Bearer {{ .accessToken }}'
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Authorization.AssertClaims[0].Name=roles"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Authorization.AssertClaims[0].AnyOf[0]=traefik-user"
 
-networks:
-  default:
-    name: services-network
-    external: true
+  # Traefik instance for the Services tier (vmbr1.10 / 10.0.10.3). Only picks up containers
+  # carrying the `traefik-tier=services` label.
+  traefik-services:
+    image: traefik:v3.0
+    container_name: traefik-services
+    restart: unless-stopped
+    privileged: true
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - service-network
+    environment:
+      - TZ
+      - TRAEFIK_LOG_LEVEL
+      - TRAEFIK_ACCESSLOG
+      - TRAEFIK_API
+      - TRAEFIK_API_DASHBOARD
+      - TRAEFIK_API_INSECURE
+      - TRAEFIK_PROVIDERS_DOCKER
+      - TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT
+      - TRAEFIK_PROVIDERS_DOCKER_NETWORK
+      - TRAEFIK_PROVIDERS_DOCKER_CONSTRAINTS
+      - TRAEFIK_ENTRYPOINTS_WEB_ADDRESS
+      - TRAEFIK_ENTRYPOINTS_WEBSECURE_ADDRESS
+      - TRAEFIK_ENTRYPOINTS_MQTT_ADDRESS
+      - TRAEFIK_ENTRYPOINTS_MQTTWS_ADDRESS
+      - TRAEFIK_ENTRYPOINTS_POSTGRES_ADDRESS
+      - TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_TO
+      - TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_SCHEME
+      - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS
+      - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_CERTRESOLVER
+      - TRAEFIK_CERTIFICATESRESOLVERS_STEPCA_ACME_EMAIL
+      - TRAEFIK_CERTIFICATESRESOLVERS_STEPCA_ACME_STORAGE
+      - TRAEFIK_CERTIFICATESRESOLVERS_STEPCA_ACME_CASERVER
+      - TRAEFIK_CERTIFICATESRESOLVERS_STEPCA_ACME_TLSCHALLENGE
+      - LEGO_CA_CERTIFICATES
+      # traefik-oidc-auth plugin configuration
+      - TRAEFIK_EXPERIMENTAL_PLUGINS_TRAEFIK-OIDC-AUTH_MODULENAME
+      - TRAEFIK_EXPERIMENTAL_PLUGINS_TRAEFIK-OIDC-AUTH_VERSION
+    ports:
+      - 10.0.10.3:80:80 # web port
+      - 10.0.10.3:443:443 # websecure port
+      # MQTT
+      - 10.0.10.3:1883:1883 # mqtt port
+      - 10.0.10.3:9001:9001 # mqttws port
+      # PostgreSQL
+      - 10.0.10.3:5432:5432 # postgres-db port
+    volumes:
+      - /var/run:/var/run/:ro
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      - /mnt/data/traefik/:/certs/
+    labels:
+      - "traefik.enable=true"
+      - "traefik-tier=services"
+      - "traefik.docker.network=service-network"
+      - "traefik.http.routers.traefik-services.rule=Host(`traefik-services.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.traefik-services.entrypoints=websecure"
+      - "traefik.http.routers.traefik-services.service=api@internal"
+      - "traefik.http.routers.traefik-services.middlewares=redirect-to-dashboard-services" # add ',oidc-traefik-dashboard@docker' for OIDC auth when Zitadel is ready
+      - "traefik.http.middlewares.redirect-to-dashboard-services.redirectregex.regex=^/$"
+      - "traefik.http.middlewares.redirect-to-dashboard-services.redirectregex.replacement=/dashboard/"
+      # Protect endpoint using OIDC middleware
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Secret=hHVCfQE6cJ8+rwQvMh6IGzkf1Hwp8aWO"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.LogLevel=DEBUG"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.CallbackUri=/oidc/callback"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.LogoutUri=/oidc/logout"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.SessionCookie.Domain=.my.world"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Provider.Url=https://zitadel.my.world"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Provider.ClientId=320323122081366029"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Provider.UsePkce=true"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Scopes[0]=openid"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Scopes[1]=profile"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Scopes[2]=email"
+      #- "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.BypassAuthenticationRule=HeaderRegexp(`X-Real-Ip`, `^10\\.1\\.`) || HeaderRegexp(`X-Real-Ip`, `^172\\.`) || HeaderRegexp(`X-Real-Ip`, `^127\\.0\\.`)"
+      # - 'traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[0].Name=X-Oidc-Username'
+      # - 'traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[0].Value={{ .claims.preferred_username }}'
+      # - 'traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[1].Name=X-Oidc-Subject'
+      # - 'traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[1].Value=sub'
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[2].Name=X-Oidc-Roles"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[2].Value={{ .claims.roles }}"
+      # - 'traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[3].Name=Authorization'
+      # - 'traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Headers[3].Value=Bearer {{ .accessToken }}'
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Authorization.AssertClaims[0].Name=roles"
+      # - "traefik.http.middlewares.oidc-traefik-dashboard.plugin.traefik-oidc-auth.Authorization.AssertClaims[0].AnyOf[0]=traefik-user"

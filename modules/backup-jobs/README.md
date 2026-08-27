@@ -448,6 +448,7 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
   "pve-host": {
     "archives": [
       "etc-pve.pxar:/etc/pve",
+      "etc-network.pxar:/etc/network",
       "root.pxar:/root"
     ],
     "prune_backups": {

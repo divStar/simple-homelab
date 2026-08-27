@@ -8,20 +8,80 @@ storage:
       mode: 0644
       contents:
         inline: ${vm_hostname}
-    # Static network configuration
-    - path: /etc/systemd/network/00-static.network
+    # Management VLAN - primary/default interface
+    - path: /etc/systemd/network/00-management.network
       mode: 0644
       contents:
         inline: |
           [Match]
-          Name=${vm_network_interface_name}
-          
+          MACAddress=${vm_management_mac}
+
           [Network]
-          Address=${vm_ip}/24
-          Gateway=${vm_gateway_ip}
+          Address=${vm_management_ip}/24
+          Gateway=${vm_management_gateway_ip}
           DNS=${vm_dns_ip}
           LinkLocalAddressing=no
           IPv6AcceptRA=no
+    # Services VLAN - secondary interface, deliberately no Gateway= of its own (a second
+    # unqualified default route would conflict with the Management interface's). Source-based
+    # routing below makes sure replies to traffic addressed here - including same-subnet peers -
+    # go back out this interface instead of falling through to the Management default route.
+    - path: /etc/systemd/network/10-services.network
+      mode: 0644
+      contents:
+        inline: |
+          [Match]
+          MACAddress=${vm_services_mac}
+
+          [Network]
+          Address=${vm_services_ip}/24
+          LinkLocalAddressing=no
+          IPv6AcceptRA=no
+
+          [RoutingPolicyRule]
+          From=${vm_services_ip}
+          Table=20
+          Priority=100
+
+          [Route]
+          Destination=${cidrhost("${vm_services_ip}/24", 0)}/24
+          Table=20
+
+          [Route]
+          Gateway=${vm_services_gateway_ip}
+          Table=20
+
+          # Without this, table 20's own default route (via the Services gateway) swallows ANY
+          # destination not otherwise listed in table 20 - including docker-vm's own Docker bridge
+          # subnets (172.20.0.0/16, see external-resources' network definitions), which only exist
+          # in the main table. That misroutes replies from anything bound to the Services IP (e.g.
+          # docker-proxy for a host-IP-scoped published port) back out to the real gateway instead
+          # of delivering them locally to the bridge - confirmed live: a container on service-network
+          # timing out trying to reach another container's published port on that same network,
+          # traced to exactly this. `throw` makes the lookup defer to the next rule (falls through
+          # to the main table, which already has the correct on-link route for every Docker bridge)
+          # instead of matching table 20's own default route.
+          [Route]
+          Destination=172.20.0.0/16
+          Table=20
+          Type=throw
+    # Route table name for the rule above - purely a debugging convenience (`ip route show table
+    # svc`), the numeric Table=20 above is what the kernel actually acts on.
+    - path: /etc/iproute2/rt_tables
+      mode: 0644
+      contents:
+        inline: |
+          #
+          # reserved values
+          #
+          255     local
+          254     main
+          253     default
+          0       unspec
+          #
+          # local
+          #
+          20      svc
     # Disable IPv6
     - path: /etc/sysctl.d/10-disable-ipv6.conf
       mode: 0644

@@ -4,11 +4,17 @@ proxmox_password  = "<root-password>" # sadly this is necessary for VM deploymen
 proxmox_ssh_user  = "root"
 proxmox_ssh_key   = "~/.ssh/id_rsa"
 
-vm_id         = 800
-vm_hostname   = "docker-vm"
-vm_ip         = "192.168.2.120"
-vm_gateway_ip = "192.168.2.1"
-vm_dns_ip     = "192.168.2.1"
+vm_id       = 800
+vm_hostname = "docker-vm"
+vm_domain   = "<domain>"
+
+vm_management_ip         = "10.0.5.7"
+vm_management_gateway_ip = "10.0.5.1"
+
+vm_services_ip         = "10.0.10.3"
+vm_services_gateway_ip = "10.0.10.1"
+
+vm_dns_ip = "10.0.5.5"
 
 step_ca_client_version       = "0.27.4"
 step_ca_domain               = "<step-ca-domain>"

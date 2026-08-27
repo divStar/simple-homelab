@@ -4,7 +4,7 @@ services:
     container_name: portainer
     restart: unless-stopped
     ports:
-      - 9000:9000
+      - ${MANAGEMENT_IP}:9000:9000
     security_opt:
       - no-new-privileges:true
     volumes:
@@ -14,6 +14,7 @@ services:
       - /etc/localtime:/etc/localtime
     labels:
       - "traefik.enable=true"
+      - "traefik-tier=management"
       # Dashboard
       - "traefik.http.routers.portainer-secure.rule=Host(`portainer.my.world`)"
       - "traefik.http.routers.portainer-secure.entrypoints=websecure"
@@ -22,7 +23,7 @@ services:
 
 networks:
   default:
-    name: services-network
+    name: management-network
     external: true
 
 volumes:

@@ -27,7 +27,7 @@ services:
     container_name: zitadel
     restart: unless-stopped
     networks:
-      - services-network
+      - service-network
       - zitadel-network
     command: 'start-from-init --masterkeyFile /config/masterkey --tlsMode external'
     environment:
@@ -96,7 +96,8 @@ services:
 
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=services-network"
+      - "traefik-tier=services"
+      - "traefik.docker.network=service-network"
 
       # API/console → 8080 (h2c). Everything except the Login v2 path.
       - "traefik.http.routers.zitadel-api.rule=Host(`zitadel.${BASE_DOMAIN}`) && !PathPrefix(`/ui/v2/login`)"
@@ -120,7 +121,7 @@ services:
     container_name: zitadel-login
     restart: unless-stopped
     networks:
-      - services-network   # reachable by Traefik
+      - service-network   # reachable by Traefik
       - zitadel-network    # can resolve "zitadel" via Docker DNS
     environment:
       - ZITADEL_API_URL
@@ -131,7 +132,8 @@ services:
       - /mnt/data/zitadel:/config:ro
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=services-network"
+      - "traefik-tier=services"
+      - "traefik.docker.network=service-network"
 
       # Login v2 → this container on port 3000
       - "traefik.http.routers.zitadel-login.rule=Host(`zitadel.${BASE_DOMAIN}`) && PathPrefix(`/ui/v2/login`)"
@@ -144,7 +146,7 @@ services:
         condition: service_started
 
 networks:
-  services-network:
+  service-network:
     external: true
   zitadel-network:
     external: true
