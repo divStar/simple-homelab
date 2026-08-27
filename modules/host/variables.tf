@@ -73,6 +73,7 @@ variable "response_routes" {
   description = "Per-interface source-based routing: traffic sourced from a specific address uses its own gateway, without disturbing the system's main default route - needed for dual-homed hosts where a secondary interface has no gateway of its own. Governs only how sanctum's own replies get routed back out; it has no bearing on who's allowed to reach it in the first place - that's OPNsense's firewall's job entirely."
   # @field interface      Interface name whose bring-up should trigger this (e.g. "vmbr1.5")
   # @field source_address The source IP that should be routed via this table (e.g. "10.0.5.3")
+  # @field prefix_length  CIDR prefix length of the subnet source_address lives on (e.g. 24) - used to derive an on-link route in this table so same-subnet peers are reached directly, not via gateway
   # @field gateway         Gateway for this source's traffic (e.g. "10.0.5.1")
   # @field table_id        Numeric routing table ID to register in /etc/iproute2/rt_tables (must be unique across all entries)
   # @field table_name      Name for that routing table (must be unique across all entries)
@@ -80,6 +81,7 @@ variable "response_routes" {
   type = list(object({
     interface      = string
     source_address = string
+    prefix_length  = number
     gateway        = string
     table_id       = number
     table_name     = string
@@ -263,12 +265,6 @@ variable "no_subscription" {
   description = "Whether to use no-subscription repository instead of enterprise repository or not"
   type        = bool
   default     = true
-}
-
-variable "storage_pools" {
-  description = "Configuration of the storage (pools and directories) to import"
-  type        = list(string)
-  default     = []
 }
 
 variable "storage_directories" {

@@ -22,6 +22,15 @@ locals {
 
   nic_link_advertise = { for nic in var.nic_link_advertise : nic.interface => nic.modes }
   response_routes    = { for route in var.response_routes : route.interface => route }
+
+  # cidrhost(ip/prefix, 0) masks a non-network-aligned host address down to its
+  # network address (verified live: cidrhost("10.0.5.4/24", 0) => "10.0.5.0") -
+  # the kernel itself rejects a route add with unmasked host bits outright
+  # ("Error: Invalid prefix for given prefix length."), so this can't be skipped.
+  response_route_subnets = {
+    for route in var.response_routes :
+    route.interface => "${cidrhost("${route.source_address}/${route.prefix_length}", 0)}/${route.prefix_length}"
+  }
 }
 
 resource "ssh_resource" "push_nic_advertise_dropin" {
@@ -74,7 +83,8 @@ resource "ssh_resource" "push_response_route_dropin" {
       interface      = each.value.interface
       gateway        = each.value.gateway
       source_address = each.value.source_address
-      table_name     = each.value.table_name
+      local_subnet   = local.response_route_subnets[each.key]
+      table_id       = each.value.table_id
       priority       = each.value.priority
     })
     destination = "/etc/network/interfaces.d/response-route-${each.key}"

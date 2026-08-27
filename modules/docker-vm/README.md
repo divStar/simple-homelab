@@ -4,6 +4,8 @@ This module sets up a [Flatcar Linux VM](https://www.flatcar.org/) with Docker.
 
 Docker is exposed via TLS port (2376). Look at the [`./files` folder](./files) for more configuration details.
 
+<!-- docs-meta: order=60 icon=flatcar -->
+
 ## Contents
 
 <blockquote><!-- contents:start -->
@@ -11,7 +13,7 @@ Docker is exposed via TLS port (2376). Look at the [`./files` folder](./files) f
 - [Providers](#providers)
 - [Resources](#resources)
   - _local_file_.[ignition_file](#local_fileignition_file)
-  - _proxmox_virtual_environment_download_file_.[flatcar_image](#proxmox_virtual_environment_download_fileflatcar_image)
+  - _proxmox_download_file_.[flatcar_image](#proxmox_download_fileflatcar_image)
   - _proxmox_virtual_environment_file_.[ignition_config](#proxmox_virtual_environment_fileignition_config)
   - _proxmox_virtual_environment_vm_.[flatcar](#proxmox_virtual_environment_vmflatcar)
 - [Variables](#variables)
@@ -46,7 +48,7 @@ Docker is exposed via TLS port (2376). Look at the [`./files` folder](./files) f
 ## Providers
 ![OpenTofu](https://img.shields.io/badge/OpenTofu->=1.10.5-d3287d?logo=opentofu)
 ![poseidon/ct](https://img.shields.io/badge/poseidon--ct-0.13.0-d82d82?logo=ct)
-![bpg/proxmox](https://img.shields.io/badge/bpg--proxmox-~>0.86.0-1e73c8?logo=proxmox)
+![bpg/proxmox](https://img.shields.io/badge/bpg--proxmox-~>0.111.0-1e73c8?logo=proxmox)
 
 ## Resources
   
@@ -65,9 +67,9 @@ Docker is exposed via TLS port (2376). Look at the [`./files` folder](./files) f
     </tr>
   </table>
 </blockquote><!-- resource:"local_file.ignition_file":end -->
-<blockquote><!-- resource:"proxmox_virtual_environment_download_file.flatcar_image":start -->
+<blockquote><!-- resource:"proxmox_download_file.flatcar_image":start -->
 
-### _proxmox_virtual_environment_download_file_.`flatcar_image`
+### _proxmox_download_file_.`flatcar_image`
 
 Download Flatcar stable image
   <table>
@@ -77,10 +79,10 @@ Download Flatcar stable image
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L72"><code>main.tf#L72</code></a></td>
+      <td><a href="./main.tf#L74"><code>main.tf#L74</code></a></td>
     </tr>
   </table>
-</blockquote><!-- resource:"proxmox_virtual_environment_download_file.flatcar_image":end -->
+</blockquote><!-- resource:"proxmox_download_file.flatcar_image":end -->
 <blockquote><!-- resource:"proxmox_virtual_environment_file.ignition_config":start -->
 
 ### _proxmox_virtual_environment_file_.`ignition_config`
@@ -93,7 +95,7 @@ Upload the transpiled Ignition config as a snippet
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L60"><code>main.tf#L60</code></a></td>
+      <td><a href="./main.tf#L62"><code>main.tf#L62</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_file.ignition_config":end -->
@@ -109,7 +111,7 @@ Create the Flatcar VM
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L84"><code>main.tf#L84</code></a></td>
+      <td><a href="./main.tf#L86"><code>main.tf#L86</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_vm.flatcar":end -->

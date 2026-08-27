@@ -2,6 +2,8 @@
 
 This module and its sub-modules setup the Proxmox host.
 
+<!-- docs-meta: order=10 icon=proxmox -->
+
 ## Contents
 
 <blockquote><!-- contents:start -->
@@ -78,7 +80,7 @@ Handles adding the SSH key of the machine running this script to the gitops user
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L154"><code>main.tf#L154</code></a></td>
+      <td><a href="./main.tf#L156"><code>main.tf#L156</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/authorized-keys-appender/README.md">README.md</a> <em>(experimental)</em></td>
@@ -97,7 +99,7 @@ Handles copying configuration files.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L39"><code>main.tf#L39</code></a></td>
+      <td><a href="./main.tf#L41"><code>main.tf#L41</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/copy-configs/README.md">README.md</a> <em>(experimental)</em></td>
@@ -116,7 +118,7 @@ Handles mapping directories for future use (e.g. file sharing via `virtiofs` int
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L131"><code>main.tf#L131</code></a></td>
+      <td><a href="./main.tf#L133"><code>main.tf#L133</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/directory-mappings/README.md">README.md</a> <em>(experimental)</em></td>
@@ -135,7 +137,7 @@ Handles creating a gitops user, providing it with access to the gitops git repos
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L146"><code>main.tf#L146</code></a></td>
+      <td><a href="./main.tf#L148"><code>main.tf#L148</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/gitops-user/README.md">README.md</a> <em>(experimental)</em></td>
@@ -154,7 +156,7 @@ Handles persisting ethtool advertised link modes and source-based routing for sp
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L103"><code>main.tf#L103</code></a></td>
+      <td><a href="./main.tf#L105"><code>main.tf#L105</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/interface-adjustments/README.md">README.md</a> <em>(experimental)</em></td>
@@ -173,7 +175,7 @@ Handles the creation of Linux bridges and VLAN interfaces on the Proxmox host.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L92"><code>main.tf#L92</code></a></td>
+      <td><a href="./main.tf#L94"><code>main.tf#L94</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/network-bridges/README.md">README.md</a> <em>(experimental)</em></td>
@@ -192,7 +194,7 @@ Handles the installation of `node-exporter`.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L85"><code>main.tf#L85</code></a></td>
+      <td><a href="./main.tf#L87"><code>main.tf#L87</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/node-exporter/README.md">README.md</a> <em>(experimental)</em></td>
@@ -211,7 +213,7 @@ Handles the installation of additional `apt` packages.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L122"><code>main.tf#L122</code></a></td>
+      <td><a href="./main.tf#L124"><code>main.tf#L124</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/packages/README.md">README.md</a> <em>(experimental)</em></td>
@@ -230,7 +232,7 @@ Handles the import of directories into Proxmox.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L113"><code>main.tf#L113</code></a></td>
+      <td><a href="./main.tf#L115"><code>main.tf#L115</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/proxmox-storage-import/README.md">README.md</a> <em>(experimental)</em></td>
@@ -249,7 +251,7 @@ Handles the deactivation of the enterprise `apt` repository and the activation o
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L47"><code>main.tf#L47</code></a></td>
+      <td><a href="./main.tf#L49"><code>main.tf#L49</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/repositories/README.md">README.md</a> <em>(experimental)</em></td>
@@ -268,7 +270,7 @@ Handles the execution of various *non-interactive* scripts.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L55"><code>main.tf#L55</code></a></td>
+      <td><a href="./main.tf#L57"><code>main.tf#L57</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/scripts/README.md">README.md</a> <em>(experimental)</em></td>
@@ -287,7 +289,7 @@ Handles creating a share user.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L31"><code>main.tf#L31</code></a></td>
+      <td><a href="./main.tf#L33"><code>main.tf#L33</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/share-user/README.md">README.md</a> <em>(experimental)</em></td>
@@ -306,7 +308,7 @@ Handles the installation of the `smartctl-exporter`.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L78"><code>main.tf#L78</code></a></td>
+      <td><a href="./main.tf#L80"><code>main.tf#L80</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/smartctl-exporter/README.md">README.md</a> <em>(experimental)</em></td>
@@ -325,7 +327,7 @@ Handles the creation of a Terraform user and API token. This user can be used fo
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L23"><code>main.tf#L23</code></a></td>
+      <td><a href="./main.tf#L25"><code>main.tf#L25</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/terraform-user/README.md">README.md</a> <em>(experimental)</em></td>
@@ -344,7 +346,7 @@ Handles letting Proxmox trust its own CA certificate.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L71"><code>main.tf#L71</code></a></td>
+      <td><a href="./main.tf#L73"><code>main.tf#L73</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/trust-proxmox-ca/README.md">README.md</a> <em>(experimental)</em></td>
@@ -363,7 +365,7 @@ Handles the import of ZFS pools.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L63"><code>main.tf#L63</code></a></td>
+      <td><a href="./main.tf#L65"><code>main.tf#L65</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/zfs-storage/README.md">README.md</a> <em>(experimental)</em></td>
@@ -392,7 +394,7 @@ Configuration files to copy to the host
     group       = optional(string)
   }))
   ```
-  In file: <a href="./variables.tf#L111"><code>variables.tf#L111</code></a>
+  In file: <a href="./variables.tf#L113"><code>variables.tf#L113</code></a>
 
 </details>
 </blockquote><!-- variable:"configuration_files":end -->
@@ -509,7 +511,7 @@ Directory mappings for the Proxmox node
   ```json
   []
   ```
-  In file: <a href="./variables.tf#L294"><code>variables.tf#L294</code></a>
+  In file: <a href="./variables.tf#L296"><code>variables.tf#L296</code></a>
 
 </details>
 </blockquote><!-- variable:"directory_mappings":end -->
@@ -535,7 +537,7 @@ Configuration of GitOps user.
   ```json
   {}
   ```
-  In file: <a href="./variables.tf#L220"><code>variables.tf#L220</code></a>
+  In file: <a href="./variables.tf#L222"><code>variables.tf#L222</code></a>
 
 </details>
 </blockquote><!-- variable:"gitops_user":end -->
@@ -559,7 +561,7 @@ NICs that should have specific ethtool link modes force-advertised via a persist
   ```json
   []
   ```
-  In file: <a href="./variables.tf#L283"><code>variables.tf#L283</code></a>
+  In file: <a href="./variables.tf#L285"><code>variables.tf#L285</code></a>
 
 </details>
 </blockquote><!-- variable:"nic_link_advertise":end -->
@@ -580,7 +582,7 @@ Whether to use no-subscription repository instead of enterprise repository or no
   ```json
   true
   ```
-  In file: <a href="./variables.tf#L262"><code>variables.tf#L262</code></a>
+  In file: <a href="./variables.tf#L264"><code>variables.tf#L264</code></a>
 
 </details>
 </blockquote><!-- variable:"no_subscription":end -->
@@ -604,7 +606,7 @@ Original owner of the source repository (before, e.g. root:root)
   ```json
   {}
   ```
-  In file: <a href="./variables.tf#L232"><code>variables.tf#L232</code></a>
+  In file: <a href="./variables.tf#L234"><code>variables.tf#L234</code></a>
 
 </details>
 </blockquote><!-- variable:"org_source_repo_owner":end -->
@@ -625,7 +627,7 @@ List of packages to install via apt-get
   ```json
   []
   ```
-  In file: <a href="./variables.tf#L127"><code>variables.tf#L127</code></a>
+  In file: <a href="./variables.tf#L129"><code>variables.tf#L129</code></a>
 
 </details>
 </blockquote><!-- variable:"packages":end -->
@@ -643,6 +645,7 @@ Per-interface source-based routing: traffic sourced from a specific address uses
   list(object({
     interface      = string
     source_address = string
+    prefix_length  = number
     gateway        = string
     table_id       = number
     table_name     = string
@@ -686,7 +689,7 @@ Configuration for script management including shared directory and script items
   "items": []
 }
   ```
-  In file: <a href="./variables.tf#L134"><code>variables.tf#L134</code></a>
+  In file: <a href="./variables.tf#L136"><code>variables.tf#L136</code></a>
 
 </details>
 </blockquote><!-- variable:"scripts":end -->
@@ -717,7 +720,7 @@ Configuration of GitOps user.
   "user": "share-user"
 }
   ```
-  In file: <a href="./variables.tf#L242"><code>variables.tf#L242</code></a>
+  In file: <a href="./variables.tf#L244"><code>variables.tf#L244</code></a>
 
 </details>
 </blockquote><!-- variable:"share_user":end -->
@@ -741,7 +744,7 @@ Map of storage directories to configure; the key is the name of the directory.
   ```json
   {}
   ```
-  In file: <a href="./variables.tf#L274"><code>variables.tf#L274</code></a>
+  In file: <a href="./variables.tf#L276"><code>variables.tf#L276</code></a>
 
 </details>
 </blockquote><!-- variable:"storage_directories":end -->
@@ -762,7 +765,7 @@ Configuration of the storage (pools and directories) to import
   ```json
   []
   ```
-  In file: <a href="./variables.tf#L268"><code>variables.tf#L268</code></a>
+  In file: <a href="./variables.tf#L270"><code>variables.tf#L270</code></a>
 
 </details>
 </blockquote><!-- variable:"storage_pools":end -->
@@ -818,7 +821,7 @@ Configuration for Terraform provisioner user. Individual fields can be overridde
   "token": {}
 }
   ```
-  In file: <a href="./variables.tf#L170"><code>variables.tf#L170</code></a>
+  In file: <a href="./variables.tf#L172"><code>variables.tf#L172</code></a>
 
 </details>
 </blockquote><!-- variable:"terraform_user":end -->

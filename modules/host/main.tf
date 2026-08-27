@@ -14,7 +14,6 @@ locals {
   terraform_user        = var.terraform_user
   gitops_user           = var.gitops_user
   org_source_repo_owner = var.org_source_repo_owner
-  storage               = var.storage_pools
   token                 = module.terraform_user.token
   nic_link_advertise    = var.nic_link_advertise
   proxmox_endpoint      = "https://${var.proxmox.host}:8006"
@@ -59,14 +58,6 @@ module "scripts" {
 
   ssh     = var.ssh
   scripts = var.scripts
-}
-
-# Handles the import of ZFS pools.
-module "zfs_storage" {
-  source = "./modules/zfs-storage"
-
-  ssh           = var.ssh
-  storage_pools = var.storage_pools
 }
 
 # Handles letting Proxmox trust its own CA certificate.
@@ -114,7 +105,6 @@ module "interface_adjustments" {
 # Handles the import of directories into Proxmox.
 module "proxmox_storage_import" {
   source     = "./modules/proxmox-storage-import"
-  depends_on = [module.zfs_storage]
 
   ssh                 = var.ssh
   storage_directories = var.storage_directories
@@ -132,7 +122,6 @@ module "packages" {
 # Handles mapping directories for future use (e.g. file sharing via `virtiofs` into VMs).
 module "directory_mappings" {
   source     = "./modules/directory-mappings"
-  depends_on = [module.zfs_storage]
 
   ssh                = var.ssh
   proxmox_node_name  = var.proxmox_node_name
@@ -147,7 +136,6 @@ module "directory_mappings" {
 # > You can use the [`authorized-keys-appender`](./modules/authorized-keys-appender/README.md) module for this.
 module "gitops_user" {
   source     = "./modules/gitops-user"
-  depends_on = [module.zfs_storage]
 
   ssh = var.ssh
 }

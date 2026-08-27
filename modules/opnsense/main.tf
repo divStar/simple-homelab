@@ -60,7 +60,7 @@ resource "proxmox_virtual_environment_vm" "opnsense" {
   }
 
   agent {
-    enabled = false # OPNsense/FreeBSD doesn't ship the QEMU guest agent by default
+    enabled = true # requires the os-qemu-guest-agent plugin installed manually in OPNsense
   }
 
   operating_system {

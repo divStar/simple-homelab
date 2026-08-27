@@ -6,6 +6,8 @@ folder backup per entry in var.folders (real data the guest-level jobs
 never touch - bind-mounted LXC state, the family file shares, PVE's own
 recovery-relevant config).
 
+<!-- docs-meta: order=70 icon=pbs -->
+
 ## Contents
 
 <blockquote><!-- contents:start -->
@@ -64,7 +66,7 @@ One job per guest - each guest's primary disk(s) (and EFI disk, where it has one
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L178"><code>main.tf#L178</code></a></td>
+      <td><a href="./main.tf#L180"><code>main.tf#L180</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_backup_job.this":end -->
@@ -80,7 +82,7 @@ Register PBS as a storage target PVE can back guests up to, authenticated with t
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L163"><code>main.tf#L163</code></a></td>
+      <td><a href="./main.tf#L165"><code>main.tf#L165</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_storage_pbs.this":end -->
@@ -96,7 +98,7 @@ Split from push_folder_backup_infra below on purpose - the file{} blocks there p
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L243"><code>main.tf#L243</code></a></td>
+      <td><a href="./main.tf#L245"><code>main.tf#L245</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.create_folder_backup_config_dir":end -->
@@ -111,7 +113,7 @@ Split from push_folder_backup_infra below on purpose - the file{} blocks there p
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L76"><code>main.tf#L76</code></a></td>
+      <td><a href="./main.tf#L78"><code>main.tf#L78</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.create_pbs_token":end -->
@@ -127,7 +129,7 @@ Dedicated PBS user for this module's own storage credential - see the `pbs_token
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L39"><code>main.tf#L39</code></a></td>
+      <td><a href="./main.tf#L41"><code>main.tf#L41</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.create_pbs_user":end -->
@@ -143,7 +145,7 @@ Idempotency for create_pbs_token below can't be a simple "skip if exists" guard 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L62"><code>main.tf#L62</code></a></td>
+      <td><a href="./main.tf#L64"><code>main.tf#L64</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_existing_pbs_token":end -->
@@ -158,7 +160,7 @@ Idempotency for create_pbs_token below can't be a simple "skip if exists" guard 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L339"><code>main.tf#L339</code></a></td>
+      <td><a href="./main.tf#L341"><code>main.tf#L341</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_folder_backup":end -->
@@ -173,7 +175,7 @@ Idempotency for create_pbs_token below can't be a simple "skip if exists" guard 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L285"><code>main.tf#L285</code></a></td>
+      <td><a href="./main.tf#L287"><code>main.tf#L287</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_folder_backup_infra":end -->
@@ -188,7 +190,7 @@ Idempotency for create_pbs_token below can't be a simple "skip if exists" guard 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L145"><code>main.tf#L145</code></a></td>
+      <td><a href="./main.tf#L147"><code>main.tf#L147</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_pbs_user":end -->
@@ -203,7 +205,7 @@ Idempotency for create_pbs_token below can't be a simple "skip if exists" guard 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L212"><code>main.tf#L212</code></a></td>
+      <td><a href="./main.tf#L214"><code>main.tf#L214</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_verify_job":end -->
@@ -219,7 +221,7 @@ One concrete timer + one per-folder env file per var.folders entry - namespace i
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L305"><code>main.tf#L305</code></a></td>
+      <td><a href="./main.tf#L307"><code>main.tf#L307</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.folder_backup":end -->
@@ -234,7 +236,7 @@ One concrete timer + one per-folder env file per var.folders entry - namespace i
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L126"><code>main.tf#L126</code></a></td>
+      <td><a href="./main.tf#L128"><code>main.tf#L128</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.grant_pbs_token_acl":end -->
@@ -250,7 +252,7 @@ PBS intersects a token's effective permissions with its parent user's own permis
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L112"><code>main.tf#L112</code></a></td>
+      <td><a href="./main.tf#L114"><code>main.tf#L114</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.grant_pbs_user_acl":end -->
@@ -265,7 +267,7 @@ PBS intersects a token's effective permissions with its parent user's own permis
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L253"><code>main.tf#L253</code></a></td>
+      <td><a href="./main.tf#L255"><code>main.tf#L255</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.push_folder_backup_infra":end -->
@@ -281,7 +283,7 @@ PBS's own datastore verify job - no native provider resource for this (see var.v
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L198"><code>main.tf#L198</code></a></td>
+      <td><a href="./main.tf#L200"><code>main.tf#L200</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.verify_job":end -->
@@ -487,7 +489,7 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
   }
 }
   ```
-  In file: <a href="./variables.tf#L173"><code>variables.tf#L173</code></a>
+  In file: <a href="./variables.tf#L182"><code>variables.tf#L182</code></a>
 
 </details>
 </blockquote><!-- variable:"folders":end -->
@@ -519,6 +521,15 @@ Map of guest name => { vmid, optional per-guest schedule/prune_backups overrides
     },
     "schedule": "02:00",
     "vmid": "800"
+  },
+  "opnsense": {
+    "prune_backups": {
+      "keep-daily": "7",
+      "keep-monthly": "6",
+      "keep-weekly": "4"
+    },
+    "schedule": "05:00",
+    "vmid": "801"
   },
   "pbs-lxc": {
     "vmid": "704"

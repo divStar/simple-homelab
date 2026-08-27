@@ -46,7 +46,7 @@ hook (`ifupdown2` reapplies these every time the interface comes up, boot includ
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L27"><code>main.tf#L27</code></a></td>
+      <td><a href="./main.tf#L36"><code>main.tf#L36</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.push_nic_advertise_dropin":end -->
@@ -61,7 +61,7 @@ hook (`ifupdown2` reapplies these every time the interface comes up, boot includ
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L65"><code>main.tf#L65</code></a></td>
+      <td><a href="./main.tf#L74"><code>main.tf#L74</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.push_response_route_dropin":end -->
@@ -76,7 +76,7 @@ hook (`ifupdown2` reapplies these every time the interface comes up, boot includ
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L48"><code>main.tf#L48</code></a></td>
+      <td><a href="./main.tf#L57"><code>main.tf#L57</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.remove_nic_advertise_dropins":end -->
@@ -91,7 +91,7 @@ hook (`ifupdown2` reapplies these every time the interface comes up, boot includ
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L92"><code>main.tf#L92</code></a></td>
+      <td><a href="./main.tf#L102"><code>main.tf#L102</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.remove_response_route_dropins":end -->
@@ -157,6 +157,7 @@ Per-interface source-based routing: traffic sourced from a specific address uses
   list(object({
     interface      = string
     source_address = string
+    prefix_length  = number
     gateway        = string
     table_id       = number
     table_name     = string

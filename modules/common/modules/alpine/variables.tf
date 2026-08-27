@@ -125,9 +125,10 @@ variable "network_interfaces" {
     vlan_id     = optional(number)
     gateway     = optional(string)
     response_route = optional(object({
-      gateway  = string
-      table_id = number
-      priority = optional(number, 100)
+      gateway    = string
+      table_id   = number
+      table_name = string
+      priority   = optional(number, 100)
     }))
   }))
   nullable = false
@@ -153,6 +154,18 @@ variable "provisioning_interface_index" {
     condition     = var.provisioning_interface_index >= 0 && var.provisioning_interface_index < length(var.network_interfaces)
     error_message = "provisioning_interface_index must be a valid index into network_interfaces."
   }
+}
+
+variable "dns_servers" {
+  description = "DNS servers for the container's /etc/resolv.conf, in order. Defaults to null, which leaves Proxmox's own per-node default in place (not something this module should silently override for every consumer - callers on a network without their own DHCP-provided DNS need to set this explicitly)."
+  type        = list(string)
+  default     = null
+}
+
+variable "dns_search_domain" {
+  description = "DNS search domain for the container. Defaults to null (Proxmox's own default)."
+  type        = string
+  default     = null
 }
 
 # General container configuration

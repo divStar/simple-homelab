@@ -6,6 +6,8 @@ Replaces modules/pbs-vm as the deployed PBS instance -- that module is kept
 in the repo as a fallback option, but no longer applied. Reuses that VM's
 former IP/MAC so sanctum-pbs.my.world keeps working unchanged.
 
+<!-- docs-meta: order=50 icon=pbs -->
+
 ## Contents
 
 <blockquote><!-- contents:start -->
@@ -55,7 +57,7 @@ Debian LXC container setup
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L66"><code>main.tf#L66</code></a></td>
+      <td><a href="./main.tf#L68"><code>main.tf#L68</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="../common/modules/debian/README.md">README.md</a> <em>(experimental)</em></td>
@@ -77,7 +79,7 @@ systemd drop-in directories are never auto-created (a convention admins/ tooling
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L240"><code>main.tf#L240</code></a></td>
+      <td><a href="./main.tf#L263"><code>main.tf#L263</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.create_daily_update_override_directory":end -->
@@ -93,7 +95,7 @@ Install PBS itself (deb822 apt source + package). Connects as root directly, no 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L127"><code>main.tf#L127</code></a></td>
+      <td><a href="./main.tf#L150"><code>main.tf#L150</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_pbs":end -->
@@ -109,7 +111,7 @@ Prepare the host-side datastore directory before the container references it as 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L52"><code>main.tf#L52</code></a></td>
+      <td><a href="./main.tf#L54"><code>main.tf#L54</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.prepare_datastore_directory":end -->
@@ -125,7 +127,7 @@ Retime PBS's own daily-update service (package updates + ACME cert renewal -- th
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L263"><code>main.tf#L263</code></a></td>
+      <td><a href="./main.tf#L286"><code>main.tf#L286</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.retime_daily_update":end -->
@@ -141,7 +143,7 @@ Get PBS a trusted cert from Step CA via ACME -- identical to modules/pbs-vm, the
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L203"><code>main.tf#L203</code></a></td>
+      <td><a href="./main.tf#L226"><code>main.tf#L226</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.setup_acme":end -->
@@ -157,7 +159,7 @@ Register (or re-register) the PBS datastore at the mount_point path -- see files
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L169"><code>main.tf#L169</code></a></td>
+      <td><a href="./main.tf#L192"><code>main.tf#L192</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.setup_datastore":end -->
@@ -173,7 +175,7 @@ Trigger for container replacement - module outputs aren't valid replace_triggere
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L115"><code>main.tf#L115</code></a></td>
+      <td><a href="./main.tf#L138"><code>main.tf#L138</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terraform_data.container_trigger":end -->

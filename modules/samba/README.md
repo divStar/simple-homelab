@@ -67,7 +67,7 @@ Deploy Samba configuration
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L75"><code>main.tf#L75</code></a></td>
+      <td><a href="./main.tf#L92"><code>main.tf#L92</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_samba":end -->
@@ -83,7 +83,7 @@ Create system users, set Samba passwords, and configure the shared write group
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L103"><code>main.tf#L103</code></a></td>
+      <td><a href="./main.tf#L120"><code>main.tf#L120</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_users":end -->
@@ -99,7 +99,7 @@ Trigger for container replacement - module outputs aren't valid replace_triggere
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L70"><code>main.tf#L70</code></a></td>
+      <td><a href="./main.tf#L87"><code>main.tf#L87</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terraform_data.container_trigger":end -->
@@ -115,7 +115,7 @@ Trigger for user list changes. Uses triggers_replace, NOT input -- input-only ch
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L62"><code>main.tf#L62</code></a></td>
+      <td><a href="./main.tf#L79"><code>main.tf#L79</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terraform_data.users_trigger":end -->

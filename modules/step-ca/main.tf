@@ -11,30 +11,21 @@ locals {
   network_interfaces = [
     {
       name        = "eth0"
-      bridge      = "vmbr0"
-      mac_address = "EA:31:0E:A5:D8:4C"
-      ip          = "192.168.178.155"
-      subnet_mask = 24
-      gateway     = "192.168.178.1"
-    },
-    {
-      name        = "eth1"
       bridge      = "vmbr1"
       mac_address = "EA:31:0E:A5:D8:4F"
       ip          = "10.0.5.4"
       subnet_mask = 24
       vlan_id     = 5
-      response_route = {
-        gateway  = "10.0.5.1"
-        table_id = 10
-      }
+      gateway     = "10.0.5.1"
     }
   ]
 
-  # Which network_interfaces entry configure_host/configure_container connect
-  # to - single source of truth so both stay in sync if this ever changes.
-  provisioning_interface_index = 0
-  container_ip                 = local.network_interfaces[local.provisioning_interface_index].ip
+  container_ip = local.network_interfaces[0].ip
+
+  # Pi-hole primary, Management's own gateway (Unbound) as fallback - matches
+  # the DHCP-option pattern used for Trusted/Guest/IoT/Services.
+  dns_servers       = ["10.0.5.5", "10.0.5.1"]
+  dns_search_domain = "my.world"
 
   timestamp            = "+%Y-%m-%d-%H-%M-%S"
   setup_host_script    = "setup-host.sh"
@@ -52,8 +43,9 @@ module "setup_container" {
   tags         = ["alpine", "lxc", "pve-resources"]
   unprivileged = true
 
-  network_interfaces           = local.network_interfaces
-  provisioning_interface_index = local.provisioning_interface_index
+  network_interfaces = local.network_interfaces
+  dns_servers        = local.dns_servers
+  dns_search_domain  = local.dns_search_domain
 
   imagestore_id = "pve-resources"
   startup_order = 1

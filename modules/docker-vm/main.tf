@@ -155,6 +155,23 @@ resource "proxmox_virtual_environment_vm" "flatcar" {
     mac_address = "06:07:38:2A:54:9F"
   }
 
+  # Management (VLAN 5) - no in-guest config yet, added ahead of the Butane
+  # network changes so the NIC exists before Ignition needs to reference it
+  network_device {
+    bridge      = "vmbr1"
+    vlan_id     = 5
+    model       = "virtio"
+    mac_address = "EA:31:0E:A5:D8:53"
+  }
+
+  # Services (VLAN 10) - same as above, no in-guest config yet
+  network_device {
+    bridge      = "vmbr1"
+    vlan_id     = 10
+    model       = "virtio"
+    mac_address = "EA:31:0E:A5:D8:54"
+  }
+
   # Pass Ignition configuration via cloud-init user-data
   initialization {
     datastore_id      = var.ignition_config_datastore_id

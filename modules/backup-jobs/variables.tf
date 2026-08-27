@@ -143,6 +143,15 @@ variable "guests" {
     "samba"   = { vmid = "702" }
     "pihole"  = { vmid = "703" }
     "pbs-lxc" = { vmid = "704" }
+    "opnsense" = {
+      vmid     = "801"
+      schedule = "05:00"
+      prune_backups = {
+        "keep-daily"   = "7"
+        "keep-weekly"  = "4"
+        "keep-monthly" = "6"
+      }
+    }
   }
 }
 

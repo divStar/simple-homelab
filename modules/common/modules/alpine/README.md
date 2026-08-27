@@ -31,6 +31,8 @@ other Alpine packages (if specified; `bash` is installed by default).
   - [cpu_units](#cpu_units-optional) (*Optional*)
   - [description](#description-optional) (*Optional*)
   - [disk_size](#disk_size-optional) (*Optional*)
+  - [dns_search_domain](#dns_search_domain-optional) (*Optional*)
+  - [dns_servers](#dns_servers-optional) (*Optional*)
   - [imagestore_id](#imagestore_id-optional) (*Optional*)
   - [memory_dedicated](#memory_dedicated-optional) (*Optional*)
   - [mount_points](#mount_points-optional) (*Optional*)
@@ -68,7 +70,7 @@ Downloads the `alpine` image.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L14"><code>main.tf#L14</code></a></td>
+      <td><a href="./main.tf#L24"><code>main.tf#L24</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_download_file.template":end -->
@@ -84,7 +86,7 @@ Create Alpine LXC container
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L37"><code>main.tf#L37</code></a></td>
+      <td><a href="./main.tf#L47"><code>main.tf#L47</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_container.container":end -->
@@ -100,7 +102,7 @@ Generate a random password for the container
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L30"><code>main.tf#L30</code></a></td>
+      <td><a href="./main.tf#L40"><code>main.tf#L40</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"random_password.root_password":end -->
@@ -108,7 +110,7 @@ Generate a random password for the container
 
 ### _ssh_resource_.`configure_response_routes`
 
-Source-based routing for secondary interfaces, via ifupdown-ng's if-up.d/ if-down.d hooks (confirmed live on this Alpine image; no interfaces.d include exists here, so a Debian-style drop-in wouldn't be picked up). Also applied immediately, since the interface already came up once before these hooks existed to catch that first ifup.
+Source-based routing for secondary interfaces, via ifupdown-ng's native if-up.d/if-down.d hook directories (confirmed these are the only split-config convention this package actually ships - no interfaces.d equivalent exists or is documented for ifupdown-ng, unlike Debian's ifupdown2, so this deliberately stays script-based rather than borrowing Debian's convention).  `ifdown <iface>` then `ifup -f <iface>` is the confirmed-reliable way to make these hooks fire immediately for an interface that's already up (needed since the interface came up once before this hook existed to catch that first ifup): live-tested that `ifup -f` alone does NOT reliably re-fire if-up.d hooks on an already-up interface (a pushed marker script silently never ran), while a real down-then-up cycle does (marker fired, table 10 correctly repopulated). Also avoids a stale/duplicate address lingering if the address itself ever changes - `ifup -f` alone doesn't necessarily clear the old one first.
   <table>
     <tr>
       <td>Provider</td>
@@ -116,7 +118,7 @@ Source-based routing for secondary interfaces, via ifupdown-ng's if-up.d/ if-dow
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L246"><code>main.tf#L246</code></a></td>
+      <td><a href="./main.tf#L275"><code>main.tf#L275</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_response_routes":end -->
@@ -132,7 +134,7 @@ Install default aliases
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L314"><code>main.tf#L314</code></a></td>
+      <td><a href="./main.tf#L344"><code>main.tf#L344</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_default_aliases":end -->
@@ -148,7 +150,7 @@ Install OpenSSH into the Alpine LXC container
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L135"><code>main.tf#L135</code></a></td>
+      <td><a href="./main.tf#L155"><code>main.tf#L155</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_openssh":end -->
@@ -164,7 +166,7 @@ Install necessary Alpine packages
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L216"><code>main.tf#L216</code></a></td>
+      <td><a href="./main.tf#L236"><code>main.tf#L236</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_packages":end -->
@@ -179,7 +181,7 @@ Install necessary Alpine packages
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L181"><code>main.tf#L181</code></a></td>
+      <td><a href="./main.tf#L201"><code>main.tf#L201</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_update_upgrade_scripts":end -->
@@ -195,7 +197,7 @@ Cleanup counterpart to configure_response_routes - without this, removing a resp
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L293"><code>main.tf#L293</code></a></td>
+      <td><a href="./main.tf#L323"><code>main.tf#L323</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.remove_response_routes":end -->
@@ -211,7 +213,7 @@ Generate SSH key for the container
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L24"><code>main.tf#L24</code></a></td>
+      <td><a href="./main.tf#L34"><code>main.tf#L34</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"tls_private_key.ssh_key":end -->
@@ -255,9 +257,10 @@ Network interfaces for the container. The first entry is the primary interface (
     vlan_id     = optional(number)
     gateway     = optional(string)
     response_route = optional(object({
-      gateway  = string
-      table_id = number
-      priority = optional(number, 100)
+      gateway    = string
+      table_id   = number
+      table_name = string
+      priority   = optional(number, 100)
     }))
   }))
   ```
@@ -434,6 +437,48 @@ Size of the main container disk (in gigabytes)
 
 </details>
 </blockquote><!-- variable:"disk_size":end -->
+<blockquote><!-- variable:"dns_search_domain":start -->
+
+### `dns_search_domain` (*Optional*)
+
+DNS search domain for the container. Defaults to null (Proxmox's own default).
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  string
+  ```
+  **Default**:
+  ```json
+  null
+  ```
+  In file: <a href="./variables.tf#L165"><code>variables.tf#L165</code></a>
+
+</details>
+</blockquote><!-- variable:"dns_search_domain":end -->
+<blockquote><!-- variable:"dns_servers":start -->
+
+### `dns_servers` (*Optional*)
+
+DNS servers for the container's /etc/resolv.conf, in order. Defaults to null, which leaves Proxmox's own per-node default in place (not something this module should silently override for every consumer - callers on a network without their own DHCP-provided DNS need to set this explicitly).
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  list(string)
+  ```
+  **Default**:
+  ```json
+  null
+  ```
+  In file: <a href="./variables.tf#L159"><code>variables.tf#L159</code></a>
+
+</details>
+</blockquote><!-- variable:"dns_servers":end -->
 <blockquote><!-- variable:"imagestore_id":start -->
 
 ### `imagestore_id` (*Optional*)
@@ -496,7 +541,7 @@ List of mount points for the container
   ```json
   []
   ```
-  In file: <a href="./variables.tf#L167"><code>variables.tf#L167</code></a>
+  In file: <a href="./variables.tf#L180"><code>variables.tf#L180</code></a>
 
 </details>
 </blockquote><!-- variable:"mount_points":end -->
@@ -521,7 +566,7 @@ List of packages to install on the container
   "ca-certificates"
 ]
   ```
-  In file: <a href="./variables.tf#L160"><code>variables.tf#L160</code></a>
+  In file: <a href="./variables.tf#L173"><code>variables.tf#L173</code></a>
 
 </details>
 </blockquote><!-- variable:"packages":end -->
@@ -542,7 +587,7 @@ Index into network_interfaces that Terraform's own SSH provisioning connects to.
   ```json
   0
   ```
-  In file: <a href="./variables.tf#L146"><code>variables.tf#L146</code></a>
+  In file: <a href="./variables.tf#L147"><code>variables.tf#L147</code></a>
 
 </details>
 </blockquote><!-- variable:"provisioning_interface_index":end -->
@@ -650,7 +695,7 @@ Cron expression for automatic updates, or 'never' to disable
   ```json
   "0 3 * * 1"
   ```
-  In file: <a href="./variables.tf#L177"><code>variables.tf#L177</code></a>
+  In file: <a href="./variables.tf#L190"><code>variables.tf#L190</code></a>
 
 </details>
 </blockquote><!-- variable:"update_interval":end -->
