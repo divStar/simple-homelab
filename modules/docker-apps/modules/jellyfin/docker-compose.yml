@@ -5,10 +5,17 @@ services:
     restart: unless-stopped
     environment:
       - DOMAIN_NAME
+      # .NET's own X509Chain builder doesn't reliably trust the step-ca root via the bundled
+      # ca-certificates.crt alone (confirmed: curl using that same bundle verifies fine, but the
+      # SSO-Auth plugin's own OIDC discovery fetch failed with NotTimeValid regardless) - pointing
+      # it at a directory containing the standalone root cert fixes it. See:
+      # https://github.com/9p4/jellyfin-plugin-sso/issues/215#issuecomment-2830669850
+      - SSL_CERT_DIR=/usr/local/share/ca-certificates
     ports:
       - "8096:8096"
     volumes:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      - /etc/ssl/certs/step-ca-root.pem:/usr/local/share/ca-certificates/step-ca-root.crt:ro
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
       - jellyfin-config:/config
@@ -19,19 +26,18 @@ services:
       - /mnt/photo:/media/photo
       - /mnt/music:/media/music
       - /mnt/yuliia:/media/yuliia
-    extra_hosts:
-      - "zitadel.${BASE_DOMAIN}:host-gateway"
     networks:
-      services-network:
+      service-network:
         priority: 100
         gw_priority: 5
       jellyfin-ipvlan-network:
-        ipv4_address: 192.168.178.200
+        ipv4_address: 10.0.10.4
         priority: 50
         gw_priority: 1
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=services-network"
+      - "traefik-tier=services"
+      - "traefik.docker.network=service-network"
       # Web UI
       - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.${BASE_DOMAIN}`)"
       - "traefik.http.routers.jellyfin.entrypoints=websecure"
@@ -47,8 +53,8 @@ services:
           memory: 16g
 
 networks:
-  services-network:
-    name: services-network
+  service-network:
+    name: service-network
     external: true
   jellyfin-ipvlan-network:
     name: jellyfin-ipvlan-network

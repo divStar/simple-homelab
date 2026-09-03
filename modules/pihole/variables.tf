@@ -34,6 +34,12 @@ variable "step_ca_domain" {
   nullable    = false
 }
 
+variable "step_ca_ip" {
+  description = "Step CA's own IP, pinned into /etc/hosts for step_ca_domain - Pi-hole's own dns_servers is deliberately Unbound-only (no self-reference), and Unbound force-NXDOMAINs *.my.world, so without this override neither the initial bootstrap nor any later 12h cert renewal could ever resolve the CA's own hostname"
+  type        = string
+  nullable    = false
+}
+
 variable "step_ca_client_version" {
   description = "Version of the step CLI to install"
   type        = string

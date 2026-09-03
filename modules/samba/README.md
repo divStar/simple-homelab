@@ -2,6 +2,8 @@
 
 This module sets up Samba server in an Alpine LXC container using the provided information.
 
+<!-- docs-meta: order=30 icon=samba -->
+
 ## Contents
 
 <blockquote><!-- contents:start -->
@@ -43,7 +45,7 @@ Alpine LXC container setup
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L14"><code>main.tf#L14</code></a></td>
+      <td><a href="./main.tf#L16"><code>main.tf#L16</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="../common/modules/alpine/README.md">README.md</a> <em>(experimental)</em></td>
@@ -65,7 +67,7 @@ Deploy Samba configuration
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L62"><code>main.tf#L62</code></a></td>
+      <td><a href="./main.tf#L79"><code>main.tf#L79</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_samba":end -->
@@ -81,7 +83,7 @@ Create system users, set Samba passwords, and configure the shared write group
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L90"><code>main.tf#L90</code></a></td>
+      <td><a href="./main.tf#L107"><code>main.tf#L107</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_users":end -->
@@ -89,7 +91,7 @@ Create system users, set Samba passwords, and configure the shared write group
 
 ### _terraform_data_.`container_trigger`
 
-Trigger for container replacement - module outputs aren't valid replace_triggered_by references on their own (only resources are), hence wrapping it the same way users_trigger wraps var.samba_users above.
+Trigger for container replacement - module outputs aren't valid replace_triggered_by references on their own (only resources are), hence wrapping it the same way users_trigger wraps var.samba_users above. Same triggers_replace requirement as users_trigger above, for the same reason.
   <table>
     <tr>
       <td>Provider</td>
@@ -97,7 +99,7 @@ Trigger for container replacement - module outputs aren't valid replace_triggere
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L57"><code>main.tf#L57</code></a></td>
+      <td><a href="./main.tf#L74"><code>main.tf#L74</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terraform_data.container_trigger":end -->
@@ -105,7 +107,7 @@ Trigger for container replacement - module outputs aren't valid replace_triggere
 
 ### _terraform_data_.`users_trigger`
 
-Trigger for user list changes
+Trigger for user list changes. Uses triggers_replace, NOT input -- input-only changes make terraform_data update in-place, which leaves its own .id unchanged (only regenerated on a real create/replace of the terraform_data resource itself). Since every replace_triggered_by below references .id, using plain `input` here meant a samba_users change silently never actually triggered reprovisioning -- confirmed via `tofu plan -replace` while fixing the identical bug in modules/pbs-lxc's container_trigger, 2026-08-09.
   <table>
     <tr>
       <td>Provider</td>
@@ -113,7 +115,7 @@ Trigger for user list changes
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L50"><code>main.tf#L50</code></a></td>
+      <td><a href="./main.tf#L66"><code>main.tf#L66</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terraform_data.users_trigger":end -->

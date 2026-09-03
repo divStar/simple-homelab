@@ -16,13 +16,13 @@ services:
       - prometheus-data:/prometheus
       - /mnt/data/monitoring/prometheus-config.yml:/etc/prometheus/prometheus.yml:ro
     networks:
-      - services-network
-    extra_hosts:
-      - "docker-vm:192.168.178.120"
-      - "proxmox:192.168.178.25"
+      - management-network
+      - monitoring-network
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
+      - "traefik-tier=management"
+      - "traefik.docker.network=management-network"
       - "traefik.http.routers.prometheus.rule=Host(`prometheus.${BASE_DOMAIN}`)"
       - "traefik.http.routers.prometheus.entrypoints=websecure"
       - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
@@ -71,11 +71,14 @@ services:
       - /var/log/journal:/var/log/journal:ro
       - /mnt/data/monitoring/alloy-config.alloy:/etc/alloy/config.alloy:ro
     networks:
-      - services-network
+      - management-network
+      - monitoring-network
     ports:
-      - "4318:4318"
+      - ${MANAGEMENT_IP}:4318:4318
     labels:
       - "traefik.enable=true"
+      - "traefik-tier=management"
+      - "traefik.docker.network=management-network"
       - "traefik.http.routers.alloy.rule=Host(`alloy.${BASE_DOMAIN}`)"
       - "traefik.http.routers.alloy.entrypoints=websecure"
       - "traefik.http.services.alloy.loadbalancer.server.port=12345"
@@ -101,7 +104,7 @@ services:
       - "traefik.http.middlewares.oidc-alloy-dashboard.plugin.traefik-oidc-auth.Headers[3].Value=Bearer {{ .accessToken }}"
     devices:
       - /dev/kmsg
-  # Loki - Log storage
+  # Loki - Log storage. Might need a host port published again once non-Docker hosts want to push logs to it.
   loki:
     image: grafana/loki:latest
     container_name: loki
@@ -110,12 +113,12 @@ services:
       - loki-data:/loki
       - /mnt/data/monitoring/loki-config.yml:/etc/loki/local-config.yaml:ro
     networks:
-      - services-network
+      - monitoring-network
     restart: unless-stopped
-    ports:
-      - "3100:3100"
 networks:
-  services-network:
+  management-network:
+    external: true
+  monitoring-network:
     external: true
 volumes:
   prometheus-data:

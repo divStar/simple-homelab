@@ -13,16 +13,16 @@ other Alpine packages (if specified; `bash` is installed by default).
   - _proxmox_download_file_.[template](#proxmox_download_filetemplate)
   - _proxmox_virtual_environment_container_.[container](#proxmox_virtual_environment_containercontainer)
   - _random_password_.[root_password](#random_passwordroot_password)
+  - _ssh_resource_.[configure_response_routes](#ssh_resourceconfigure_response_routes)
   - _ssh_resource_.[install_default_aliases](#ssh_resourceinstall_default_aliases)
   - _ssh_resource_.[install_openssh](#ssh_resourceinstall_openssh)
   - _ssh_resource_.[install_packages](#ssh_resourceinstall_packages)
   - _ssh_resource_.[install_update_upgrade_scripts](#ssh_resourceinstall_update_upgrade_scripts)
+  - _ssh_resource_.[remove_response_routes](#ssh_resourceremove_response_routes)
   - _tls_private_key_.[ssh_key](#tls_private_keyssh_key)
 - [Variables](#variables)
   - [hostname](#hostname-required) (**Required**)
-  - [ni_gateway](#ni_gateway-required) (**Required**)
-  - [ni_ip](#ni_ip-required) (**Required**)
-  - [ni_mac_address](#ni_mac_address-required) (**Required**)
+  - [network_interfaces](#network_interfaces-required) (**Required**)
   - [proxmox](#proxmox-required) (**Required**)
   - [startup_order](#startup_order-required) (**Required**)
   - [vm_id](#vm_id-required) (**Required**)
@@ -31,13 +31,13 @@ other Alpine packages (if specified; `bash` is installed by default).
   - [cpu_units](#cpu_units-optional) (*Optional*)
   - [description](#description-optional) (*Optional*)
   - [disk_size](#disk_size-optional) (*Optional*)
+  - [dns_search_domain](#dns_search_domain-optional) (*Optional*)
+  - [dns_servers](#dns_servers-optional) (*Optional*)
   - [imagestore_id](#imagestore_id-optional) (*Optional*)
   - [memory_dedicated](#memory_dedicated-optional) (*Optional*)
   - [mount_points](#mount_points-optional) (*Optional*)
-  - [ni_bridge](#ni_bridge-optional) (*Optional*)
-  - [ni_name](#ni_name-optional) (*Optional*)
-  - [ni_subnet_mask](#ni_subnet_mask-optional) (*Optional*)
   - [packages](#packages-optional) (*Optional*)
+  - [provisioning_interface_index](#provisioning_interface_index-optional) (*Optional*)
   - [startup_down_delay](#startup_down_delay-optional) (*Optional*)
   - [startup_up_delay](#startup_up_delay-optional) (*Optional*)
   - [tags](#tags-optional) (*Optional*)
@@ -70,7 +70,7 @@ Downloads the `alpine` image.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L14"><code>main.tf#L14</code></a></td>
+      <td><a href="./main.tf#L24"><code>main.tf#L24</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_download_file.template":end -->
@@ -86,7 +86,7 @@ Create Alpine LXC container
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L37"><code>main.tf#L37</code></a></td>
+      <td><a href="./main.tf#L47"><code>main.tf#L47</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_container.container":end -->
@@ -102,10 +102,26 @@ Generate a random password for the container
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L30"><code>main.tf#L30</code></a></td>
+      <td><a href="./main.tf#L40"><code>main.tf#L40</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"random_password.root_password":end -->
+<blockquote><!-- resource:"ssh_resource.configure_response_routes":start -->
+
+### _ssh_resource_.`configure_response_routes`
+
+Source-based routing for secondary interfaces, via ifupdown-ng's native if-up.d/if-down.d hook directories (confirmed these are the only split-config convention this package actually ships - no interfaces.d equivalent exists or is documented for ifupdown-ng, unlike Debian's ifupdown2, so this deliberately stays script-based rather than borrowing Debian's convention).  `ifdown <iface>` then `ifup -f <iface>` is the confirmed-reliable way to make these hooks fire immediately for an interface that's already up (needed since the interface came up once before this hook existed to catch that first ifup): live-tested that `ifup -f` alone does NOT reliably re-fire if-up.d hooks on an already-up interface (a pushed marker script silently never ran), while a real down-then-up cycle does (marker fired, table 10 correctly repopulated). Also avoids a stale/duplicate address lingering if the address itself ever changes - `ifup -f` alone doesn't necessarily clear the old one first.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>ssh (loafoe/ssh)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L275"><code>main.tf#L275</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"ssh_resource.configure_response_routes":end -->
 <blockquote><!-- resource:"ssh_resource.install_default_aliases":start -->
 
 ### _ssh_resource_.`install_default_aliases`
@@ -118,7 +134,7 @@ Install default aliases
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L214"><code>main.tf#L214</code></a></td>
+      <td><a href="./main.tf#L344"><code>main.tf#L344</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_default_aliases":end -->
@@ -134,7 +150,7 @@ Install OpenSSH into the Alpine LXC container
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L128"><code>main.tf#L128</code></a></td>
+      <td><a href="./main.tf#L155"><code>main.tf#L155</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_openssh":end -->
@@ -150,7 +166,7 @@ Install necessary Alpine packages
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L193"><code>main.tf#L193</code></a></td>
+      <td><a href="./main.tf#L236"><code>main.tf#L236</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_packages":end -->
@@ -165,10 +181,26 @@ Install necessary Alpine packages
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L163"><code>main.tf#L163</code></a></td>
+      <td><a href="./main.tf#L201"><code>main.tf#L201</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_update_upgrade_scripts":end -->
+<blockquote><!-- resource:"ssh_resource.remove_response_routes":start -->
+
+### _ssh_resource_.`remove_response_routes`
+
+Cleanup counterpart to configure_response_routes - without this, removing a response_route entry later would orphan its hook scripts and ip rule/table.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>ssh (loafoe/ssh)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L323"><code>main.tf#L323</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"ssh_resource.remove_response_routes":end -->
 <blockquote><!-- resource:"tls_private_key.ssh_key":start -->
 
 ### _tls_private_key_.`ssh_key`
@@ -181,7 +213,7 @@ Generate SSH key for the container
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L24"><code>main.tf#L24</code></a></td>
+      <td><a href="./main.tf#L34"><code>main.tf#L34</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"tls_private_key.ssh_key":end -->
@@ -205,57 +237,37 @@ Container host name
 
 </details>
 </blockquote><!-- variable:"hostname":end -->
-<blockquote><!-- variable:"ni_gateway":start -->
+<blockquote><!-- variable:"network_interfaces":start -->
 
-### `ni_gateway` (**Required**)
+### `network_interfaces` (**Required**)
 
-Network interface gateway
-
-<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
-  <summary>Show more...</summary>
-
-  **Type**:
-  ```hcl
-  string
-  ```
-  In file: <a href="./variables.tf#L123"><code>variables.tf#L123</code></a>
-
-</details>
-</blockquote><!-- variable:"ni_gateway":end -->
-<blockquote><!-- variable:"ni_ip":start -->
-
-### `ni_ip` (**Required**)
-
-Network interface IP address
+Network interfaces for the container. The first entry is the primary interface (net0); any further entries dual-home the container onto additional networks (e.g. a second VLAN) and are left gateway-less unless one is explicitly given. `response_route`, if set, adds source-based routing (a dedicated table + an `ip rule from <this interface's ip>`) so replies to traffic addressed to this interface go back out via its own gateway instead of falling through to the primary interface's default route - without it, only same-subnet peers of this interface can actually reach it.
 
 <details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
   <summary>Show more...</summary>
 
   **Type**:
   ```hcl
-  string
+  list(object({
+    name        = string
+    bridge      = string
+    mac_address = string
+    ip          = string
+    subnet_mask = optional(number, 24)
+    vlan_id     = optional(number)
+    gateway     = optional(string)
+    response_route = optional(object({
+      gateway    = string
+      table_id   = number
+      table_name = string
+      priority   = optional(number, 100)
+    }))
+  }))
   ```
   In file: <a href="./variables.tf#L117"><code>variables.tf#L117</code></a>
 
 </details>
-</blockquote><!-- variable:"ni_ip":end -->
-<blockquote><!-- variable:"ni_mac_address":start -->
-
-### `ni_mac_address` (**Required**)
-
-Network interface MAC address
-
-<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
-  <summary>Show more...</summary>
-
-  **Type**:
-  ```hcl
-  string
-  ```
-  In file: <a href="./variables.tf#L129"><code>variables.tf#L129</code></a>
-
-</details>
-</blockquote><!-- variable:"ni_mac_address":end -->
+</blockquote><!-- variable:"network_interfaces":end -->
 <blockquote><!-- variable:"proxmox":start -->
 
 ### `proxmox` (**Required**)
@@ -332,9 +344,9 @@ Alpine image configuration
   **Default**:
   ```json
   {
-  "checksum": "211ac75f4b66494e78a6e72acc206b8ac490e0d174a778ae5be2970b0a1a57a8dddea8fc5880886a3794b8bb787fe93297a1cad3aee75d07623d8443ea9062e4",
+  "checksum": "9877b74de4c4878b70450502618f7b02952e792afdbc91f146f6cba507432dae516674d0bb3a306484d58edc722ff63db1ed3c4e5b0954fb2a2773ec8d8f33bd",
   "checksum_algorithm": "sha512",
-  "url": "http://download.proxmox.com/images/system/alpine-3.21-default_20241217_amd64.tar.xz"
+  "url": "http://download.proxmox.com/images/system/alpine-3.24-default_20260714_amd64.tar.xz"
 }
   ```
   In file: <a href="./variables.tf#L43"><code>variables.tf#L43</code></a>
@@ -425,6 +437,48 @@ Size of the main container disk (in gigabytes)
 
 </details>
 </blockquote><!-- variable:"disk_size":end -->
+<blockquote><!-- variable:"dns_search_domain":start -->
+
+### `dns_search_domain` (*Optional*)
+
+DNS search domain for the container. Defaults to null (Proxmox's own default).
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  string
+  ```
+  **Default**:
+  ```json
+  null
+  ```
+  In file: <a href="./variables.tf#L165"><code>variables.tf#L165</code></a>
+
+</details>
+</blockquote><!-- variable:"dns_search_domain":end -->
+<blockquote><!-- variable:"dns_servers":start -->
+
+### `dns_servers` (*Optional*)
+
+DNS servers for the container's /etc/resolv.conf, in order. Defaults to null, which leaves Proxmox's own per-node default in place (not something this module should silently override for every consumer - callers on a network without their own DHCP-provided DNS need to set this explicitly).
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  list(string)
+  ```
+  **Default**:
+  ```json
+  null
+  ```
+  In file: <a href="./variables.tf#L159"><code>variables.tf#L159</code></a>
+
+</details>
+</blockquote><!-- variable:"dns_servers":end -->
 <blockquote><!-- variable:"imagestore_id":start -->
 
 ### `imagestore_id` (*Optional*)
@@ -487,73 +541,10 @@ List of mount points for the container
   ```json
   []
   ```
-  In file: <a href="./variables.tf#L165"><code>variables.tf#L165</code></a>
+  In file: <a href="./variables.tf#L180"><code>variables.tf#L180</code></a>
 
 </details>
 </blockquote><!-- variable:"mount_points":end -->
-<blockquote><!-- variable:"ni_bridge":start -->
-
-### `ni_bridge` (*Optional*)
-
-Network interface bridge
-
-<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
-  <summary>Show more...</summary>
-
-  **Type**:
-  ```hcl
-  string
-  ```
-  **Default**:
-  ```json
-  "vmbr0"
-  ```
-  In file: <a href="./variables.tf#L149"><code>variables.tf#L149</code></a>
-
-</details>
-</blockquote><!-- variable:"ni_bridge":end -->
-<blockquote><!-- variable:"ni_name":start -->
-
-### `ni_name` (*Optional*)
-
-Network interface name
-
-<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
-  <summary>Show more...</summary>
-
-  **Type**:
-  ```hcl
-  string
-  ```
-  **Default**:
-  ```json
-  "eth0"
-  ```
-  In file: <a href="./variables.tf#L142"><code>variables.tf#L142</code></a>
-
-</details>
-</blockquote><!-- variable:"ni_name":end -->
-<blockquote><!-- variable:"ni_subnet_mask":start -->
-
-### `ni_subnet_mask` (*Optional*)
-
-Network interface subnet mask in CIDR notation
-
-<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
-  <summary>Show more...</summary>
-
-  **Type**:
-  ```hcl
-  number
-  ```
-  **Default**:
-  ```json
-  24
-  ```
-  In file: <a href="./variables.tf#L135"><code>variables.tf#L135</code></a>
-
-</details>
-</blockquote><!-- variable:"ni_subnet_mask":end -->
 <blockquote><!-- variable:"packages":start -->
 
 ### `packages` (*Optional*)
@@ -575,10 +566,31 @@ List of packages to install on the container
   "ca-certificates"
 ]
   ```
-  In file: <a href="./variables.tf#L158"><code>variables.tf#L158</code></a>
+  In file: <a href="./variables.tf#L173"><code>variables.tf#L173</code></a>
 
 </details>
 </blockquote><!-- variable:"packages":end -->
+<blockquote><!-- variable:"provisioning_interface_index":start -->
+
+### `provisioning_interface_index` (*Optional*)
+
+Index into network_interfaces that Terraform's own SSH provisioning connects to. Defaults to the primary interface (0); change only if that one isn't reachable from wherever `tofu apply` runs.
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  number
+  ```
+  **Default**:
+  ```json
+  0
+  ```
+  In file: <a href="./variables.tf#L147"><code>variables.tf#L147</code></a>
+
+</details>
+</blockquote><!-- variable:"provisioning_interface_index":end -->
 <blockquote><!-- variable:"startup_down_delay":start -->
 
 ### `startup_down_delay` (*Optional*)
@@ -683,7 +695,7 @@ Cron expression for automatic updates, or 'never' to disable
   ```json
   "0 3 * * 1"
   ```
-  In file: <a href="./variables.tf#L175"><code>variables.tf#L175</code></a>
+  In file: <a href="./variables.tf#L190"><code>variables.tf#L190</code></a>
 
 </details>
 </blockquote><!-- variable:"update_interval":end -->

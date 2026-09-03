@@ -4,8 +4,7 @@
  * This module sets up Proxmox Backup Server in a Debian LXC container, using
  * /mnt/backup/pbs (bind-mounted from the host) as the datastore location.
  * Replaces modules/pbs-vm as the deployed PBS instance -- that module is kept
- * in the repo as a fallback option, but no longer applied. Reuses that VM's
- * former IP/MAC so sanctum-pbs.my.world keeps working unchanged.
+ * in the repo as a fallback option, but no longer applied.
  *
  * <!-- docs-meta: order=50 icon=pbs -->
  */
@@ -13,8 +12,7 @@
 locals {
   proxmox_endpoint = "https://${var.proxmox.host}:8006"
 
-  # Same IP modules/pbs-vm (VM 801, now decommissioned) used to own.
-  container_ip = "192.168.178.121"
+  container_ip = "10.0.5.6"
 
   # Used both for the container's own hostname and (with .my.world appended
   # inline at the one place that needs it) the ACME cert's node domain.
@@ -29,6 +27,16 @@ locals {
   # actually removable, just consistently named.
   host_datastore_path  = "/mnt/backup/pbs"
   guest_datastore_path = "/mnt/datastore/primary"
+
+  # Same idea, for PBS's own config/state directory rather than the datastore
+  # data - user.cfg, token.shadow, acl.cfg, datastore.cfg, domains.cfg (ACME
+  # account), authkey.key, node.cfg all live here. Confirmed via `dpkg -L
+  # proxmox-backup-server` that none of it is a package-shipped conffile -
+  # it's entirely generated at runtime by the PBS daemon on first start, same
+  # category as /etc/pihole and /etc/step-ca already bind-mounting their own
+  # state elsewhere in this repo.
+  host_config_path  = "/mnt/storage/pbs-lxc"
+  guest_config_path = "/etc/proxmox-backup"
 
   setup_datastore_script     = "setup-datastore.sh"
   setup_acme_script          = "setup-acme.sh"
@@ -64,10 +72,46 @@ resource "ssh_resource" "prepare_datastore_directory" {
   timeout = "20s"
 }
 
+# Unlike prepare_datastore_directory above, this one needs to start OWNED BY
+# backup, not root, AND at exactly mode 700 - both confirmed the hard way,
+# 2026-08-26:
+# - proxmox-backup-proxy runs as User=backup/Group=backup (no
+#   ConfigurationDirectory=/StateDirectory= in its unit, so systemd doesn't
+#   chown this for it) - a root-owned directory left it unable to create
+#   authkey.key/acme/accounts/* at all (panicked: "unable to read
+#   authkey.pub - No such file or directory").
+# - Fixing ownership alone still wasn't enough: proxmox-backup.service (the
+#   *other* PBS daemon, proxmox-backup-api, which runs as root and is the one
+#   that actually generates authkey.key on first start) refuses to start at
+#   all unless the directory is *exactly* mode 700 - plain `mkdir -p` leaves
+#   it at 755, and proxmox-backup-api's own error is explicit about this:
+#   "configuration directory '/etc/proxmox-backup' permission problem - wrong
+#   permission (755 != 700)". Without proxmox-backup-api ever starting,
+#   authkey.key never gets generated, and proxmox-backup-proxy fails on the
+#   missing key downstream - both end up crash-looping and hitting systemd's
+#   restart rate limit before the real cause is obvious from either one
+#   alone.
+# 100034 = this host's confirmed subuid base (100000) + backup's
+# container-internal uid (34), same mapping already verified via the
+# datastore path's real ownership once PBS takes it over.
+resource "ssh_resource" "prepare_config_directory" {
+  host        = var.proxmox.host
+  user        = var.proxmox.ssh_user
+  private_key = file(var.proxmox.ssh_key)
+
+  commands = [
+    "mkdir -p ${local.host_config_path}",
+    "[ -f ${local.host_config_path}/user.cfg ] || chown 100034:100034 ${local.host_config_path}",
+    "[ -f ${local.host_config_path}/user.cfg ] || chmod 700 ${local.host_config_path}",
+  ]
+
+  timeout = "20s"
+}
+
 # Debian LXC container setup
 module "setup_container" {
   source     = "../common/modules/debian"
-  depends_on = [ssh_resource.prepare_datastore_directory]
+  depends_on = [ssh_resource.prepare_datastore_directory, ssh_resource.prepare_config_directory]
 
   proxmox      = var.proxmox
   vm_id        = 704
@@ -87,18 +131,27 @@ module "setup_container" {
   cpu_cores        = 2
   memory_dedicated = 4096
 
-  ni_mac_address = "06:2A:97:E1:5C:83"
-  ni_ip          = local.container_ip
-  ni_gateway     = "192.168.178.1"
-  ni_subnet_mask = 24
-  ni_name        = "eth0"
-  ni_bridge      = "vmbr0"
+  network_interfaces = [
+    {
+      name        = "eth0"
+      bridge      = "vmbr1"
+      mac_address = "EA:31:0E:A5:D8:51"
+      ip          = local.container_ip
+      subnet_mask = 24
+      vlan_id     = 5
+      gateway     = "10.0.5.1"
+    }
+  ]
+
+  dns_servers       = ["10.0.5.1"]
+  dns_search_domain = "my.world"
 
   imagestore_id = "pve-resources"
   startup_order = 4
 
   mount_points = [
     { volume = local.host_datastore_path, path = local.guest_datastore_path },
+    { volume = local.host_config_path, path = local.guest_config_path },
   ]
 }
 

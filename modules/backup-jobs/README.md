@@ -6,6 +6,8 @@ folder backup per entry in var.folders (real data the guest-level jobs
 never touch - bind-mounted LXC state, the family file shares, PVE's own
 recovery-relevant config).
 
+<!-- docs-meta: order=70 icon=pbs -->
+
 ## Contents
 
 <blockquote><!-- contents:start -->
@@ -18,6 +20,7 @@ recovery-relevant config).
   - _ssh_resource_.[create_pbs_token](#ssh_resourcecreate_pbs_token)
   - _ssh_resource_.[create_pbs_user](#ssh_resourcecreate_pbs_user)
   - _ssh_resource_.[delete_existing_pbs_token](#ssh_resourcedelete_existing_pbs_token)
+  - _ssh_resource_.[delete_flatcar_data_export](#ssh_resourcedelete_flatcar_data_export)
   - _ssh_resource_.[delete_folder_backup](#ssh_resourcedelete_folder_backup)
   - _ssh_resource_.[delete_folder_backup_infra](#ssh_resourcedelete_folder_backup_infra)
   - _ssh_resource_.[delete_pbs_user](#ssh_resourcedelete_pbs_user)
@@ -25,11 +28,14 @@ recovery-relevant config).
   - _ssh_resource_.[folder_backup](#ssh_resourcefolder_backup)
   - _ssh_resource_.[grant_pbs_token_acl](#ssh_resourcegrant_pbs_token_acl)
   - _ssh_resource_.[grant_pbs_user_acl](#ssh_resourcegrant_pbs_user_acl)
+  - _ssh_resource_.[push_flatcar_data_export](#ssh_resourcepush_flatcar_data_export)
   - _ssh_resource_.[push_folder_backup_infra](#ssh_resourcepush_folder_backup_infra)
   - _ssh_resource_.[verify_job](#ssh_resourceverify_job)
 - [Variables](#variables)
   - [pbs](#pbs-required) (**Required**)
   - [proxmox](#proxmox-required) (**Required**)
+  - [flatcar_data_export_schedule](#flatcar_data_export_schedule-optional) (*Optional*)
+  - [folder_secrets](#folder_secrets-optional) (*Optional*)
   - [folders](#folders-optional) (*Optional*)
   - [guests](#guests-optional) (*Optional*)
   - [pbs_token_name](#pbs_token_name-optional) (*Optional*)
@@ -41,8 +47,10 @@ recovery-relevant config).
   - [verify_outdated_after_days](#verify_outdated_after_days-optional) (*Optional*)
   - [verify_schedule](#verify_schedule-optional) (*Optional*)
 - [Outputs](#outputs)
+  - [folder_backups](#folder_backups)
   - [job_ids](#job_ids)
   - [storage_id](#storage_id)
+  - [verify_job](#verify_job)
 </blockquote><!-- contents:end -->
 
 ## Providers
@@ -56,7 +64,7 @@ recovery-relevant config).
 
 ### _proxmox_backup_job_.`this`
 
-One job per guest - each guest's primary disk(s) (and EFI disk, where it has one - EFI disks have no per-disk backup toggle in this provider, so they're always included automatically, nothing to configure for that here).
+One job per guest - each guest's primary disk(s). Note: EFI disks have no per-disk backup toggle in this provider, so they're always included automatically, nothing to configure for that here).
   <table>
     <tr>
       <td>Provider</td>
@@ -64,7 +72,7 @@ One job per guest - each guest's primary disk(s) (and EFI disk, where it has one
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L178"><code>main.tf#L178</code></a></td>
+      <td><a href="./main.tf#L150"><code>main.tf#L150</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_backup_job.this":end -->
@@ -80,7 +88,7 @@ Register PBS as a storage target PVE can back guests up to, authenticated with t
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L163"><code>main.tf#L163</code></a></td>
+      <td><a href="./main.tf#L135"><code>main.tf#L135</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_storage_pbs.this":end -->
@@ -88,7 +96,7 @@ Register PBS as a storage target PVE can back guests up to, authenticated with t
 
 ### _ssh_resource_.`create_folder_backup_config_dir`
 
-Split from push_folder_backup_infra below on purpose - the file{} blocks there push into /etc/pbs-folder-backup, which doesn't exist on a fresh sanctum, and ssh_resource gives no documented guarantee that its file{} pushes happen after (vs. before/alongside) its own commands. A separate, ordered-by-depends_on resource removes the question entirely.
+Create PBS backup directory if necessary and chmod it.
   <table>
     <tr>
       <td>Provider</td>
@@ -96,14 +104,15 @@ Split from push_folder_backup_infra below on purpose - the file{} blocks there p
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L243"><code>main.tf#L243</code></a></td>
+      <td><a href="./main.tf#L196"><code>main.tf#L196</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.create_folder_backup_config_dir":end -->
 <blockquote><!-- resource:"ssh_resource.create_pbs_token":start -->
 
 ### _ssh_resource_.`create_pbs_token`
-      
+
+Create a new PBS token for the user.
   <table>
     <tr>
       <td>Provider</td>
@@ -111,7 +120,7 @@ Split from push_folder_backup_infra below on purpose - the file{} blocks there p
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L76"><code>main.tf#L76</code></a></td>
+      <td><a href="./main.tf#L87"><code>main.tf#L87</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.create_pbs_token":end -->
@@ -119,7 +128,7 @@ Split from push_folder_backup_infra below on purpose - the file{} blocks there p
 
 ### _ssh_resource_.`create_pbs_user`
 
-Dedicated PBS user for this module's own storage credential - see the `pbs_token_userid` variable for why this needs prune, not just backup, privilege.
+Dedicated PBS user for this module's own storage credential.
   <table>
     <tr>
       <td>Provider</td>
@@ -127,7 +136,7 @@ Dedicated PBS user for this module's own storage credential - see the `pbs_token
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L39"><code>main.tf#L39</code></a></td>
+      <td><a href="./main.tf#L44"><code>main.tf#L44</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.create_pbs_user":end -->
@@ -135,7 +144,7 @@ Dedicated PBS user for this module's own storage credential - see the `pbs_token
 
 ### _ssh_resource_.`delete_existing_pbs_token`
 
-Idempotency for create_pbs_token below can't be a simple "skip if exists" guard like create_pbs_user's, since a pre-existing token's secret can never be retrieved again (PBS shows it exactly once, at creation). So a rerun instead deletes any same-named token first, then create_pbs_token always (re)creates, guaranteeing a fresh, known secret lands in state. Safe because this token has exactly one consumer (proxmox_storage_pbs.this below, wired in the same apply) - nothing else holds a copy that a rotation could break. Kept as its own resource, separate from create_pbs_token, so create_pbs_token's `result` stays a single command's output - the only form already confirmed safe to jsondecode() (see host/modules/terraform-user's create_api_token for the same pattern).
+Delete existing PBS token for the user.
   <table>
     <tr>
       <td>Provider</td>
@@ -143,14 +152,15 @@ Idempotency for create_pbs_token below can't be a simple "skip if exists" guard 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L62"><code>main.tf#L62</code></a></td>
+      <td><a href="./main.tf#L72"><code>main.tf#L72</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_existing_pbs_token":end -->
-<blockquote><!-- resource:"ssh_resource.delete_folder_backup":start -->
+<blockquote><!-- resource:"ssh_resource.delete_flatcar_data_export":start -->
 
-### _ssh_resource_.`delete_folder_backup`
-      
+### _ssh_resource_.`delete_flatcar_data_export`
+
+Remove the Flatcar data export job on module destroy.
   <table>
     <tr>
       <td>Provider</td>
@@ -158,14 +168,31 @@ Idempotency for create_pbs_token below can't be a simple "skip if exists" guard 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L339"><code>main.tf#L339</code></a></td>
+      <td><a href="./main.tf#L370"><code>main.tf#L370</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"ssh_resource.delete_flatcar_data_export":end -->
+<blockquote><!-- resource:"ssh_resource.delete_folder_backup":start -->
+
+### _ssh_resource_.`delete_folder_backup`
+
+Delete folder backup runs.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>ssh (loafoe/ssh)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L318"><code>main.tf#L318</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_folder_backup":end -->
 <blockquote><!-- resource:"ssh_resource.delete_folder_backup_infra":start -->
 
 ### _ssh_resource_.`delete_folder_backup_infra`
-      
+
+Delete folder backup infrastructure from host.
   <table>
     <tr>
       <td>Provider</td>
@@ -173,14 +200,15 @@ Idempotency for create_pbs_token below can't be a simple "skip if exists" guard 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L285"><code>main.tf#L285</code></a></td>
+      <td><a href="./main.tf#L235"><code>main.tf#L235</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_folder_backup_infra":end -->
 <blockquote><!-- resource:"ssh_resource.delete_pbs_user":start -->
 
 ### _ssh_resource_.`delete_pbs_user`
-      
+
+Delete the dedicated PBS user.
   <table>
     <tr>
       <td>Provider</td>
@@ -188,14 +216,15 @@ Idempotency for create_pbs_token below can't be a simple "skip if exists" guard 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L145"><code>main.tf#L145</code></a></td>
+      <td><a href="./main.tf#L57"><code>main.tf#L57</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_pbs_user":end -->
 <blockquote><!-- resource:"ssh_resource.delete_verify_job":start -->
 
 ### _ssh_resource_.`delete_verify_job`
-      
+
+Delete verify jobs.
   <table>
     <tr>
       <td>Provider</td>
@@ -203,7 +232,7 @@ Idempotency for create_pbs_token below can't be a simple "skip if exists" guard 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L212"><code>main.tf#L212</code></a></td>
+      <td><a href="./main.tf#L181"><code>main.tf#L181</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_verify_job":end -->
@@ -219,14 +248,15 @@ One concrete timer + one per-folder env file per var.folders entry - namespace i
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L305"><code>main.tf#L305</code></a></td>
+      <td><a href="./main.tf#L255"><code>main.tf#L255</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.folder_backup":end -->
 <blockquote><!-- resource:"ssh_resource.grant_pbs_token_acl":start -->
 
 ### _ssh_resource_.`grant_pbs_token_acl`
-      
+
+Grant the user token the necessary ACL permissions.
   <table>
     <tr>
       <td>Provider</td>
@@ -234,7 +264,7 @@ One concrete timer + one per-folder env file per var.folders entry - namespace i
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L126"><code>main.tf#L126</code></a></td>
+      <td><a href="./main.tf#L118"><code>main.tf#L118</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.grant_pbs_token_acl":end -->
@@ -242,7 +272,7 @@ One concrete timer + one per-folder env file per var.folders entry - namespace i
 
 ### _ssh_resource_.`grant_pbs_user_acl`
 
-PBS intersects a token's effective permissions with its parent user's own permissions ("A user can always configure privileges for their own API tokens, as they will be limited by the users privileges anyway" - PBS user-management docs) - confirmed live: granting a role to only the token left it with zero effective permissions until the plain user got the same grant too. So both principals need the ACL entry, not just the token - acl update is idempotent, safe to always run both.  Role is DatastoreAdmin, not the narrower DatastorePowerUser originally used here (Audit+Backup+Prune+Read) - the folder-backup track below needs Datastore.Modify too, to create its per-folder namespaces (confirmed live: `namespace create` fails with "missing Datastore.Modify" under DatastorePowerUser). DatastoreAdmin is a confirmed superset (adds Modify + Verify, same reachable Backup/Prune/Read/Audit) - one role covers both tracks, no second credential needed.
+Grant the user the necessary ACL permissions.
   <table>
     <tr>
       <td>Provider</td>
@@ -250,14 +280,15 @@ PBS intersects a token's effective permissions with its parent user's own permis
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L112"><code>main.tf#L112</code></a></td>
+      <td><a href="./main.tf#L103"><code>main.tf#L103</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.grant_pbs_user_acl":end -->
-<blockquote><!-- resource:"ssh_resource.push_folder_backup_infra":start -->
+<blockquote><!-- resource:"ssh_resource.push_flatcar_data_export":start -->
 
-### _ssh_resource_.`push_folder_backup_infra`
-      
+### _ssh_resource_.`push_flatcar_data_export`
+
+Daily export of docker-vm's data disks into the Proxmox import directory, so a docker-vm rebuild (destroy + tofu apply) picks up current data automatically - not a PBS backup, standalone from everything else in this module.
   <table>
     <tr>
       <td>Provider</td>
@@ -265,7 +296,23 @@ PBS intersects a token's effective permissions with its parent user's own permis
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L253"><code>main.tf#L253</code></a></td>
+      <td><a href="./main.tf#L338"><code>main.tf#L338</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"ssh_resource.push_flatcar_data_export":end -->
+<blockquote><!-- resource:"ssh_resource.push_folder_backup_infra":start -->
+
+### _ssh_resource_.`push_folder_backup_infra`
+
+Push folder backup infrastructure to the host.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>ssh (loafoe/ssh)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L207"><code>main.tf#L207</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.push_folder_backup_infra":end -->
@@ -273,7 +320,7 @@ PBS intersects a token's effective permissions with its parent user's own permis
 
 ### _ssh_resource_.`verify_job`
 
-PBS's own datastore verify job - no native provider resource for this (see var.verify_schedule), so it's ssh_resource-driven like the user/token bootstrap above. Unlike create_pbs_token, `verify-job update` is a clean, safe idempotent operation on its own - no secret-rotation gotcha - so this is a plain check-then-create-or-update, no separate delete step needed.
+PBS's own datastore verify job.
   <table>
     <tr>
       <td>Provider</td>
@@ -281,7 +328,7 @@ PBS's own datastore verify job - no native provider resource for this (see var.v
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L198"><code>main.tf#L198</code></a></td>
+      <td><a href="./main.tf#L166"><code>main.tf#L166</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.verify_job":end -->
@@ -333,6 +380,48 @@ Proxmox host configuration
 
 </details>
 </blockquote><!-- variable:"proxmox":end -->
+<blockquote><!-- variable:"flatcar_data_export_schedule":start -->
+
+### `flatcar_data_export_schedule` (*Optional*)
+
+Systemd calendar schedule for the Flatcar data export job
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  string
+  ```
+  **Default**:
+  ```json
+  "07:00"
+  ```
+  In file: <a href="./variables.tf#L85"><code>variables.tf#L85</code></a>
+
+</details>
+</blockquote><!-- variable:"flatcar_data_export_schedule":end -->
+<blockquote><!-- variable:"folder_secrets":start -->
+
+### `folder_secrets` (*Optional*)
+
+Map of folder name => extra env vars for that folder's exec_start_pre script
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  map(map(string))
+  ```
+  **Default**:
+  ```json
+  {}
+  ```
+  In file: <a href="./variables.tf#L63"><code>variables.tf#L63</code></a>
+
+</details>
+</blockquote><!-- variable:"folder_secrets":end -->
 <blockquote><!-- variable:"folders":start -->
 
 ### `folders` (*Optional*)
@@ -348,6 +437,10 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
     archives      = list(string) # "<archive-name>.pxar:<source-path>" specs, proxmox-backup-client's own format
     schedule      = string
     prune_backups = map(string)
+    exec_start_pre = optional(object({ # optional pre-fetch step, run before the backup itself
+      script      = string             # filename under files/
+      environment = optional(map(string)) # -> EnvironmentFile=; secrets come from var.folder_secrets instead, see main.tf
+    }))
   }))
   ```
   **Default**:
@@ -376,6 +469,20 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
     "archives": [
       "document.pxar:/mnt/storage/document"
     ],
+    "prune_backups": {
+      "keep-daily": "7",
+      "keep-monthly": "6",
+      "keep-weekly": "4"
+    },
+    "schedule": "00:30"
+  },
+  "flint2-config": {
+    "archives": [
+      "flint2-config.pxar:/mnt/temp/flint2"
+    ],
+    "exec_start_pre": {
+      "script": "flint2-config-fetch.sh"
+    },
     "prune_backups": {
       "keep-daily": "7",
       "keep-monthly": "6",
@@ -412,6 +519,20 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
     },
     "schedule": "*-*-01 02:30:00"
   },
+  "opnsense-config": {
+    "archives": [
+      "opnsense-config.pxar:/mnt/temp/opnsense"
+    ],
+    "exec_start_pre": {
+      "script": "opnsense-config-fetch.sh"
+    },
+    "prune_backups": {
+      "keep-daily": "7",
+      "keep-monthly": "6",
+      "keep-weekly": "4"
+    },
+    "schedule": "00:30"
+  },
   "photo": {
     "archives": [
       "photo.pxar:/mnt/storage/photo"
@@ -446,6 +567,7 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
   "pve-host": {
     "archives": [
       "etc-pve.pxar:/etc/pve",
+      "etc-network.pxar:/etc/network",
       "root.pxar:/root"
     ],
     "prune_backups": {
@@ -457,7 +579,7 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
   },
   "step-ca": {
     "archives": [
-      "step-ca.pxar:/mnt/temp/step-ca"
+      "step-ca.pxar:/mnt/storage/step-ca"
     ],
     "prune_backups": {
       "keep-monthly": "6",
@@ -487,7 +609,7 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
   }
 }
   ```
-  In file: <a href="./variables.tf#L173"><code>variables.tf#L173</code></a>
+  In file: <a href="./variables.tf#L198"><code>variables.tf#L198</code></a>
 
 </details>
 </blockquote><!-- variable:"folders":end -->
@@ -520,6 +642,15 @@ Map of guest name => { vmid, optional per-guest schedule/prune_backups overrides
     "schedule": "02:00",
     "vmid": "800"
   },
+  "opnsense": {
+    "prune_backups": {
+      "keep-daily": "7",
+      "keep-monthly": "6",
+      "keep-weekly": "4"
+    },
+    "schedule": "05:00",
+    "vmid": "801"
+  },
   "pbs-lxc": {
     "vmid": "704"
   },
@@ -534,7 +665,7 @@ Map of guest name => { vmid, optional per-guest schedule/prune_backups overrides
   }
 }
   ```
-  In file: <a href="./variables.tf#L124"><code>variables.tf#L124</code></a>
+  In file: <a href="./variables.tf#L140"><code>variables.tf#L140</code></a>
 
 </details>
 </blockquote><!-- variable:"guests":end -->
@@ -621,7 +752,7 @@ Default retention policy (keep-weekly/keep-monthly etc.), used by any guest that
   "keep-weekly": "4"
 }
   ```
-  In file: <a href="./variables.tf#L75"><code>variables.tf#L75</code></a>
+  In file: <a href="./variables.tf#L92"><code>variables.tf#L92</code></a>
 
 </details>
 </blockquote><!-- variable:"prune_backups":end -->
@@ -642,7 +773,7 @@ Default backup schedule (systemd calendar event format), used by any guest that 
   ```json
   "sun 01:30"
   ```
-  In file: <a href="./variables.tf#L68"><code>variables.tf#L68</code></a>
+  In file: <a href="./variables.tf#L78"><code>variables.tf#L78</code></a>
 
 </details>
 </blockquote><!-- variable:"schedule":end -->
@@ -663,7 +794,7 @@ Identifier to register the PBS datastore under in PVE
   ```json
   "pbs"
   ```
-  In file: <a href="./variables.tf#L61"><code>variables.tf#L61</code></a>
+  In file: <a href="./variables.tf#L71"><code>variables.tf#L71</code></a>
 
 </details>
 </blockquote><!-- variable:"storage_id":end -->
@@ -684,7 +815,7 @@ Days after which a prior successful verification is considered stale and re-chec
   ```json
   60
   ```
-  In file: <a href="./variables.tf#L105"><code>variables.tf#L105</code></a>
+  In file: <a href="./variables.tf#L122"><code>variables.tf#L122</code></a>
 
 </details>
 </blockquote><!-- variable:"verify_outdated_after_days":end -->
@@ -705,13 +836,21 @@ Schedule for the PBS datastore verify job (systemd calendar event format - confi
   ```json
   "*-01,03,05,07,09,11-01 03:00:00"
   ```
-  In file: <a href="./variables.tf#L98"><code>variables.tf#L98</code></a>
+  In file: <a href="./variables.tf#L115"><code>variables.tf#L115</code></a>
 
 </details>
 </blockquote><!-- variable:"verify_schedule":end -->
 
 ## Outputs
   
+<blockquote><!-- output:"folder_backups":start -->
+
+#### `folder_backups`
+
+Map of folder name => { namespace, schedule, prune_backups, has_exec_start_pre }
+
+In file: <a href="./outputs.tf#L11"><code>outputs.tf#L11</code></a>
+</blockquote><!-- output:"folder_backups":end -->
 <blockquote><!-- output:"job_ids":start -->
 
 #### `job_ids`
@@ -728,3 +867,11 @@ The PVE storage id the PBS datastore was registered under
 
 In file: <a href="./outputs.tf#L1"><code>outputs.tf#L1</code></a>
 </blockquote><!-- output:"storage_id":end -->
+<blockquote><!-- output:"verify_job":start -->
+
+#### `verify_job`
+
+PBS datastore verify job settings - one job, covers every namespace, not per-folder
+
+In file: <a href="./outputs.tf#L23"><code>outputs.tf#L23</code></a>
+</blockquote><!-- output:"verify_job":end -->

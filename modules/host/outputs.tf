@@ -32,11 +32,6 @@ output "share_user" {
   sensitive = true
 }
 
-output "storage_pools" {
-  description = "List of storage pools that were imported and added to Proxmox"
-  value       = module.zfs_storage.storage_pools
-}
-
 output "imported_directories" {
   description = "Imported directories"
   value       = module.proxmox_storage_import.imported_directories

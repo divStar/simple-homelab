@@ -1,0 +1,13 @@
+[Unit]
+Description=PBS folder backup: ${name}
+
+[Service]
+Type=oneshot
+NoNewPrivileges=true
+%{ if environment_file != "" ~}
+EnvironmentFile=${environment_file}
+%{ endif ~}
+%{ for cmd in exec_start_pre ~}
+ExecStartPre=${cmd}
+%{ endfor ~}
+ExecStart=/usr/local/bin/pbs-folder-backup.sh ${name}

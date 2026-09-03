@@ -9,7 +9,7 @@
 locals {
   proxmox_endpoint = "https://${var.proxmox.host}:8006"
 
-  container_ip = "192.168.178.156"
+  container_ip = "10.0.10.2"
 }
 
 # Alpine LXC container setup
@@ -23,12 +23,20 @@ module "setup_container" {
   tags         = ["alpine", "lxc", "pve-resources"]
   unprivileged = false
 
-  ni_mac_address = "EA:31:0E:A5:D8:4D"
-  ni_ip          = local.container_ip
-  ni_gateway     = "192.168.178.1"
-  ni_subnet_mask = 24
-  ni_name        = "eth0"
-  ni_bridge      = "vmbr0"
+  network_interfaces = [
+    {
+      name        = "eth0"
+      bridge      = "vmbr1"
+      mac_address = "EA:31:0E:A5:D8:52"
+      ip          = local.container_ip
+      subnet_mask = 24
+      vlan_id     = 10
+      gateway     = "10.0.10.1"
+    }
+  ]
+
+  dns_servers       = ["10.0.10.1"]
+  dns_search_domain = "my.world"
 
   imagestore_id = "pve-resources"
   startup_order = 2

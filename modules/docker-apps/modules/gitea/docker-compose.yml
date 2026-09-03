@@ -27,7 +27,7 @@ services:
       gitea-db:
         condition: service_healthy
     networks:
-      services-network:
+      service-network:
         priority: 100   # Primary network - used for Traefik/outbound routing
       gitea-network:
         priority: 10    # Internal only - used to reach gitea-db
@@ -83,7 +83,8 @@ services:
 
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=services-network"
+      - "traefik-tier=services"
+      - "traefik.docker.network=service-network"
       - "traefik.http.routers.gitea.rule=Host(`${GITEA__server__DOMAIN}`)"
       - "traefik.http.routers.gitea.entrypoints=websecure"
       - "traefik.http.services.gitea.loadbalancer.server.port=3000"
@@ -173,7 +174,7 @@ services:
       gitea:
         condition: service_healthy
     networks:
-      services-network:
+      service-network:
         priority: 100
     volumes:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
@@ -185,7 +186,7 @@ services:
       - GITEA_RUNNER_NAME
 
 networks:
-  services-network:
+  service-network:
     external: true
   gitea-network:
     external: true

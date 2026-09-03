@@ -5,10 +5,11 @@ storage:
   files:
     - path: /etc/environment
       mode: 0644
-      append:
-        - inline: |
-            LANG=C.UTF-8
-            LC_ALL=C.UTF-8
+      overwrite: true
+      contents:
+        inline: |
+          LANG=C.UTF-8
+          LC_ALL=C.UTF-8
     - path: /etc/locale.conf
       mode: 0644
       overwrite: true

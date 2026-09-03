@@ -1,3 +1,8 @@
 iface ${interface} inet static
-    post-up ip route add default via ${gateway} dev ${interface} table ${table_name}
-    post-up ip rule add from ${source_address} lookup ${table_name} priority ${priority}
+    # On-link route first, so same-subnet peers are reached directly instead of via the
+    # gateway below - without this, this table's default route captures ALL traffic
+    # (including same-subnet), and reply traffic silently fails if the gateway is ever
+    # down, even though the actual destination is directly reachable on this interface.
+    post-up ip route add ${local_subnet} dev ${interface} src ${source_address} table ${table_id}
+    post-up ip route add default via ${gateway} dev ${interface} table ${table_id}
+    post-up ip rule add from ${source_address} lookup ${table_id} priority ${priority}

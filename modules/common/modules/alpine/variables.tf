@@ -114,43 +114,58 @@ variable "startup_down_delay" {
 
 # Network configuration
 
-variable "ni_ip" {
-  description = "Network interface IP address"
-  type        = string
-  nullable    = false
+variable "network_interfaces" {
+  description = "Network interfaces for the container. The first entry is the primary interface (net0); any further entries dual-home the container onto additional networks (e.g. a second VLAN) and are left gateway-less unless one is explicitly given. `response_route`, if set, adds source-based routing (a dedicated table + an `ip rule from <this interface's ip>`) so replies to traffic addressed to this interface go back out via its own gateway instead of falling through to the primary interface's default route - without it, only same-subnet peers of this interface can actually reach it."
+  type = list(object({
+    name        = string
+    bridge      = string
+    mac_address = string
+    ip          = string
+    subnet_mask = optional(number, 24)
+    vlan_id     = optional(number)
+    gateway     = optional(string)
+    response_route = optional(object({
+      gateway    = string
+      table_id   = number
+      table_name = string
+      priority   = optional(number, 100)
+    }))
+  }))
+  nullable = false
+
+  validation {
+    condition     = length(var.network_interfaces) > 0
+    error_message = "network_interfaces must contain at least one entry (the primary interface)."
+  }
+
+  validation {
+    condition     = length([for ni in var.network_interfaces : ni if ni.gateway != null]) <= 1
+    error_message = "At most one network_interfaces entry may set `gateway` - a second unqualified default route conflicts with the primary interface's (confirmed footgun, not a hypothetical). Use `response_route` for source-based routing on secondary interfaces instead."
+  }
 }
 
-variable "ni_gateway" {
-  description = "Network interface gateway"
-  type        = string
-  nullable    = false
-}
-
-variable "ni_mac_address" {
-  description = "Network interface MAC address"
-  type        = string
-  nullable    = false
-}
-
-variable "ni_subnet_mask" {
-  description = "Network interface subnet mask in CIDR notation"
+variable "provisioning_interface_index" {
+  description = "Index into network_interfaces that Terraform's own SSH provisioning connects to. Defaults to the primary interface (0); change only if that one isn't reachable from wherever `tofu apply` runs."
   type        = number
-  default     = 24
+  default     = 0
   nullable    = false
+
+  validation {
+    condition     = var.provisioning_interface_index >= 0 && var.provisioning_interface_index < length(var.network_interfaces)
+    error_message = "provisioning_interface_index must be a valid index into network_interfaces."
+  }
 }
 
-variable "ni_name" {
-  description = "Network interface name"
-  type        = string
-  default     = "eth0"
-  nullable    = false
+variable "dns_servers" {
+  description = "DNS servers for the container's /etc/resolv.conf, in order. Defaults to null, which leaves Proxmox's own per-node default in place (not something this module should silently override for every consumer - callers on a network without their own DHCP-provided DNS need to set this explicitly)."
+  type        = list(string)
+  default     = null
 }
 
-variable "ni_bridge" {
-  description = "Network interface bridge"
+variable "dns_search_domain" {
+  description = "DNS search domain for the container. Defaults to null (Proxmox's own default)."
   type        = string
-  default     = "vmbr0"
-  nullable    = false
+  default     = null
 }
 
 # General container configuration

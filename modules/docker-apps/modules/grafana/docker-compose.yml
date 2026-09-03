@@ -14,9 +14,12 @@ services:
       - GF_SECURITY_CSRF_TRUSTED_ORIGINS
       - GF_AUTH_GENERIC_OAUTH_ICON
     networks:
-      - services-network
+      - management-network
+      - monitoring-network
     labels:
       - "traefik.enable=true"
+      - "traefik-tier=management"
+      - "traefik.docker.network=management-network"
       - "traefik.http.routers.grafana.rule=Host(`grafana.${BASE_DOMAIN}`)"
       - "traefik.http.routers.grafana.entrypoints=websecure"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
@@ -28,7 +31,9 @@ services:
       start_period: 40s
 
 networks:
-  services-network:
+  management-network:
+    external: true
+  monitoring-network:
     external: true
 
 volumes:

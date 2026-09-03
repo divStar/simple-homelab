@@ -8,7 +8,22 @@
 locals {
   proxmox_endpoint = "https://${var.proxmox.host}:8006"
 
-  container_ip = "192.168.178.155"
+  network_interfaces = [
+    {
+      name        = "eth0"
+      bridge      = "vmbr1"
+      mac_address = "EA:31:0E:A5:D8:4F"
+      ip          = "10.0.5.4"
+      subnet_mask = 24
+      vlan_id     = 5
+      gateway     = "10.0.5.1"
+    }
+  ]
+
+  container_ip = local.network_interfaces[0].ip
+
+  dns_servers       = ["10.0.5.1"]
+  dns_search_domain = "my.world"
 
   timestamp            = "+%Y-%m-%d-%H-%M-%S"
   setup_host_script    = "setup-host.sh"
@@ -26,32 +41,21 @@ module "setup_container" {
   tags         = ["alpine", "lxc", "pve-resources"]
   unprivileged = true
 
-  ni_mac_address = "EA:31:0E:A5:D8:4C"
-  ni_ip          = local.container_ip
-  ni_gateway     = "192.168.178.1"
-  ni_subnet_mask = 24
-  ni_name        = "eth0"
-  ni_bridge      = "vmbr0"
+  network_interfaces = local.network_interfaces
+  dns_servers        = local.dns_servers
+  dns_search_domain  = local.dns_search_domain
 
   imagestore_id = "pve-resources"
   startup_order = 1
   mount_points = [
-    { volume = "/mnt/temp/step-ca", path = "/etc/step-ca" }
+    { volume = "/mnt/storage/step-ca", path = "/etc/step-ca" }
   ]
   packages = ["bash", "curl", "ca-certificates", "step-cli", "step-certificates"]
 }
 
-# Trigger for container replacement - module outputs aren't valid
-# replace_triggered_by references on their own (only resources are), hence
-# wrapping it in a terraform_data resource. Only configure_container needs
-# this: it's the only resource here that actually connects to the container
-# itself - configure_host/revert_host connect to the Proxmox host, and the CA's
-# own identity persists via mount_points regardless of container replacement.
-# Uses triggers_replace, NOT input -- input-only changes make terraform_data
-# update in-place, which leaves its own .id unchanged (only regenerated on a
-# real create/replace of the terraform_data resource itself), so the
-# replace_triggered_by below would silently never actually fire. Confirmed via
-# `tofu plan -replace` while fixing the identical bug in modules/pbs-lxc, 2026-08-09.
+# Wraps container_id into a valid replace_triggered_by target (module outputs
+# alone aren't). Only configure_container needs it - configure_host/revert_host
+# hit the Proxmox host, not the container.
 resource "terraform_data" "container_trigger" {
   triggers_replace = module.setup_container.container_id
 }
@@ -73,7 +77,10 @@ resource "ssh_resource" "configure_container" {
       "sleep 10"
     ],
     [
-      "step ca bootstrap --ca-url https://${local.container_ip} --fingerprint $(echo \"${file(var.fingerprint_file)}\") --install --force"
+      # 127.0.0.1, not local.container_ip - this runs inside the ssh session
+      # already on the container itself, so it doesn't need an externally
+      # reachable address (and 127.0.0.1 is always in the server cert's SANs).
+      "step ca bootstrap --ca-url https://127.0.0.1 --fingerprint $(echo \"${file(var.fingerprint_file)}\") --install --force"
     ]
   ])
 

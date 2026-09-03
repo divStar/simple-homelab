@@ -44,22 +44,42 @@ variable "vm_domain" {
   type        = string
 }
 
-variable "vm_ip" {
-  description = "VM IP (v4)"
+variable "vm_management_ip" {
+  description = "VM IP (v4) on the Management VLAN - the VM's primary/default interface"
   type        = string
 
   validation {
-    condition     = can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}$", var.vm_ip))
+    condition     = can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}$", var.vm_management_ip))
     error_message = "VM IP addresses must be in valid IPv4 format"
   }
 }
 
-variable "vm_gateway_ip" {
-  description = "VM gateway IP (v4)"
+variable "vm_management_gateway_ip" {
+  description = "Management VLAN gateway IP (v4)"
   type        = string
 
   validation {
-    condition     = can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}$", var.vm_gateway_ip))
+    condition     = can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}$", var.vm_management_gateway_ip))
+    error_message = "Gateway IP addresses must be in valid IPv4 format"
+  }
+}
+
+variable "vm_services_ip" {
+  description = "VM IP (v4) on the Services VLAN - secondary interface, no default route of its own (source-based routing handles replies)"
+  type        = string
+
+  validation {
+    condition     = can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}$", var.vm_services_ip))
+    error_message = "VM IP addresses must be in valid IPv4 format"
+  }
+}
+
+variable "vm_services_gateway_ip" {
+  description = "Services VLAN gateway IP (v4), used only in the source-based routing table, not as a general default route"
+  type        = string
+
+  validation {
+    condition     = can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}$", var.vm_services_gateway_ip))
     error_message = "Gateway IP addresses must be in valid IPv4 format"
   }
 }
@@ -72,12 +92,6 @@ variable "vm_dns_ip" {
     condition     = can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}$", var.vm_dns_ip))
     error_message = "DNS IP addresses must be in valid IPv4 format"
   }
-}
-
-variable "vm_network_interface_name" {
-  description = "Name of the network interface in the VM (e.g. eth0)"
-  type        = string
-  default     = "eth0"
 }
 
 variable "step_ca_client_version" {

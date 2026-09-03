@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily Flatcar data export
+
+[Timer]
+OnCalendar=${schedule}
+Persistent=true
+Unit=flatcar-data-export.service
+
+[Install]
+WantedBy=timers.target

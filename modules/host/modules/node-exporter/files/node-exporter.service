@@ -8,7 +8,8 @@ Type=simple
 User=root
 ExecStart=/usr/local/bin/node_exporter \
   --web.listen-address=:9100 \
-  --collector.ethtool
+  --collector.ethtool \
+  --collector.cpu.info
 Restart=on-failure
 RestartSec=5s
 

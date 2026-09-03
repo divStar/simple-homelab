@@ -1,15 +1,37 @@
 /**
  * # Pi-hole Setup
  *
- * This module sets up Pi-hole in a Debian LXC container using the provided information.
+ * Not currently in use - superseded by OPNsense's Unbound DNS (blocklists, host overrides,
+ * reporting). Kept in the repo as a fallback option, not applied.
  *
- * <!-- docs-meta: order=40 icon=pihole -->
+ * This module sets up Pi-hole in a Debian LXC container using the provided information.
  */
 
 locals {
   proxmox_endpoint = "https://${var.proxmox.host}:8006"
 
-  container_ip = "192.168.178.157"
+  network_interfaces = [
+    {
+      name        = "eth0"
+      bridge      = "vmbr1"
+      mac_address = "EA:31:0E:A5:D8:50"
+      ip          = "10.0.5.5"
+      subnet_mask = 24
+      vlan_id     = 5
+      gateway     = "10.0.5.1"
+    }
+  ]
+
+  container_ip = local.network_interfaces[0].ip
+
+  # Every network_interfaces IP needs to be a cert SAN, so the webserver is
+  # trusted no matter which interface a client reaches it through.
+  cert_san_ips = join(" ", local.network_interfaces[*].ip)
+
+  # Management's own gateway (Unbound) only - not 10.0.5.5 (itself), which
+  # would create a bootstrap circularity during initial provisioning.
+  dns_servers       = ["10.0.5.1"]
+  dns_search_domain = "my.world"
 }
 
 # Debian LXC container setup
@@ -25,12 +47,9 @@ module "setup_container" {
   cpu_cores        = 2
   memory_dedicated = 4096
 
-  ni_mac_address = "EA:31:0E:A5:D8:4E"
-  ni_ip          = local.container_ip
-  ni_gateway     = "192.168.178.1"
-  ni_subnet_mask = 24
-  ni_name        = "eth0"
-  ni_bridge      = "vmbr0"
+  network_interfaces = local.network_interfaces
+  dns_servers        = local.dns_servers
+  dns_search_domain  = local.dns_search_domain
 
   imagestore_id = "pve-resources"
   startup_order = 3
@@ -96,10 +115,34 @@ resource "ssh_resource" "create_pihole_directory" {
   timeout = "1m"
 }
 
+# Pin step_ca_domain to its real IP in /etc/hosts. Pi-hole's own dns_servers is
+# deliberately Unbound-only (no self-reference, see dns_servers above) - and
+# Unbound force-NXDOMAINs *.my.world - so without this, Pi-hole itself can never
+# resolve the CA's hostname, not just during this initial bootstrap but on every
+# later 12h cert renewal too (confirmed live, 2026-08-26: a from-scratch rebuild
+# hung on install_step_cli with no working resolution path at all).
+resource "ssh_resource" "pin_step_ca_hosts_entry" {
+  depends_on = [module.setup_container]
+
+  host        = local.container_ip
+  user        = "root"
+  private_key = module.setup_container.ssh_private_key
+
+  commands = [
+    "grep -qxF '${var.step_ca_ip} ${var.step_ca_domain}' /etc/hosts || echo '${var.step_ca_ip} ${var.step_ca_domain}' >> /etc/hosts"
+  ]
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.container_trigger.id]
+  }
+
+  timeout = "1m"
+}
+
 # Install the step CLI and bootstrap trust in Step CA, so Pi-hole's own
 # webserver can get a real certificate instead of depending on Traefik
 resource "ssh_resource" "install_step_cli" {
-  depends_on = [module.setup_container]
+  depends_on = [module.setup_container, ssh_resource.pin_step_ca_hosts_entry]
 
   host        = local.container_ip
   user        = "root"
@@ -157,7 +200,7 @@ resource "ssh_resource" "request_pihole_certificate" {
   }
 
   commands = [
-    "/usr/local/bin/pihole-cert.sh ${var.step_ca_domain} ${var.step_ca_provisioner} /root/.step/provisioner-password pihole pihole.my.world ${local.container_ip}"
+    "/usr/local/bin/pihole-cert.sh ${var.step_ca_domain} ${var.step_ca_provisioner} /root/.step/provisioner-password pihole pihole.my.world ${local.cert_san_ips}"
   ]
 
   lifecycle {
@@ -296,7 +339,7 @@ resource "ssh_resource" "configure_cert_renewal_timer" {
 
       [Service]
       Type=oneshot
-      ExecStart=/usr/local/bin/pihole-cert.sh ${var.step_ca_domain} ${var.step_ca_provisioner} /root/.step/provisioner-password pihole pihole.my.world ${local.container_ip}
+      ExecStart=/usr/local/bin/pihole-cert.sh ${var.step_ca_domain} ${var.step_ca_provisioner} /root/.step/provisioner-password pihole pihole.my.world ${local.cert_san_ips}
       SERVICE_UNIT
       cat > /etc/systemd/system/pihole-cert.timer <<'TIMER_UNIT'
       [Unit]

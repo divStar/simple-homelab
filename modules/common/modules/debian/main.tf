@@ -9,6 +9,16 @@
 locals {
   upgrade_debian_script = "upgrade-debian.sh"
   update_debian_script  = "update-debian.sh"
+
+  # cidrhost(ip/mask, 0) masks a non-network-aligned host address down to its
+  # network address (verified live: cidrhost("10.0.5.4/24", 0) => "10.0.5.0") -
+  # the kernel itself rejects a route add with unmasked host bits outright
+  # ("Error: Invalid prefix for given prefix length."), so this can't be skipped.
+  response_route_subnets = {
+    for ni in var.network_interfaces :
+    ni.name => "${cidrhost("${ni.ip}/${ni.subnet_mask}", 0)}/${ni.subnet_mask}"
+    if ni.response_route != null
+  }
 }
 
 # Downloads the `debian` image.
@@ -54,11 +64,24 @@ resource "proxmox_virtual_environment_container" "container" {
   initialization {
     hostname = var.hostname
 
-    # Network configuration
-    ip_config {
-      ipv4 {
-        address = "${var.ni_ip}/${var.ni_subnet_mask}"
-        gateway = var.ni_gateway
+    # Network configuration - one ip_config per network_interface, same order
+    dynamic "ip_config" {
+      for_each = var.network_interfaces
+      content {
+        ipv4 {
+          address = "${ip_config.value.ip}/${ip_config.value.subnet_mask}"
+          gateway = ip_config.value.gateway
+        }
+      }
+    }
+
+    # DNS - only set if the caller actually specified something, otherwise
+    # let Proxmox's own default stand rather than forcing an opinion on it.
+    dynamic "dns" {
+      for_each = var.dns_servers != null ? [1] : []
+      content {
+        servers = var.dns_servers
+        domain  = var.dns_search_domain
       }
     }
 
@@ -71,11 +94,15 @@ resource "proxmox_virtual_environment_container" "container" {
     }
   }
 
-  # Network interface
-  network_interface {
-    name        = var.ni_name
-    bridge      = var.ni_bridge
-    mac_address = var.ni_mac_address
+  # Network interfaces - order must match the ip_config blocks above (net0, net1, ...)
+  dynamic "network_interface" {
+    for_each = var.network_interfaces
+    content {
+      name        = network_interface.value.name
+      bridge      = network_interface.value.bridge
+      mac_address = network_interface.value.mac_address
+      vlan_id     = network_interface.value.vlan_id
+    }
   }
 
   # Operating system - using Debian template
@@ -174,7 +201,7 @@ resource "ssh_resource" "install_openssh" {
 resource "ssh_resource" "install_packages" {
   depends_on = [ssh_resource.install_openssh]
 
-  host        = var.ni_ip
+  host        = var.network_interfaces[var.provisioning_interface_index].ip
   user        = "root"
   private_key = tls_private_key.ssh_key.private_key_pem
 
@@ -198,7 +225,7 @@ resource "ssh_resource" "install_packages" {
 resource "ssh_resource" "install_update_upgrade_scripts" {
   depends_on = [ssh_resource.install_openssh]
 
-  host        = var.ni_ip
+  host        = var.network_interfaces[var.provisioning_interface_index].ip
   user        = "root"
   private_key = tls_private_key.ssh_key.private_key_pem
 
@@ -264,7 +291,7 @@ resource "ssh_resource" "install_update_upgrade_scripts" {
 resource "ssh_resource" "disable_default_apt_timers" {
   depends_on = [ssh_resource.install_openssh]
 
-  host        = var.ni_ip
+  host        = var.network_interfaces[var.provisioning_interface_index].ip
   user        = "root"
   private_key = tls_private_key.ssh_key.private_key_pem
 
@@ -280,11 +307,107 @@ resource "ssh_resource" "disable_default_apt_timers" {
   timeout = "1m"
 }
 
+# ifupdown2's own package ships /etc/network/interfaces.d/ (confirmed via
+# `dpkg -L ifupdown2`) - the same convention Proxmox's own host network config
+# already relies on - but a container's auto-generated interfaces file doesn't
+# source it by default (unlike the PVE host's, which gets `source
+# /etc/network/interfaces.d/*` appended automatically by Proxmox's own host
+# network generator - a host-specific behavior, not a general ifupdown2
+# default), so it needs enabling once before any drop-in gets pushed into it.
+resource "ssh_resource" "enable_interfaces_d_sourcing" {
+  count = length([for ni in var.network_interfaces : ni if ni.response_route != null]) > 0 ? 1 : 0
+
+  depends_on = [ssh_resource.install_openssh]
+
+  host        = var.network_interfaces[var.provisioning_interface_index].ip
+  user        = "root"
+  private_key = tls_private_key.ssh_key.private_key_pem
+
+  commands = [
+    "mkdir -p /etc/network/interfaces.d",
+    "grep -qx 'source /etc/network/interfaces.d/*' /etc/network/interfaces || echo 'source /etc/network/interfaces.d/*' >> /etc/network/interfaces"
+  ]
+
+  # See install_openssh above for why this is needed.
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_container.container.id]
+  }
+
+  timeout = "1m"
+}
+
+# Source-based routing for secondary interfaces, via an /etc/network/interfaces.d/
+# drop-in - the same mechanism modules/host's response-route already uses
+# successfully (ifupdown2 merges a sourced same-name `iface` stanza with the
+# interface's main declaration elsewhere in /etc/network/interfaces). `ifreload
+# -a` reapplies it immediately, since the interface already came up once before
+# this drop-in existed to catch that first ifup.
+resource "ssh_resource" "configure_response_routes" {
+  for_each = { for ni in var.network_interfaces : ni.name => ni if ni.response_route != null }
+
+  depends_on = [ssh_resource.enable_interfaces_d_sourcing]
+
+  host        = var.network_interfaces[var.provisioning_interface_index].ip
+  user        = "root"
+  private_key = tls_private_key.ssh_key.private_key_pem
+
+  file {
+    content = templatefile("${path.module}/files/response-route.tftpl", {
+      interface      = each.value.name
+      source_address = each.value.ip
+      local_subnet   = local.response_route_subnets[each.key]
+      gateway        = each.value.response_route.gateway
+      table_id       = each.value.response_route.table_id
+      priority       = each.value.response_route.priority
+    })
+    destination = "/etc/network/interfaces.d/response-route-${each.value.name}"
+    permissions = "0644"
+  }
+
+  commands = [
+    # /etc/iproute2/ doesn't exist by default on this image either (confirmed
+    # live: writing to rt_tables fails outright without it, despite iproute2
+    # being installed as an ifupdown2 dependency) - create it defensively.
+    "mkdir -p /etc/iproute2",
+    "grep -q '^${each.value.response_route.table_id} ${each.value.response_route.table_name}$' /etc/iproute2/rt_tables || echo '${each.value.response_route.table_id} ${each.value.response_route.table_name}' >> /etc/iproute2/rt_tables",
+    "ifreload -a"
+  ]
+
+  # See install_openssh above for why this is needed.
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_container.container.id]
+  }
+
+  timeout = "1m"
+}
+
+# Cleanup counterpart to configure_response_routes - without this, removing
+# a response_route entry later would orphan its drop-in and ip rule/table.
+resource "ssh_resource" "remove_response_routes" {
+  for_each = { for ni in var.network_interfaces : ni.name => ni if ni.response_route != null }
+
+  when = "destroy"
+
+  depends_on = [ssh_resource.configure_response_routes]
+
+  host        = var.network_interfaces[var.provisioning_interface_index].ip
+  user        = "root"
+  private_key = tls_private_key.ssh_key.private_key_pem
+
+  commands = [
+    "rm -f /etc/network/interfaces.d/response-route-${each.value.name}",
+    "ip rule del from ${each.value.ip} table ${each.value.response_route.table_id} priority ${each.value.response_route.priority} 2>/dev/null || true",
+    "ip route flush table ${each.value.response_route.table_id} 2>/dev/null || true"
+  ]
+
+  timeout = "1m"
+}
+
 # Install default aliases
 resource "ssh_resource" "install_default_aliases" {
   depends_on = [ssh_resource.install_openssh]
 
-  host        = var.ni_ip
+  host        = var.network_interfaces[var.provisioning_interface_index].ip
   user        = "root"
   private_key = tls_private_key.ssh_key.private_key_pem
 

@@ -25,8 +25,8 @@ variable "plugin_repositories" {
       Enabled = true
     },
     {
-      Name    = "9p4 SSO"
-      Url     = "https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/manifest-release/manifest.json"
+      Name    = "Buco7854 SSO"
+      Url     = "https://raw.githubusercontent.com/Buco7854/jellyfin-plugin-sso/manifest-release/manifest.json"
       Enabled = true
     }
   ]
@@ -44,7 +44,7 @@ variable "plugins" {
     "sso" = {
       name          = "SSO Authentication"
       assembly_guid = "505ce9d1-d916-42fa-86ca-673ef241d7df"
-      repository    = "https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/manifest-release/manifest.json"
+      repository    = "https://raw.githubusercontent.com/Buco7854/jellyfin-plugin-sso/manifest-release/manifest.json"
     }
     "dlna" = {
       name          = "DLNA"

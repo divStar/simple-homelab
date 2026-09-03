@@ -11,6 +11,12 @@ locals {
   ssh_public_key     = trimspace(file(pathexpand("~/.ssh/id_rsa.pub")))
   config_directory   = "${path.module}/files"
   config_file_suffix = ".config.yaml.tftpl"
+
+  # Matched by MAC in the Butane network config, not by in-guest interface name (eth0/eth1/eth2) -
+  # that naming is discovery-order-based and reshuffles whenever a NIC is added/removed (confirmed
+  # live: removing the old vmbr0 NIC renumbered these two down from eth1/eth2 to eth0/eth1).
+  management_mac = "EA:31:0E:A5:D8:53"
+  services_mac   = "EA:31:0E:A5:D8:54"
 }
 
 # Butane config for Flatcar
@@ -24,11 +30,14 @@ data "ct_config" "flatcar" {
     file("${local.config_directory}/fstrim${local.config_file_suffix}"),
     file("${local.config_directory}/locale${local.config_file_suffix}"),
     templatefile("${local.config_directory}/network${local.config_file_suffix}", {
-      vm_hostname               = var.vm_hostname
-      vm_network_interface_name = var.vm_network_interface_name
-      vm_ip                     = var.vm_ip
-      vm_gateway_ip             = var.vm_gateway_ip
-      vm_dns_ip                 = var.vm_dns_ip
+      vm_hostname              = var.vm_hostname
+      vm_management_mac        = local.management_mac
+      vm_management_ip         = var.vm_management_ip
+      vm_management_gateway_ip = var.vm_management_gateway_ip
+      vm_services_mac          = local.services_mac
+      vm_services_ip           = var.vm_services_ip
+      vm_services_gateway_ip   = var.vm_services_gateway_ip
+      vm_dns_ip                = var.vm_dns_ip
     }),
     templatefile("${local.config_directory}/ssh-key${local.config_file_suffix}", {
       ssh_public_key = local.ssh_public_key
@@ -49,7 +58,7 @@ data "ct_config" "flatcar" {
       step_ca_provisioner = var.step_ca_provisioner
       vm_hostname         = var.vm_hostname
       vm_domain           = var.vm_domain
-      vm_ip               = var.vm_ip
+      vm_management_ip    = var.vm_management_ip
     }),
     templatefile("${local.config_directory}/docker-service${local.config_file_suffix}", {
       docker_daemon_configuration = var.docker_daemon_configuration
@@ -149,10 +158,20 @@ resource "proxmox_virtual_environment_vm" "flatcar" {
   }
 
   # Network configuration
+  # Management (VLAN 5) - primary/default interface, matched by MAC in Butane (see locals above)
   network_device {
-    bridge      = "vmbr0"
+    bridge      = "vmbr1"
+    vlan_id     = 5
     model       = "virtio"
-    mac_address = "06:07:38:2A:54:9F"
+    mac_address = local.management_mac
+  }
+
+  # Services (VLAN 10) - secondary interface, source-based routing (no default route of its own)
+  network_device {
+    bridge      = "vmbr1"
+    vlan_id     = 10
+    model       = "virtio"
+    mac_address = local.services_mac
   }
 
   # Pass Ignition configuration via cloud-init user-data

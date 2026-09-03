@@ -22,9 +22,8 @@ storage:
           /opt/bin/step ca certificate "${vm_hostname}" \
             /etc/docker/server.pem \
             /etc/docker/server-key.pem \
-            --san "${vm_hostname}" \
-            --san "${vm_hostname}.${vm_domain}" \
-            --san "${vm_ip}" \
+            --san "docker-management.${vm_domain}" \
+            --san "${vm_management_ip}" \
             --not-after=24h \
             --provisioner "${step_ca_provisioner}" \
             --provisioner-password-file /home/core/.step/provisioner-password \
