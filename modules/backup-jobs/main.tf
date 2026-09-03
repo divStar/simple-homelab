@@ -29,6 +29,15 @@ locals {
   pbs_token = jsondecode(ssh_resource.create_pbs_token.result)
 
   pbs_repository = "${local.pbs_token.tokenid}@${var.pbs.server}:${var.pbs.datastore}"
+
+  # var.folders with var.folder_secrets injected into each entry's exec_start_pre.environment, keyed by name.
+  folders = {
+    for name, folder in var.folders : name => merge(folder, {
+      exec_start_pre = folder.exec_start_pre == null ? null : merge(folder.exec_start_pre, {
+        environment = lookup(var.folder_secrets, name, folder.exec_start_pre.environment)
+      })
+    })
+  }
 }
 
 # Dedicated PBS user for this module's own storage credential.
@@ -205,12 +214,7 @@ resource "ssh_resource" "push_folder_backup_infra" {
   file {
     source      = "${path.module}/files/pbs-folder-backup.sh"
     destination = "/usr/local/bin/pbs-folder-backup.sh"
-    permissions = "0755"
-  }
-
-  file {
-    source      = "${path.module}/files/pbs-folder-backup.service"
-    destination = "/etc/systemd/system/pbs-folder-backup@.service"
+    permissions = "0700"
   }
 
   file {
@@ -237,7 +241,7 @@ resource "ssh_resource" "delete_folder_backup_infra" {
 
   commands = [
     "rm -rf /etc/pbs-folder-backup",
-    "rm -f /etc/systemd/system/pbs-folder-backup@.service /usr/local/bin/pbs-folder-backup.sh",
+    "rm -f /usr/local/bin/pbs-folder-backup.sh",
     "systemctl daemon-reload",
   ]
 
@@ -249,7 +253,7 @@ resource "ssh_resource" "delete_folder_backup_infra" {
 # note and the earlier session decision to keep namespaces per-folder rather
 # than per-tier, for UI legibility.
 resource "ssh_resource" "folder_backup" {
-  for_each = var.folders
+  for_each = local.folders
 
   depends_on = [ssh_resource.push_folder_backup_infra]
 
@@ -264,6 +268,7 @@ resource "ssh_resource" "folder_backup" {
       prune_args = join(" ", [for k, v in each.value.prune_backups : "--${k} ${v}"])
     })
     destination = "/etc/pbs-folder-backup/${each.key}.env"
+    permissions = "0600"
   }
 
   file {
@@ -272,6 +277,33 @@ resource "ssh_resource" "folder_backup" {
       schedule = each.value.schedule
     })
     destination = "/etc/systemd/system/pbs-folder-backup-${each.key}.timer"
+  }
+
+  file {
+    content = templatefile("${path.module}/files/pbs-folder-backup.service.tftpl", {
+      name              = each.key
+      exec_start_pre    = each.value.exec_start_pre != null ? ["/usr/local/bin/${each.key}-pre.sh"] : []
+      environment_file  = try(each.value.exec_start_pre.environment, null) != null ? "/etc/pbs-folder-backup/${each.key}.exec.env" : ""
+    })
+    destination = "/etc/systemd/system/pbs-folder-backup-${each.key}.service"
+  }
+
+  dynamic "file" {
+    for_each = each.value.exec_start_pre != null ? [each.value.exec_start_pre.script] : []
+    content {
+      source      = "${path.module}/files/${file.value}"
+      destination = "/usr/local/bin/${each.key}-pre.sh"
+      permissions = "0700"
+    }
+  }
+
+  dynamic "file" {
+    for_each = try(each.value.exec_start_pre.environment, null) != null ? [each.value.exec_start_pre.environment] : []
+    content {
+      content     = join("", [for k, v in file.value : "${k}=${v}\n"])
+      destination = "/etc/pbs-folder-backup/${each.key}.exec.env"
+      permissions = "0600"
+    }
   }
 
   commands = [
@@ -284,7 +316,7 @@ resource "ssh_resource" "folder_backup" {
 
 # Delete folder backup runs.
 resource "ssh_resource" "delete_folder_backup" {
-  for_each = var.folders
+  for_each = local.folders
   when     = "destroy"
 
   host        = local.sanctum_ssh.host
@@ -293,7 +325,58 @@ resource "ssh_resource" "delete_folder_backup" {
 
   commands = [
     "systemctl disable --now pbs-folder-backup-${each.key}.timer || true",
-    "rm -f /etc/systemd/system/pbs-folder-backup-${each.key}.timer /etc/pbs-folder-backup/${each.key}.env",
+    "rm -f /etc/systemd/system/pbs-folder-backup-${each.key}.timer /etc/systemd/system/pbs-folder-backup-${each.key}.service /etc/pbs-folder-backup/${each.key}.env /etc/pbs-folder-backup/${each.key}.exec.env /usr/local/bin/${each.key}-pre.sh",
+    "systemctl daemon-reload",
+  ]
+
+  timeout = "1m"
+}
+
+# Daily export of docker-vm's data disks into the Proxmox import directory, so a
+# docker-vm rebuild (destroy + tofu apply) picks up current data automatically -
+# not a PBS backup, standalone from everything else in this module.
+resource "ssh_resource" "push_flatcar_data_export" {
+  host        = local.sanctum_ssh.host
+  user        = local.sanctum_ssh.user
+  private_key = local.sanctum_ssh.private_key
+
+  file {
+    source      = "${path.module}/files/export-flatcar-data.sh"
+    destination = "/usr/local/bin/export-flatcar-data.sh"
+    permissions = "0700"
+  }
+
+  file {
+    content = templatefile("${path.module}/files/flatcar-data-export.timer.tftpl", {
+      schedule = var.flatcar_data_export_schedule
+    })
+    destination = "/etc/systemd/system/flatcar-data-export.timer"
+  }
+
+  file {
+    source      = "${path.module}/files/flatcar-data-export.service"
+    destination = "/etc/systemd/system/flatcar-data-export.service"
+  }
+
+  commands = [
+    "systemctl daemon-reload",
+    "systemctl enable --now flatcar-data-export.timer",
+  ]
+
+  timeout = "1m"
+}
+
+# Remove the Flatcar data export job on module destroy.
+resource "ssh_resource" "delete_flatcar_data_export" {
+  when = "destroy"
+
+  host        = local.sanctum_ssh.host
+  user        = local.sanctum_ssh.user
+  private_key = local.sanctum_ssh.private_key
+
+  commands = [
+    "systemctl disable --now flatcar-data-export.timer || true",
+    "rm -f /etc/systemd/system/flatcar-data-export.timer /etc/systemd/system/flatcar-data-export.service /usr/local/bin/export-flatcar-data.sh",
     "systemctl daemon-reload",
   ]
 

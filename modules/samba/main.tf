@@ -35,7 +35,7 @@ module "setup_container" {
     }
   ]
 
-  dns_servers       = ["10.0.5.5", "10.0.5.1"]
+  dns_servers       = ["10.0.10.1"]
   dns_search_domain = "my.world"
 
   imagestore_id = "pve-resources"

@@ -27,7 +27,13 @@ services:
       - /mnt/music:/media/music
       - /mnt/yuliia:/media/yuliia
     networks:
-      - service-network
+      service-network:
+        priority: 100
+        gw_priority: 5
+      jellyfin-ipvlan-network:
+        ipv4_address: 10.0.10.4
+        priority: 50
+        gw_priority: 1
     labels:
       - "traefik.enable=true"
       - "traefik-tier=services"
@@ -49,6 +55,9 @@ services:
 networks:
   service-network:
     name: service-network
+    external: true
+  jellyfin-ipvlan-network:
+    name: jellyfin-ipvlan-network
     external: true
 
 volumes:

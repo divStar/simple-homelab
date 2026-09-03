@@ -12,3 +12,16 @@ pbs = {
   server    = "sanctum-pbs.my.world"
   datastore = "primary"
 }
+
+folder_secrets = {
+  "opnsense-config" = {
+    OPNSENSE_HOST       = "opnsense.my.world"
+    OPNSENSE_API_KEY    = "some-api-key"
+    OPNSENSE_API_SECRET = "some-api-secret"
+  }
+  "flint2-config" = {
+    FLINT2_HOST = "flint2.my.world"
+    # base64'd, not raw PEM - systemd's EnvironmentFile= can't parse a value containing embedded newlines.
+    FLINT2_SSH_KEY_B64 = "base64 -w0 the private key file's contents"
+  }
+}

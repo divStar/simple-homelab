@@ -3,8 +3,7 @@
 This module sets up Proxmox Backup Server in a Debian LXC container, using
 /mnt/backup/pbs (bind-mounted from the host) as the datastore location.
 Replaces modules/pbs-vm as the deployed PBS instance -- that module is kept
-in the repo as a fallback option, but no longer applied. Reuses that VM's
-former IP/MAC so sanctum-pbs.my.world keeps working unchanged.
+in the repo as a fallback option, but no longer applied.
 
 <!-- docs-meta: order=50 icon=pbs -->
 
@@ -18,6 +17,7 @@ former IP/MAC so sanctum-pbs.my.world keeps working unchanged.
 - [Resources](#resources)
   - _ssh_resource_.[create_daily_update_override_directory](#ssh_resourcecreate_daily_update_override_directory)
   - _ssh_resource_.[install_pbs](#ssh_resourceinstall_pbs)
+  - _ssh_resource_.[prepare_config_directory](#ssh_resourceprepare_config_directory)
   - _ssh_resource_.[prepare_datastore_directory](#ssh_resourceprepare_datastore_directory)
   - _ssh_resource_.[retime_daily_update](#ssh_resourceretime_daily_update)
   - _ssh_resource_.[setup_acme](#ssh_resourcesetup_acme)
@@ -57,7 +57,7 @@ Debian LXC container setup
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L68"><code>main.tf#L68</code></a></td>
+      <td><a href="./main.tf#L112"><code>main.tf#L112</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="../common/modules/debian/README.md">README.md</a> <em>(experimental)</em></td>
@@ -79,7 +79,7 @@ systemd drop-in directories are never auto-created (a convention admins/ tooling
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L263"><code>main.tf#L263</code></a></td>
+      <td><a href="./main.tf#L295"><code>main.tf#L295</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.create_daily_update_override_directory":end -->
@@ -95,10 +95,26 @@ Install PBS itself (deb822 apt source + package). Connects as root directly, no 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L150"><code>main.tf#L150</code></a></td>
+      <td><a href="./main.tf#L182"><code>main.tf#L182</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_pbs":end -->
+<blockquote><!-- resource:"ssh_resource.prepare_config_directory":start -->
+
+### _ssh_resource_.`prepare_config_directory`
+
+Unlike prepare_datastore_directory above, this one needs to start OWNED BY backup, not root, AND at exactly mode 700 - both confirmed the hard way, 2026-08-26: - proxmox-backup-proxy runs as User=backup/Group=backup (no ConfigurationDirectory=/StateDirectory= in its unit, so systemd doesn't chown this for it) - a root-owned directory left it unable to create authkey.key/acme/accounts/* at all (panicked: "unable to read authkey.pub - No such file or directory"). - Fixing ownership alone still wasn't enough: proxmox-backup.service (the *other* PBS daemon, proxmox-backup-api, which runs as root and is the one that actually generates authkey.key on first start) refuses to start at all unless the directory is *exactly* mode 700 - plain `mkdir -p` leaves it at 755, and proxmox-backup-api's own error is explicit about this: "configuration directory '/etc/proxmox-backup' permission problem - wrong permission (755 != 700)". Without proxmox-backup-api ever starting, authkey.key never gets generated, and proxmox-backup-proxy fails on the missing key downstream - both end up crash-looping and hitting systemd's restart rate limit before the real cause is obvious from either one alone. 100034 = this host's confirmed subuid base (100000) + backup's container-internal uid (34), same mapping already verified via the datastore path's real ownership once PBS takes it over.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>ssh (loafoe/ssh)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L97"><code>main.tf#L97</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"ssh_resource.prepare_config_directory":end -->
 <blockquote><!-- resource:"ssh_resource.prepare_datastore_directory":start -->
 
 ### _ssh_resource_.`prepare_datastore_directory`
@@ -111,7 +127,7 @@ Prepare the host-side datastore directory before the container references it as 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L54"><code>main.tf#L54</code></a></td>
+      <td><a href="./main.tf#L62"><code>main.tf#L62</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.prepare_datastore_directory":end -->
@@ -127,7 +143,7 @@ Retime PBS's own daily-update service (package updates + ACME cert renewal -- th
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L286"><code>main.tf#L286</code></a></td>
+      <td><a href="./main.tf#L318"><code>main.tf#L318</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.retime_daily_update":end -->
@@ -143,7 +159,7 @@ Get PBS a trusted cert from Step CA via ACME -- identical to modules/pbs-vm, the
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L226"><code>main.tf#L226</code></a></td>
+      <td><a href="./main.tf#L258"><code>main.tf#L258</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.setup_acme":end -->
@@ -159,7 +175,7 @@ Register (or re-register) the PBS datastore at the mount_point path -- see files
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L192"><code>main.tf#L192</code></a></td>
+      <td><a href="./main.tf#L224"><code>main.tf#L224</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.setup_datastore":end -->
@@ -175,7 +191,7 @@ Trigger for container replacement - module outputs aren't valid replace_triggere
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L138"><code>main.tf#L138</code></a></td>
+      <td><a href="./main.tf#L170"><code>main.tf#L170</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terraform_data.container_trigger":end -->

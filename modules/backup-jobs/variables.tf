@@ -58,6 +58,16 @@ variable "pbs_token_name" {
   nullable    = false
 }
 
+# Secrets for var.folders entries' exec_start_pre.environment, keyed by folder name - can't live in
+# var.folders' own default since a variable default can't reference another variable.
+variable "folder_secrets" {
+  description = "Map of folder name => extra env vars for that folder's exec_start_pre script"
+  type        = map(map(string))
+  sensitive   = true
+  nullable    = false
+  default     = {}
+}
+
 variable "storage_id" {
   description = "Identifier to register the PBS datastore under in PVE"
   type        = string
@@ -69,6 +79,13 @@ variable "schedule" {
   description = "Default backup schedule (systemd calendar event format), used by any guest that doesn't set its own schedule in var.guests - weekly by default, since most of these guests are reproducible OS/config shells rather than places real data lives (see docker-vm's own override for the exception)"
   type        = string
   default     = "sun 01:30"
+  nullable    = false
+}
+
+variable "flatcar_data_export_schedule" {
+  description = "Systemd calendar schedule for the Flatcar data export job"
+  type        = string
+  default     = "07:00"
   nullable    = false
 }
 
@@ -118,9 +135,8 @@ variable "verify_outdated_after_days" {
 # both overridden - its disks hold real application data (gitea, grist,
 # jellyfin, portainer, etc.) that Terraform can't reproduce, unlike the other
 # four guests, whose real state either lives outside these backups entirely
-# (bind mounts - step-ca's keys, pihole's config, samba's shares, not yet
-# covered by any job) or is itself reproducible from this repo - so those
-# four are fine on the lighter weekly/monthly-only shared default.
+# (bind mounts - step-ca's covered by var.folders below, pbs-lxc's isn't)
+# or is itself reproducible from this repo.
 variable "guests" {
   description = "Map of guest name => { vmid, optional per-guest schedule/prune_backups overrides } to create a dedicated backup job for"
   type = map(object({
@@ -141,7 +157,6 @@ variable "guests" {
     }
     "step-ca" = { vmid = "701" }
     "samba"   = { vmid = "702" }
-    "pihole"  = { vmid = "703" }
     "pbs-lxc" = { vmid = "704" }
     "opnsense" = {
       vmid     = "801"
@@ -156,7 +171,7 @@ variable "guests" {
 }
 
 # Host-level folder backups - covers real data these guest-level backups
-# never touch: bind-mounted LXC state (pihole/step-ca's actual config/keys,
+# never touch: bind-mounted LXC state (step-ca's actual config/keys,
 # excluded from vzdump same as any bind mount), the family file shares on
 # /mnt/storage, and PVE's own recovery-relevant state (pve-host). Pushed via
 # proxmox-backup-client directly from the PVE host itself (see main.tf) -
@@ -167,15 +182,10 @@ variable "guests" {
 # Grouped into 4 "tiers" of shared schedule+retention (values are repeated
 # per entry rather than centrally defined, matching var.guests' style - no
 # cross-referencing abstraction for 13 entries):
-#   short     (00:30 daily)                    - pve-host, document, photo, kyocera-scan, temp, pihole
+#   short     (00:30 daily)                    - pve-host, document, photo, kyocera-scan, temp
 #   mid       (sun 01:00 weekly)                - backup, step-ca
 #   long      (1st 02:30 monthly)               - yuliia, music
 #   very long (1st 09:00, odd months/bimonthly) - application, game, picture
-# pihole moved short in this session (2026-08-14): its mounted config
-# (whitelist/blacklist/custom DNS/gravity.db) genuinely changes at times,
-# unlike step-ca's mountpoint (keys/CA state), which stays mid since it
-# almost never changes. Cost of the extra frequency is negligible - these
-# backups are tiny.
 # "very long" uses keep-last instead of keep-monthly deliberately - a job
 # that only runs every 2 months doesn't map cleanly onto calendar-month
 # buckets, keep-last just keeps the N most recent runs regardless of cadence.
@@ -185,6 +195,10 @@ variable "folders" {
     archives      = list(string) # "<archive-name>.pxar:<source-path>" specs, proxmox-backup-client's own format
     schedule      = string
     prune_backups = map(string)
+    exec_start_pre = optional(object({ # optional pre-fetch step, run before the backup itself
+      script      = string             # filename under files/
+      environment = optional(map(string)) # -> EnvironmentFile=; secrets come from var.folder_secrets instead, see main.tf
+    }))
   }))
   nullable = false
   default = {
@@ -218,13 +232,8 @@ variable "folders" {
       schedule      = "sun 01:00"
       prune_backups = { "keep-weekly" = "4", "keep-monthly" = "6" }
     }
-    "pihole" = {
-      archives      = ["pihole.pxar:/mnt/temp/pihole"]
-      schedule      = "00:30"
-      prune_backups = { "keep-daily" = "7", "keep-weekly" = "4", "keep-monthly" = "6" }
-    }
     "step-ca" = {
-      archives      = ["step-ca.pxar:/mnt/temp/step-ca"]
+      archives      = ["step-ca.pxar:/mnt/storage/step-ca"]
       schedule      = "sun 01:00"
       prune_backups = { "keep-weekly" = "4", "keep-monthly" = "6" }
     }
@@ -252,6 +261,18 @@ variable "folders" {
       archives      = ["picture.pxar:/mnt/storage/picture"]
       schedule      = "*-01,03,05,07,09,11-01 09:00:00"
       prune_backups = { "keep-last" = "3" }
+    }
+    "opnsense-config" = {
+      archives       = ["opnsense-config.pxar:/mnt/temp/opnsense"]
+      schedule       = "00:30"
+      prune_backups  = { "keep-daily" = "7", "keep-weekly" = "4", "keep-monthly" = "6" }
+      exec_start_pre = { script = "opnsense-config-fetch.sh" }
+    }
+    "flint2-config" = {
+      archives       = ["flint2-config.pxar:/mnt/temp/flint2"]
+      schedule       = "00:30"
+      prune_backups  = { "keep-daily" = "7", "keep-weekly" = "4", "keep-monthly" = "6" }
+      exec_start_pre = { script = "flint2-config-fetch.sh" }
     }
   }
 }

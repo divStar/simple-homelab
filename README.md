@@ -16,8 +16,7 @@ Terraform/OpenTofu-managed infrastructure for the user's Proxmox homelab.
 | <img src="images/icons/opnsense.svg" width="64" height="64" align="right" alt="OPNsense VM">**[OPNsense VM](modules/opnsense/README.md)**<br>Creates the OPNsense router/firewall VM. WAN attaches untagged to `var.wan_bridge` (gets its address from upstream, e.g. via DHCP during the test phase). LAN attaches untagged/trunk to `var.lan_bridge` - OPNsense itself defines VLAN sub-interfaces on top of that one interface. |
 | <img src="images/icons/samba.svg" width="64" height="64" align="right" alt="Samba Setup">**[Samba Setup](modules/samba/README.md)**<br>This module sets up Samba server in an Alpine LXC container using the provided information. |
 | <img src="images/icons/step-ca.svg" width="64" height="64" align="right" alt="Step-CA Setup">**[Step-CA Setup](modules/step-ca/README.md)**<br>This module sets up Step-CA in an Alpine LXC container using the provided information. |
-| <img src="images/icons/pihole.svg" width="64" height="64" align="right" alt="Pi-hole Setup">**[Pi-hole Setup](modules/pihole/README.md)**<br>This module sets up Pi-hole in a Debian LXC container using the provided information. |
-| <img src="images/icons/pbs.svg" width="64" height="64" align="right" alt="PBS LXC Setup">**[PBS LXC Setup](modules/pbs-lxc/README.md)**<br>This module sets up Proxmox Backup Server in a Debian LXC container, using /mnt/backup/pbs (bind-mounted from the host) as the datastore location. Replaces modules/pbs-vm as the deployed PBS instance -- that module is kept in the repo as a fallback option, but no longer applied. Reuses that VM's former IP/MAC so sanctum-pbs.my.world keeps working unchanged. |
+| <img src="images/icons/pbs.svg" width="64" height="64" align="right" alt="PBS LXC Setup">**[PBS LXC Setup](modules/pbs-lxc/README.md)**<br>This module sets up Proxmox Backup Server in a Debian LXC container, using /mnt/backup/pbs (bind-mounted from the host) as the datastore location. Replaces modules/pbs-vm as the deployed PBS instance -- that module is kept in the repo as a fallback option, but no longer applied. |
 | <img src="images/icons/flatcar.svg" width="64" height="64" align="right" alt="Docker VM Setup">**[Docker VM Setup](modules/docker-vm/README.md)**<br>This module sets up a [Flatcar Linux VM](https://www.flatcar.org/) with Docker. |
 | <img src="images/icons/pbs.svg" width="64" height="64" align="right" alt="Backup Jobs">**[Backup Jobs](modules/backup-jobs/README.md)**<br>Registers Proxmox Backup Server as a PVE storage target, creates one dedicated backup job per guest (VM/LXC primary disks), and one host-level folder backup per entry in var.folders (real data the guest-level jobs never touch - bind-mounted LXC state, the family file shares, PVE's own recovery-relevant config). |
 <!-- generated:modules-list:end -->
@@ -49,5 +48,5 @@ Terraform/OpenTofu-managed infrastructure for the user's Proxmox homelab.
 |  |
 |---|
 | **[common](modules/common/README.md)** |
-| **[PBS VM Setup](modules/pbs-vm/README.md)**<br>This module sets up a Debian VM running Proxmox Backup Server. |
+| **[Pi-hole Setup](modules/pihole/README.md)**<br>Not currently in use - superseded by OPNsense's Unbound DNS (blocklists, host overrides, reporting). Kept in the repo as a fallback option, not applied. |
 <!-- generated:appendix-list:end -->

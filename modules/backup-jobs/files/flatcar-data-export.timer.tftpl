@@ -1,10 +1,10 @@
 [Unit]
-Description=Run PBS folder backup for ${name}
+Description=Daily Flatcar data export
 
 [Timer]
 OnCalendar=${schedule}
 Persistent=true
-Unit=pbs-folder-backup-${name}.service
+Unit=flatcar-data-export.service
 
 [Install]
 WantedBy=timers.target

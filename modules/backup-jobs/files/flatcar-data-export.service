@@ -1,0 +1,7 @@
+[Unit]
+Description=Flatcar data export
+
+[Service]
+Type=oneshot
+NoNewPrivileges=true
+ExecStart=/usr/local/bin/export-flatcar-data.sh

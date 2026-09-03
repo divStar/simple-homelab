@@ -1,9 +1,10 @@
 /**
  * # Pi-hole Setup
  *
- * This module sets up Pi-hole in a Debian LXC container using the provided information.
+ * Not currently in use - superseded by OPNsense's Unbound DNS (blocklists, host overrides,
+ * reporting). Kept in the repo as a fallback option, not applied.
  *
- * <!-- docs-meta: order=40 icon=pihole -->
+ * This module sets up Pi-hole in a Debian LXC container using the provided information.
  */
 
 locals {

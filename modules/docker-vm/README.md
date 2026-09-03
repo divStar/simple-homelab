@@ -36,13 +36,14 @@ Docker is exposed via TLS port (2376). Look at the [`./files` folder](./files) f
   - [viritofs_resources](#viritofs_resources-required) (**Required**)
   - [vm_dns_ip](#vm_dns_ip-required) (**Required**)
   - [vm_domain](#vm_domain-required) (**Required**)
-  - [vm_gateway_ip](#vm_gateway_ip-required) (**Required**)
   - [vm_hostname](#vm_hostname-required) (**Required**)
   - [vm_id](#vm_id-required) (**Required**)
-  - [vm_ip](#vm_ip-required) (**Required**)
+  - [vm_management_gateway_ip](#vm_management_gateway_ip-required) (**Required**)
+  - [vm_management_ip](#vm_management_ip-required) (**Required**)
+  - [vm_services_gateway_ip](#vm_services_gateway_ip-required) (**Required**)
+  - [vm_services_ip](#vm_services_ip-required) (**Required**)
   - [flatcar_image_channel](#flatcar_image_channel-optional) (*Optional*)
   - [proxmox_insecure](#proxmox_insecure-optional) (*Optional*)
-  - [vm_network_interface_name](#vm_network_interface_name-optional) (*Optional*)
 </blockquote><!-- contents:end -->
 
 ## Providers
@@ -79,7 +80,7 @@ Download Flatcar stable image
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L74"><code>main.tf#L74</code></a></td>
+      <td><a href="./main.tf#L83"><code>main.tf#L83</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_download_file.flatcar_image":end -->
@@ -95,7 +96,7 @@ Upload the transpiled Ignition config as a snippet
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L62"><code>main.tf#L62</code></a></td>
+      <td><a href="./main.tf#L71"><code>main.tf#L71</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_file.ignition_config":end -->
@@ -111,7 +112,7 @@ Create the Flatcar VM
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L86"><code>main.tf#L86</code></a></td>
+      <td><a href="./main.tf#L95"><code>main.tf#L95</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_vm.flatcar":end -->
@@ -139,7 +140,7 @@ Disks, that should be mounted
     mount_path   = optional(string)
   }))
   ```
-  In file: <a href="./variables.tf#L155"><code>variables.tf#L155</code></a>
+  In file: <a href="./variables.tf#L169"><code>variables.tf#L169</code></a>
 
 </details>
 </blockquote><!-- variable:"disks":end -->
@@ -156,7 +157,7 @@ Docker daemon.json configuration file content
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L135"><code>variables.tf#L135</code></a>
+  In file: <a href="./variables.tf#L149"><code>variables.tf#L149</code></a>
 
 </details>
 </blockquote><!-- variable:"docker_daemon_configuration":end -->
@@ -173,7 +174,7 @@ Proxmox location for the EFI disk
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L150"><code>variables.tf#L150</code></a>
+  In file: <a href="./variables.tf#L164"><code>variables.tf#L164</code></a>
 
 </details>
 </blockquote><!-- variable:"efi_disk_datastore_id":end -->
@@ -190,7 +191,7 @@ Proxmox location for the FlatCar image
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L114"><code>variables.tf#L114</code></a>
+  In file: <a href="./variables.tf#L128"><code>variables.tf#L128</code></a>
 
 </details>
 </blockquote><!-- variable:"flatcar_image_datastore_id":end -->
@@ -207,7 +208,7 @@ Filename of the FlatCar image (image type must match format of the boot disk in 
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L119"><code>variables.tf#L119</code></a>
+  In file: <a href="./variables.tf#L133"><code>variables.tf#L133</code></a>
 
 </details>
 </blockquote><!-- variable:"flatcar_image_file_name":end -->
@@ -224,7 +225,7 @@ Proxmox location of the Ignition configuration
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L104"><code>variables.tf#L104</code></a>
+  In file: <a href="./variables.tf#L118"><code>variables.tf#L118</code></a>
 
 </details>
 </blockquote><!-- variable:"ignition_config_datastore_id":end -->
@@ -241,7 +242,7 @@ Filename of the Ignition configuration; use `VM_ID` in the filename to replace i
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L109"><code>variables.tf#L109</code></a>
+  In file: <a href="./variables.tf#L123"><code>variables.tf#L123</code></a>
 
 </details>
 </blockquote><!-- variable:"ignition_config_file_name":end -->
@@ -343,7 +344,7 @@ Step CA client version (used in `step-ca.config.yaml.tftpl`)
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L83"><code>variables.tf#L83</code></a>
+  In file: <a href="./variables.tf#L97"><code>variables.tf#L97</code></a>
 
 </details>
 </blockquote><!-- variable:"step_ca_client_version":end -->
@@ -360,7 +361,7 @@ Step CA domain
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L88"><code>variables.tf#L88</code></a>
+  In file: <a href="./variables.tf#L102"><code>variables.tf#L102</code></a>
 
 </details>
 </blockquote><!-- variable:"step_ca_domain":end -->
@@ -377,7 +378,7 @@ Step CA provisioner name
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L93"><code>variables.tf#L93</code></a>
+  In file: <a href="./variables.tf#L107"><code>variables.tf#L107</code></a>
 
 </details>
 </blockquote><!-- variable:"step_ca_provisioner":end -->
@@ -394,7 +395,7 @@ Step CA provisioner password
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L98"><code>variables.tf#L98</code></a>
+  In file: <a href="./variables.tf#L112"><code>variables.tf#L112</code></a>
 
 </details>
 </blockquote><!-- variable:"step_ca_provisioner_password":end -->
@@ -411,7 +412,7 @@ Map of VirtioFS mapping names to attach to all VMs
   ```hcl
   map(string)
   ```
-  In file: <a href="./variables.tf#L145"><code>variables.tf#L145</code></a>
+  In file: <a href="./variables.tf#L159"><code>variables.tf#L159</code></a>
 
 </details>
 </blockquote><!-- variable:"viritofs_resources":end -->
@@ -428,7 +429,7 @@ VM DNS IP (v4)
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L67"><code>variables.tf#L67</code></a>
+  In file: <a href="./variables.tf#L87"><code>variables.tf#L87</code></a>
 
 </details>
 </blockquote><!-- variable:"vm_dns_ip":end -->
@@ -449,23 +450,6 @@ VM Domain for the host
 
 </details>
 </blockquote><!-- variable:"vm_domain":end -->
-<blockquote><!-- variable:"vm_gateway_ip":start -->
-
-### `vm_gateway_ip` (**Required**)
-
-VM gateway IP (v4)
-
-<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
-  <summary>Show more...</summary>
-
-  **Type**:
-  ```hcl
-  string
-  ```
-  In file: <a href="./variables.tf#L57"><code>variables.tf#L57</code></a>
-
-</details>
-</blockquote><!-- variable:"vm_gateway_ip":end -->
 <blockquote><!-- variable:"vm_hostname":start -->
 
 ### `vm_hostname` (**Required**)
@@ -500,11 +484,28 @@ VM ID
 
 </details>
 </blockquote><!-- variable:"vm_id":end -->
-<blockquote><!-- variable:"vm_ip":start -->
+<blockquote><!-- variable:"vm_management_gateway_ip":start -->
 
-### `vm_ip` (**Required**)
+### `vm_management_gateway_ip` (**Required**)
 
-VM IP (v4)
+Management VLAN gateway IP (v4)
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  string
+  ```
+  In file: <a href="./variables.tf#L57"><code>variables.tf#L57</code></a>
+
+</details>
+</blockquote><!-- variable:"vm_management_gateway_ip":end -->
+<blockquote><!-- variable:"vm_management_ip":start -->
+
+### `vm_management_ip` (**Required**)
+
+VM IP (v4) on the Management VLAN - the VM's primary/default interface
 
 <details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
   <summary>Show more...</summary>
@@ -516,7 +517,41 @@ VM IP (v4)
   In file: <a href="./variables.tf#L47"><code>variables.tf#L47</code></a>
 
 </details>
-</blockquote><!-- variable:"vm_ip":end -->
+</blockquote><!-- variable:"vm_management_ip":end -->
+<blockquote><!-- variable:"vm_services_gateway_ip":start -->
+
+### `vm_services_gateway_ip` (**Required**)
+
+Services VLAN gateway IP (v4), used only in the source-based routing table, not as a general default route
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  string
+  ```
+  In file: <a href="./variables.tf#L77"><code>variables.tf#L77</code></a>
+
+</details>
+</blockquote><!-- variable:"vm_services_gateway_ip":end -->
+<blockquote><!-- variable:"vm_services_ip":start -->
+
+### `vm_services_ip` (**Required**)
+
+VM IP (v4) on the Services VLAN - secondary interface, no default route of its own (source-based routing handles replies)
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  string
+  ```
+  In file: <a href="./variables.tf#L67"><code>variables.tf#L67</code></a>
+
+</details>
+</blockquote><!-- variable:"vm_services_ip":end -->
 <blockquote><!-- variable:"flatcar_image_channel":start -->
 
 ### `flatcar_image_channel` (*Optional*)
@@ -534,7 +569,7 @@ Image channel of the FlatCar image (alpha, beta, stable)
   ```json
   "stable"
   ```
-  In file: <a href="./variables.tf#L124"><code>variables.tf#L124</code></a>
+  In file: <a href="./variables.tf#L138"><code>variables.tf#L138</code></a>
 
 </details>
 </blockquote><!-- variable:"flatcar_image_channel":end -->
@@ -559,24 +594,3 @@ Skip TLS verification
 
 </details>
 </blockquote><!-- variable:"proxmox_insecure":end -->
-<blockquote><!-- variable:"vm_network_interface_name":start -->
-
-### `vm_network_interface_name` (*Optional*)
-
-Name of the network interface in the VM (e.g. eth0)
-
-<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
-  <summary>Show more...</summary>
-
-  **Type**:
-  ```hcl
-  string
-  ```
-  **Default**:
-  ```json
-  "eth0"
-  ```
-  In file: <a href="./variables.tf#L77"><code>variables.tf#L77</code></a>
-
-</details>
-</blockquote><!-- variable:"vm_network_interface_name":end -->

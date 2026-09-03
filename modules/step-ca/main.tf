@@ -22,9 +22,7 @@ locals {
 
   container_ip = local.network_interfaces[0].ip
 
-  # Pi-hole primary, Management's own gateway (Unbound) as fallback - matches
-  # the DHCP-option pattern used for Trusted/Guest/IoT/Services.
-  dns_servers       = ["10.0.5.5", "10.0.5.1"]
+  dns_servers       = ["10.0.5.1"]
   dns_search_domain = "my.world"
 
   timestamp            = "+%Y-%m-%d-%H-%M-%S"
@@ -50,7 +48,7 @@ module "setup_container" {
   imagestore_id = "pve-resources"
   startup_order = 1
   mount_points = [
-    { volume = "/mnt/temp/step-ca", path = "/etc/step-ca" }
+    { volume = "/mnt/storage/step-ca", path = "/etc/step-ca" }
   ]
   packages = ["bash", "curl", "ca-certificates", "step-cli", "step-certificates"]
 }

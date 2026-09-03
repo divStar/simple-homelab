@@ -46,7 +46,7 @@ Alpine LXC container setup
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L51"><code>main.tf#L51</code></a></td>
+      <td><a href="./main.tf#L34"><code>main.tf#L34</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="../common/modules/alpine/README.md">README.md</a> <em>(experimental)</em></td>
@@ -68,7 +68,7 @@ Configure Step-CA
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L82"><code>main.tf#L82</code></a></td>
+      <td><a href="./main.tf#L64"><code>main.tf#L64</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_container":end -->
@@ -84,7 +84,7 @@ Configure ACME domain and order certificates
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L113"><code>main.tf#L113</code></a></td>
+      <td><a href="./main.tf#L95"><code>main.tf#L95</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_host":end -->
@@ -100,7 +100,7 @@ ACME Cleanup on destroy
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L153"><code>main.tf#L153</code></a></td>
+      <td><a href="./main.tf#L135"><code>main.tf#L135</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.revert_host":end -->
@@ -116,7 +116,7 @@ Wraps container_id into a valid replace_triggered_by target (module outputs alon
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L77"><code>main.tf#L77</code></a></td>
+      <td><a href="./main.tf#L59"><code>main.tf#L59</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terraform_data.container_trigger":end -->

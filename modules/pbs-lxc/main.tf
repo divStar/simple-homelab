@@ -35,7 +35,7 @@ locals {
   # it's entirely generated at runtime by the PBS daemon on first start, same
   # category as /etc/pihole and /etc/step-ca already bind-mounting their own
   # state elsewhere in this repo.
-  host_config_path  = "/mnt/temp/pbs-lxc"
+  host_config_path  = "/mnt/storage/pbs-lxc"
   guest_config_path = "/etc/proxmox-backup"
 
   setup_datastore_script     = "setup-datastore.sh"
@@ -143,7 +143,7 @@ module "setup_container" {
     }
   ]
 
-  dns_servers       = ["10.0.5.5", "10.0.5.1"]
+  dns_servers       = ["10.0.5.1"]
   dns_search_domain = "my.world"
 
   imagestore_id = "pve-resources"
