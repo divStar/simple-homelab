@@ -1,0 +1,72 @@
+# This module's documentation: ./README.md
+# docs-title: MQTT
+# docs-purpose: Mosquitto broker for Tasmota smart plugs, exported to Prometheus via mqtt-exporter
+# docs-meta: order=210 icon=mosquitto,prometheus
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    restart: unless-stopped
+    volumes:
+      - /mnt/data/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - /mnt/data/mqtt/passwd:/mosquitto/config/passwd:ro
+      - mosquitto-data:/mosquitto/data
+    networks:
+      service-network:
+        priority: 100   # Primary network - used for Traefik/outbound routing
+      mqtt-network:
+        priority: 10    # Internal only - used to reach/be reached by mqtt-exporter
+    labels:
+      - "traefik.enable=true"
+      - "traefik-tier=services"
+      - "traefik.docker.network=service-network"
+      - "traefik.tcp.routers.mosquitto.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.mosquitto.entrypoints=mqtt"
+      - "traefik.tcp.services.mosquitto.loadbalancer.server.port=1883"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 1883"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  mqtt-exporter:
+    image: kpetrem/mqtt-exporter:latest
+    container_name: mqtt-exporter
+    restart: unless-stopped
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    environment:
+      - MQTT_ADDRESS=mosquitto
+      - MQTT_PORT=1883
+      - MQTT_TOPIC=tele/+/SENSOR
+      - MQTT_USERNAME=${MQTT_EXPORTER_USERNAME}
+      - MQTT_PASSWORD=${MQTT_EXPORTER_PASSWORD}
+      - PROMETHEUS_PORT=9000
+    networks:
+      service-network:
+        priority: 100   # Primary network - used for Traefik/outbound routing
+      mqtt-network:
+        priority: 10    # Internal only - used to reach mosquitto
+      monitoring-network:
+        priority: 10    # Internal only - used to be scraped by Prometheus
+    labels:
+      - "traefik.enable=true"
+      - "traefik-tier=services"
+      - "traefik.docker.network=service-network"
+      - "traefik.http.routers.mqtt-exporter.rule=Host(`mqtt-exporter.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.mqtt-exporter.entrypoints=websecure"
+      - "traefik.http.services.mqtt-exporter.loadbalancer.server.port=9000"
+
+networks:
+  mqtt-network:
+    external: true
+  service-network:
+    external: true
+  monitoring-network:
+    external: true
+
+volumes:
+  mosquitto-data:
+    external: true
