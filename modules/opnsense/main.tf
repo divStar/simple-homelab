@@ -40,7 +40,7 @@ resource "proxmox_virtual_environment_vm" "opnsense" {
 
   name          = var.vm_name
   description   = "OPNsense router/firewall - WAN on ${var.wan_bridge}, LAN (trunk) on ${var.lan_bridge}."
-  tags          = ["opnsense", "router", "disk-images"]
+  tags          = ["opnsense", "router", "disk-images", "pve-resources"]
   node_name     = var.proxmox_node_name
   vm_id         = var.vm_id
   on_boot       = true
@@ -57,6 +57,7 @@ resource "proxmox_virtual_environment_vm" "opnsense" {
 
   memory {
     dedicated = var.memory
+    floating = var.memory
   }
 
   agent {

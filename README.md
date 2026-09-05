@@ -40,6 +40,7 @@ Terraform/OpenTofu-managed infrastructure for the user's Proxmox homelab.
 | <img src="images/icons/jellyfin.svg" width="64" height="64" align="right" alt="Jellyfin Web UI OIDC">**[Jellyfin Web UI OIDC](modules/docker-apps/modules/jellyfin/README.md)**<br>This module uses the [OIDC module](../../../common/modules/oidc/README.md) to create the necessary `client_id` to set up OIDC/OAuth for Jellyfin (dashboard) with Zitadel. |
 | <img src="images/icons/grist.svg" width="64" height="64" align="right" alt="Grist OIDC"> <img src="images/icons/postgres.svg" width="64" height="64" align="right" alt="Grist OIDC"> <img src="images/icons/redis.svg" width="64" height="64" align="right" alt="Grist OIDC">**[Grist OIDC](modules/docker-apps/modules/grist/README.md)**<br>This module uses the [OIDC module](../../../common/modules/oidc/README.md) to create the necessary `client_id` and `client_secret` to set up OIDC/OAuth in Grist with Zitadel. |
 | <img src="images/icons/watchtower.svg" width="64" height="64" align="right" alt="Watchtower">**[Watchtower](modules/docker-apps/modules/watchtower/README.md)**<br>Automatically restarts containers when a newer image is pushed |
+| <img src="images/icons/prometheus.svg" width="64" height="64" align="right" alt="MQTT">**[MQTT](modules/docker-apps/modules/mqtt/README.md)**<br>Mosquitto broker for Tasmota smart plugs, exported to Prometheus via mqtt-exporter |
 <!-- generated:docker-apps-list:end -->
 
 ### Other modules
