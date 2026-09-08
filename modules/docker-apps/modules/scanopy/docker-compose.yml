@@ -1,0 +1,100 @@
+# This module's documentation: ./README.md
+# docs-title: Scanopy
+# docs-purpose: Automated network topology mapping (L2/L3/workloads) - experimental, unfamiliar tool, evaluate before trusting
+# docs-meta: order=220 icon=scanopy
+services:
+  scanopy-db:
+    image: postgres:18-alpine
+    container_name: scanopy-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: scanopy
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      # postgres 18+ images mount at /var/lib/postgresql directly (not .../data) - they create
+      # their own major-version-specific subdirectory now, to support pg_upgrade --link cleanly.
+      - scanopy-postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      scanopy-network:
+        priority: 10
+
+  scanopy-daemon:
+    image: ghcr.io/scanopy/scanopy/daemon:latest
+    container_name: scanopy-daemon
+    restart: unless-stopped
+    environment:
+      SCANOPY_LOG_LEVEL: ${SCANOPY_LOG_LEVEL:-info}
+      SCANOPY_LOG_FILE: /var/log/scanopy/scanopy-daemon.log
+      # Reference upstream config points these at 127.0.0.1/host.docker.internal, which only
+      # works with network_mode: host. We deliberately don't use host networking here (see
+      # README) - the daemon is multi-homed instead, so these point at the server's service
+      # name on the shared internal scanopy-network.
+      SCANOPY_SERVER_URL: http://scanopy-server:60072
+      SCANOPY_ALLOW_SELF_SIGNED_CERTS: true
+      SCANOPY_DAEMON_API_KEY: ${SCANOPY_DAEMON_API_KEY}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:60073/api/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      - scanopy-daemon-config:/root/.config/scanopy/daemon
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    #network_mode: host
+    networks:
+      scanopy-network:
+        priority: 10    # Internal only - reach the server's control-plane API
+
+  scanopy-server:
+    image: ghcr.io/scanopy/scanopy/server:latest
+    container_name: scanopy-server
+    restart: unless-stopped
+    depends_on:
+      scanopy-db:
+        condition: service_healthy
+      scanopy-daemon:
+        condition: service_started
+    environment:
+      SCANOPY_LOG_LEVEL: ${SCANOPY_LOG_LEVEL:-info}
+      SCANOPY_DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@scanopy-db:5432/scanopy
+      SCANOPY_WEB_EXTERNAL_PATH: /app/static
+      SCANOPY_PUBLIC_URL: https://topology.${BASE_DOMAIN}
+      # Same service-name-over-shared-network substitution as SCANOPY_SERVER_URL above.
+      SCANOPY_INTEGRATED_DAEMON_URL: http://scanopy-daemon:60073
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      - scanopy-server-data:/data
+      - /mnt/data/scanopy/oidc.toml:/oidc.toml:ro
+    networks:
+      management-network:
+        priority: 100   # Primary network - used for Traefik/outbound routing
+      scanopy-network:
+        priority: 10    # Internal only - used to reach scanopy-db and scanopy-daemon
+    labels:
+      - "traefik.enable=true"
+      - "traefik-tier=management"
+      - "traefik.docker.network=management-network"
+      - "traefik.http.routers.scanopy.rule=Host(`topology.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.scanopy.entrypoints=websecure"
+      - "traefik.http.services.scanopy.loadbalancer.server.port=60072"
+
+networks:
+  scanopy-network:
+    external: true
+  management-network:
+    external: true
+
+volumes:
+  scanopy-postgres-data:
+    external: true
+  scanopy-daemon-config:
+    external: true
+  scanopy-server-data:
+    external: true

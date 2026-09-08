@@ -57,4 +57,11 @@ volumes = {
       "com.docker-vm.tags"          = "grist,postgresql"
     }
   }
+  "homarr-data" = {
+    labels = {
+      "com.docker-vm.managed-using" = "Terraform"
+      "com.docker-vm.description"   = "Homarr's Data volume (/appdata, incl. SQLite DB)"
+      "com.docker-vm.tags"          = "homarr"
+    }
+  }
 }
