@@ -1,0 +1,6 @@
+[[oidc_providers]]
+name = "Zitadel"
+slug = "zitadel"
+issuer_url = "https://zitadel.example.domain"
+client_id = "<scanopy-zitadel-client-id>"
+client_secret = "<scanopy-zitadel-client-secret>"

@@ -1,0 +1,48 @@
+# This module's documentation: ./README.md
+# docs-title: Homarr
+# docs-purpose: Unified dashboard - container/hardware overview, service bookmarks, per-group boards via SSO
+services:
+  homarr:
+    image: ghcr.io/homarr-labs/homarr:latest
+    container_name: homarr
+    restart: unless-stopped
+    environment:
+      - SECRET_ENCRYPTION_KEY
+      # OIDC setup
+      - NODE_EXTRA_CA_CERTS
+      - AUTH_PROVIDERS
+      - AUTH_OIDC_ISSUER
+      - AUTH_OIDC_CLIENT_ID
+      - AUTH_OIDC_CLIENT_SECRET
+      - AUTH_OIDC_CLIENT_NAME
+      - AUTH_OIDC_GROUPS_ATTRIBUTE
+      - AUTH_OIDC_TOKEN_ENDPOINT_AUTH_METHOD
+      - AUTH_OIDC_AUTO_LOGIN
+    networks:
+      - service-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik-tier=services"
+      - "traefik.docker.network=service-network"
+      - "traefik.http.routers.homarr.rule=Host(`homarr.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.homarr.entrypoints=websecure"
+      - "traefik.http.services.homarr.loadbalancer.server.port=7575"
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /mnt/data/step-ca/sanctum-root-ca.crt:/appdata/trusted-certificates/sanctum-root-ca.crt:ro
+      - homarr-data:/appdata
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 7575"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  service-network:
+    external: true
+
+volumes:
+  homarr-data:
+    external: true

@@ -21,6 +21,14 @@ Terraform/OpenTofu-managed infrastructure for the user's Proxmox homelab.
 | <img src="images/icons/pbs.svg" width="64" height="64" align="right" alt="Backup Jobs">**[Backup Jobs](modules/backup-jobs/README.md)**<br>Registers Proxmox Backup Server as a PVE storage target, creates one dedicated backup job per guest (VM/LXC primary disks), and one host-level folder backup per entry in var.folders (real data the guest-level jobs never touch - bind-mounted LXC state, the family file shares, PVE's own recovery-relevant config). |
 <!-- generated:modules-list:end -->
 
+### Hardware
+
+Not Terraform-managed - present on the network, documented here for reference only.
+
+|  |
+|---|
+| <img src="images/icons/luci.svg" width="64" height="64" align="right" alt="Flint 2"> <img src="images/icons/flint2.svg" width="64" height="64" align="right" alt="Flint 2">**Flint 2 (GL.iNet / LuCI)**<br>This row just describes, that the infrastructure has Flint 2 with its default (GLi.net) and OpenWRT/LuCI interface. |
+
 ### Docker Apps
 
 > [!NOTE]
@@ -41,6 +49,8 @@ Terraform/OpenTofu-managed infrastructure for the user's Proxmox homelab.
 | <img src="images/icons/grist.svg" width="64" height="64" align="right" alt="Grist OIDC"> <img src="images/icons/postgres.svg" width="64" height="64" align="right" alt="Grist OIDC"> <img src="images/icons/redis.svg" width="64" height="64" align="right" alt="Grist OIDC">**[Grist OIDC](modules/docker-apps/modules/grist/README.md)**<br>This module uses the [OIDC module](../../../common/modules/oidc/README.md) to create the necessary `client_id` and `client_secret` to set up OIDC/OAuth in Grist with Zitadel. |
 | <img src="images/icons/watchtower.svg" width="64" height="64" align="right" alt="Watchtower">**[Watchtower](modules/docker-apps/modules/watchtower/README.md)**<br>Automatically restarts containers when a newer image is pushed |
 | <img src="images/icons/prometheus.svg" width="64" height="64" align="right" alt="MQTT">**[MQTT](modules/docker-apps/modules/mqtt/README.md)**<br>Mosquitto broker for Tasmota smart plugs, exported to Prometheus via mqtt-exporter |
+| <img src="images/icons/scanopy.svg" width="64" height="64" align="right" alt="Scanopy">**[Scanopy](modules/docker-apps/modules/scanopy/README.md)**<br>Automated network topology mapping (L2/L3/workloads) - experimental, unfamiliar tool, evaluate before trusting |
+| <img src="images/icons/homarr.svg" width="64" height="64" align="right" alt="Homarr">**[Homarr](modules/docker-apps/modules/homarr/README.md)**<br>Unified dashboard - container/hardware overview, service bookmarks, per-group boards via SSO |
 <!-- generated:docker-apps-list:end -->
 
 ### Other modules
@@ -50,4 +60,5 @@ Terraform/OpenTofu-managed infrastructure for the user's Proxmox homelab.
 |---|
 | **[common](modules/common/README.md)** |
 | **[Pi-hole Setup](modules/pihole/README.md)**<br>Not currently in use - superseded by OPNsense's Unbound DNS (blocklists, host overrides, reporting). Kept in the repo as a fallback option, not applied. |
+| **[Scanopy Daemon (standalone LXC)](modules/scanopy-daemon/README.md)**<br>Runs a standalone `scanopy-daemon` in a Debian LXC container, dual-homed onto every VLAN (`vmbr1.5/10/20/30/40`) so it has genuine ARP-level presence on each subnet - unlike SNMP-relayed discovery (via OPNsense's ARP/routing tables), this catches hosts with no open ports and gets real MACs directly. |
 <!-- generated:appendix-list:end -->

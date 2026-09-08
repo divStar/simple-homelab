@@ -1,0 +1,6 @@
+proxmox = {
+  host     = "sanctum.my.world"
+  insecure = false
+  username = "root@pam"
+  password = "<proxmox_root_password>"
+}

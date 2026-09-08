@@ -8,3 +8,4 @@ CLAUDE.md filter=crypt diff=crypt merge=crypt
 *.key filter=crypt diff=crypt merge=crypt
 *.pem filter=crypt diff=crypt merge=crypt
 stack*.env  filter=crypt diff=crypt merge=crypt
+oidc.toml   filter=crypt diff=crypt merge=crypt

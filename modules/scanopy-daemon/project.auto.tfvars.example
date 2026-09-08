@@ -1,0 +1,11 @@
+proxmox = {
+  name     = "sanctum"
+  host     = "sanctum.my.world"
+  ssh_user = "root"
+  ssh_key  = "~/.ssh/id_rsa"
+  username = "root@pam"
+  password = "some-password"
+  insecure = false
+}
+
+scanopy_daemon_api_key = "scp_d_some-api-key"

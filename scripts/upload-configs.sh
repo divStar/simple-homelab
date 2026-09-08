@@ -11,15 +11,8 @@ NC='\033[0m' # No Color
 
 # Configuration
 REMOTE_HOST="core@docker-management.my.world"
-REMOTE_PATH="/mnt/data/monitoring"
+DEFAULT_REMOTE_PATH="/mnt/data/monitoring"
 DEFAULT_INPUT_DIR="./files"
-
-# Required files
-REQUIRED_FILES=(
-    "alloy-config.alloy"
-    "loki-config.yml"
-    "prometheus-config.yml"
-)
 
 # Function to print colored log messages
 log_info() {
@@ -43,19 +36,16 @@ usage() {
     cat << EOF
 Usage: $0 [OPTIONS]
 
-Deploy configuration files to Docker VM.
+Deploy every file in a local directory to a directory on the Docker VM.
 
 OPTIONS:
-    --input <path>     Path to local directory containing config files (default: ./files)
+    --input <path>     Path to local directory containing files to upload (default: ./files)
+    --dest <path>       Destination directory on the Docker VM (default: /mnt/data/monitoring)
     -h, --help         Show this help message
-
-REQUIRED FILES:
-    - alloy-config.alloy
-    - loki-config.yml
-    - prometheus-config.yml
 
 EXAMPLE:
     $0 --input ./configs
+    $0 --input modules/docker-apps/modules/homarr/files --dest /mnt/data/step-ca
     $0
 EOF
     exit 0
@@ -63,11 +53,16 @@ EOF
 
 # Parse arguments
 INPUT_DIR="$DEFAULT_INPUT_DIR"
+REMOTE_PATH="$DEFAULT_REMOTE_PATH"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --input)
             INPUT_DIR="$2"
+            shift 2
+            ;;
+        --dest)
+            REMOTE_PATH="$2"
             shift 2
             ;;
         -h|--help)
@@ -90,16 +85,18 @@ if [[ ! -d "$INPUT_DIR" ]]; then
     exit 1
 fi
 
-# Verify all required files exist locally
-log_info "Verifying required files exist locally..."
-for file in "${REQUIRED_FILES[@]}"; do
-    local_file="${INPUT_DIR}/${file}"
-    if [[ ! -f "$local_file" ]]; then
-        log_error "Required file not found: ${local_file}"
-        exit 1
-    fi
-    log_success "Found: ${file}"
+# Collect files to upload (flat, non-recursive)
+FILES=()
+for f in "$INPUT_DIR"/*; do
+    [[ -f "$f" ]] && FILES+=("$(basename "$f")")
 done
+
+if [[ ${#FILES[@]} -eq 0 ]]; then
+    log_error "No files found in: ${INPUT_DIR}"
+    exit 1
+fi
+
+log_info "Found ${#FILES[@]} file(s) to upload: ${FILES[*]}"
 
 # Create remote directory if it doesn't exist and set ownership
 log_info "Creating remote directory if necessary..."
@@ -110,11 +107,11 @@ fi
 log_success "Remote directory ready: ${REMOTE_PATH}"
 
 # Copy each file
-log_info "Copying configuration files..."
-for file in "${REQUIRED_FILES[@]}"; do
+log_info "Copying files..."
+for file in "${FILES[@]}"; do
     local_file="${INPUT_DIR}/${file}"
     remote_file="${REMOTE_HOST}:${REMOTE_PATH}/${file}"
-    
+
     log_info "Copying ${file}..."
     if ! scp -q "$local_file" "$remote_file" 2>&1; then
         log_error "Failed to copy file: ${file}"
@@ -125,13 +122,13 @@ for file in "${REQUIRED_FILES[@]}"; do
     log_success "Copied: ${file}"
 done
 
-# Set ownership and permissions on remote files
-log_info "Setting file ownership to 65534:65534 and permissions to 644 (read-only)..."
-if ! ssh "$REMOTE_HOST" "sudo chmod 644 ${REMOTE_PATH}/*.yml ${REMOTE_PATH}/*.alloy" 2>&1; then
-    log_error "Failed to set ownership and permissions on remote files"
+# Set permissions on remote files
+log_info "Setting file permissions to 644 (read-only)..."
+if ! ssh "$REMOTE_HOST" "sudo chmod 644 ${REMOTE_PATH}"/*; then
+    log_error "Failed to set permissions on remote files"
     exit 1
 fi
-log_success "Ownership and permissions set successfully"
+log_success "Permissions set successfully"
 
-log_success "All configuration files deployed successfully!"
+log_success "All files deployed successfully!"
 log_info "Files are now available at ${REMOTE_HOST}:${REMOTE_PATH}"
