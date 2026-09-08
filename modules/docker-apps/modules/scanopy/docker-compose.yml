@@ -1,7 +1,7 @@
 # This module's documentation: ./README.md
 # docs-title: Scanopy
 # docs-purpose: Automated network topology mapping (L2/L3/workloads) - experimental, unfamiliar tool, evaluate before trusting
-# docs-meta: order=220 icon=scanopy
+# docs-meta: order=220 icon=scanopy,postgres
 services:
   scanopy-db:
     image: postgres:18-alpine

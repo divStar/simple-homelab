@@ -7,7 +7,7 @@
  * link it to their existing account via Account Settings. Config is a mounted `oidc.toml` file
  * (fixed container path `/oidc.toml`), not env vars - Scanopy's own format, not ours.
  *
- * <!-- docs-meta: order=220 icon=scanopy -->
+ * <!-- docs-meta: order=220 icon=scanopy,postgres -->
  */
 
 # Terraform and provider setup.
