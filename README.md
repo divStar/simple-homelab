@@ -27,7 +27,8 @@ Not Terraform-managed - present on the network, documented here for reference on
 
 |  |
 |---|
-| <img src="images/icons/luci.svg" width="64" height="64" align="right" alt="Flint 2"> <img src="images/icons/flint2.svg" width="64" height="64" align="right" alt="Flint 2">**Flint 2 (GL.iNet / LuCI)**<br>This row just describes, that the infrastructure has Flint 2 with its default (GLi.net) and OpenWRT/LuCI interface. |
+| <img src="images/icons/luci.svg" width="64" height="64" align="right" alt="Flint 2"> <img src="images/icons/flint2.svg" width="64" height="64" align="right" alt="Flint 2">**Flint 2 (GL.iNet / LuCI)**<br>A Flint 2 (GL-MT6000) is installed in the network and offers a GLi.net default UI as well as LuCI. The latter can be accessed and customized to meet all the needs (e.g. SNMP, LLDP, VLANs and much more). |
+| **Horaco LAN switch** |
 
 ### Docker Apps
 
