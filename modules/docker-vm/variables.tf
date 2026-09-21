@@ -34,6 +34,13 @@ variable "vm_id" {
   type        = number
 }
 
+variable "startup_order" {
+  description = "Proxmox host-boot start order (ascending; shutdown runs in reverse). See the boot-order table in CLAUDE.md"
+  type        = number
+  default     = 40
+  nullable    = false
+}
+
 variable "vm_hostname" {
   description = "VM Name and hostname"
   type        = string

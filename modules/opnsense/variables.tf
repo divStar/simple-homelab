@@ -83,6 +83,20 @@ variable "efi_disk_datastore_id" {
   default     = "pve-resources"
 }
 
+variable "startup_order" {
+  description = "Proxmox host-boot start order (ascending; shutdown runs in reverse). See the boot-order table in CLAUDE.md"
+  type        = number
+  default     = 20
+  nullable    = false
+}
+
+variable "startup_up_delay" {
+  description = "Seconds to wait after starting this VM before the next guest is started (a plain sleep, not a readiness check)"
+  type        = number
+  default     = 30
+  nullable    = false
+}
+
 variable "boot_from_installer" {
   description = "Whether to boot from the install ISO. true for the initial manual install; set to false afterwards (and re-apply) to boot from disk and eject the ISO."
   type        = bool

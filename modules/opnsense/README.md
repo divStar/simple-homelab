@@ -36,6 +36,8 @@ isn't needed.
   - [lan_bridge](#lan_bridge-optional) (*Optional*)
   - [memory](#memory-optional) (*Optional*)
   - [opnsense_version](#opnsense_version-optional) (*Optional*)
+  - [startup_order](#startup_order-optional) (*Optional*)
+  - [startup_up_delay](#startup_up_delay-optional) (*Optional*)
   - [vm_name](#vm_name-optional) (*Optional*)
   - [wan_bridge](#wan_bridge-optional) (*Optional*)
 - [Outputs](#outputs)
@@ -160,7 +162,7 @@ Whether to boot from the install ISO. true for the initial manual install; set t
   ```json
   true
   ```
-  In file: <a href="./variables.tf#L86"><code>variables.tf#L86</code></a>
+  In file: <a href="./variables.tf#L100"><code>variables.tf#L100</code></a>
 
 </details>
 </blockquote><!-- variable:"boot_from_installer":end -->
@@ -332,6 +334,48 @@ OPNsense release version to install (used to build the ISO download URL, e.g. ht
 
 </details>
 </blockquote><!-- variable:"opnsense_version":end -->
+<blockquote><!-- variable:"startup_order":start -->
+
+### `startup_order` (*Optional*)
+
+Proxmox host-boot start order (ascending; shutdown runs in reverse). See the boot-order table in CLAUDE.md
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  number
+  ```
+  **Default**:
+  ```json
+  20
+  ```
+  In file: <a href="./variables.tf#L86"><code>variables.tf#L86</code></a>
+
+</details>
+</blockquote><!-- variable:"startup_order":end -->
+<blockquote><!-- variable:"startup_up_delay":start -->
+
+### `startup_up_delay` (*Optional*)
+
+Seconds to wait after starting this VM before the next guest is started (a plain sleep, not a readiness check)
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  number
+  ```
+  **Default**:
+  ```json
+  30
+  ```
+  In file: <a href="./variables.tf#L93"><code>variables.tf#L93</code></a>
+
+</details>
+</blockquote><!-- variable:"startup_up_delay":end -->
 <blockquote><!-- variable:"vm_name":start -->
 
 ### `vm_name` (*Optional*)

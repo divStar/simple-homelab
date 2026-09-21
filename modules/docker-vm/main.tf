@@ -124,6 +124,10 @@ resource "proxmox_virtual_environment_vm" "flatcar" {
     type = "l26" # Linux kernel 2.6+
   }
 
+  startup {
+    order = var.startup_order
+  }
+
   efi_disk {
     datastore_id = var.efi_disk_datastore_id
     file_format  = "raw"

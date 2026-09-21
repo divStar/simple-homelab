@@ -147,7 +147,7 @@ module "setup_container" {
   dns_search_domain = "my.world"
 
   imagestore_id = "pve-resources"
-  startup_order = 4
+  startup_order = 60
 
   mount_points = [
     { volume = local.host_datastore_path, path = local.guest_datastore_path },

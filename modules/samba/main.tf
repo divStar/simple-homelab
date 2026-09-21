@@ -39,7 +39,7 @@ module "setup_container" {
   dns_search_domain = "my.world"
 
   imagestore_id = "pve-resources"
-  startup_order = 2
+  startup_order = 50
   mount_points = [
     { volume = "/mnt/storage/application", path = "/mnt/application" },
     { volume = "/mnt/storage/backup", path = "/mnt/backup" },

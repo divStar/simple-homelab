@@ -92,6 +92,13 @@ variable "disk_size" {
   nullable    = false
 }
 
+variable "start_on_boot" {
+  description = "Whether the container is started automatically when the Proxmox host boots"
+  type        = bool
+  default     = true
+  nullable    = false
+}
+
 variable "startup_order" {
   description = "Container startup order; shutdowns happen in reverse order"
   type        = number

@@ -57,7 +57,7 @@ resource "proxmox_virtual_environment_vm" "opnsense" {
 
   memory {
     dedicated = var.memory
-    floating = var.memory
+    floating  = var.memory
   }
 
   agent {
@@ -66,6 +66,11 @@ resource "proxmox_virtual_environment_vm" "opnsense" {
 
   operating_system {
     type = "other" # FreeBSD-based, not Linux
+  }
+
+  startup {
+    order    = var.startup_order
+    up_delay = var.startup_up_delay
   }
 
   efi_disk {

@@ -38,6 +38,7 @@ other Alpine packages (if specified; `bash` is installed by default).
   - [mount_points](#mount_points-optional) (*Optional*)
   - [packages](#packages-optional) (*Optional*)
   - [provisioning_interface_index](#provisioning_interface_index-optional) (*Optional*)
+  - [start_on_boot](#start_on_boot-optional) (*Optional*)
   - [startup_down_delay](#startup_down_delay-optional) (*Optional*)
   - [startup_up_delay](#startup_up_delay-optional) (*Optional*)
   - [tags](#tags-optional) (*Optional*)
@@ -118,7 +119,7 @@ Source-based routing for secondary interfaces, via ifupdown-ng's native if-up.d/
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L275"><code>main.tf#L275</code></a></td>
+      <td><a href="./main.tf#L277"><code>main.tf#L277</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_response_routes":end -->
@@ -134,7 +135,7 @@ Install default aliases
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L344"><code>main.tf#L344</code></a></td>
+      <td><a href="./main.tf#L353"><code>main.tf#L353</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_default_aliases":end -->
@@ -150,7 +151,7 @@ Install OpenSSH into the Alpine LXC container
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L155"><code>main.tf#L155</code></a></td>
+      <td><a href="./main.tf#L157"><code>main.tf#L157</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_openssh":end -->
@@ -166,7 +167,7 @@ Install necessary Alpine packages
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L236"><code>main.tf#L236</code></a></td>
+      <td><a href="./main.tf#L238"><code>main.tf#L238</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_packages":end -->
@@ -181,7 +182,7 @@ Install necessary Alpine packages
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L201"><code>main.tf#L201</code></a></td>
+      <td><a href="./main.tf#L203"><code>main.tf#L203</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_update_upgrade_scripts":end -->
@@ -197,7 +198,7 @@ Cleanup counterpart to configure_response_routes - without this, removing a resp
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L323"><code>main.tf#L323</code></a></td>
+      <td><a href="./main.tf#L332"><code>main.tf#L332</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.remove_response_routes":end -->
@@ -264,7 +265,7 @@ Network interfaces for the container. The first entry is the primary interface (
     }))
   }))
   ```
-  In file: <a href="./variables.tf#L117"><code>variables.tf#L117</code></a>
+  In file: <a href="./variables.tf#L124"><code>variables.tf#L124</code></a>
 
 </details>
 </blockquote><!-- variable:"network_interfaces":end -->
@@ -303,7 +304,7 @@ Container startup order; shutdowns happen in reverse order
   ```hcl
   number
   ```
-  In file: <a href="./variables.tf#L95"><code>variables.tf#L95</code></a>
+  In file: <a href="./variables.tf#L102"><code>variables.tf#L102</code></a>
 
 </details>
 </blockquote><!-- variable:"startup_order":end -->
@@ -454,7 +455,7 @@ DNS search domain for the container. Defaults to null (Proxmox's own default).
   ```json
   null
   ```
-  In file: <a href="./variables.tf#L165"><code>variables.tf#L165</code></a>
+  In file: <a href="./variables.tf#L172"><code>variables.tf#L172</code></a>
 
 </details>
 </blockquote><!-- variable:"dns_search_domain":end -->
@@ -475,7 +476,7 @@ DNS servers for the container's /etc/resolv.conf, in order. Defaults to null, wh
   ```json
   null
   ```
-  In file: <a href="./variables.tf#L159"><code>variables.tf#L159</code></a>
+  In file: <a href="./variables.tf#L166"><code>variables.tf#L166</code></a>
 
 </details>
 </blockquote><!-- variable:"dns_servers":end -->
@@ -541,7 +542,7 @@ List of mount points for the container
   ```json
   []
   ```
-  In file: <a href="./variables.tf#L180"><code>variables.tf#L180</code></a>
+  In file: <a href="./variables.tf#L187"><code>variables.tf#L187</code></a>
 
 </details>
 </blockquote><!-- variable:"mount_points":end -->
@@ -566,7 +567,7 @@ List of packages to install on the container
   "ca-certificates"
 ]
   ```
-  In file: <a href="./variables.tf#L173"><code>variables.tf#L173</code></a>
+  In file: <a href="./variables.tf#L180"><code>variables.tf#L180</code></a>
 
 </details>
 </blockquote><!-- variable:"packages":end -->
@@ -587,10 +588,31 @@ Index into network_interfaces that Terraform's own SSH provisioning connects to.
   ```json
   0
   ```
-  In file: <a href="./variables.tf#L147"><code>variables.tf#L147</code></a>
+  In file: <a href="./variables.tf#L154"><code>variables.tf#L154</code></a>
 
 </details>
 </blockquote><!-- variable:"provisioning_interface_index":end -->
+<blockquote><!-- variable:"start_on_boot":start -->
+
+### `start_on_boot` (*Optional*)
+
+Whether the container is started automatically when the Proxmox host boots
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  bool
+  ```
+  **Default**:
+  ```json
+  true
+  ```
+  In file: <a href="./variables.tf#L95"><code>variables.tf#L95</code></a>
+
+</details>
+</blockquote><!-- variable:"start_on_boot":end -->
 <blockquote><!-- variable:"startup_down_delay":start -->
 
 ### `startup_down_delay` (*Optional*)
@@ -608,7 +630,7 @@ Delay (in seconds) before next container is shutdown
   ```json
   20
   ```
-  In file: <a href="./variables.tf#L108"><code>variables.tf#L108</code></a>
+  In file: <a href="./variables.tf#L115"><code>variables.tf#L115</code></a>
 
 </details>
 </blockquote><!-- variable:"startup_down_delay":end -->
@@ -629,7 +651,7 @@ Delay (in seconds) before next container is started
   ```json
   20
   ```
-  In file: <a href="./variables.tf#L101"><code>variables.tf#L101</code></a>
+  In file: <a href="./variables.tf#L108"><code>variables.tf#L108</code></a>
 
 </details>
 </blockquote><!-- variable:"startup_up_delay":end -->
@@ -695,7 +717,7 @@ Cron expression for automatic updates, or 'never' to disable
   ```json
   "0 3 * * 1"
   ```
-  In file: <a href="./variables.tf#L190"><code>variables.tf#L190</code></a>
+  In file: <a href="./variables.tf#L197"><code>variables.tf#L197</code></a>
 
 </details>
 </blockquote><!-- variable:"update_interval":end -->

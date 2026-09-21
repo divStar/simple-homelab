@@ -45,8 +45,9 @@ module "setup_container" {
   dns_servers        = local.dns_servers
   dns_search_domain  = local.dns_search_domain
 
-  imagestore_id = "pve-resources"
-  startup_order = 1
+  imagestore_id    = "pve-resources"
+  startup_order    = 10
+  startup_up_delay = 0
   mount_points = [
     { volume = "/mnt/storage/step-ca", path = "/etc/step-ca" }
   ]

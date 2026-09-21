@@ -139,6 +139,8 @@ resource "proxmox_virtual_environment_container" "container" {
     }
   }
 
+  start_on_boot = var.start_on_boot
+
   # Basic startup configuration
   startup {
     order      = var.startup_order

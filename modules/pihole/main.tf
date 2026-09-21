@@ -52,6 +52,7 @@ module "setup_container" {
   dns_search_domain  = local.dns_search_domain
 
   imagestore_id = "pve-resources"
+  start_on_boot = false
   startup_order = 3
 
   # Persists /etc/pihole (config, gravity.db, everything Pi-hole's own UI/API

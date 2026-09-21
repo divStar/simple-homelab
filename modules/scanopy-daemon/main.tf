@@ -53,7 +53,7 @@ module "setup_container" {
   dns_search_domain  = local.dns_search_domain
 
   imagestore_id = "pve-resources"
-  startup_order = 5
+  startup_order = 100
 
   # No mount_points - nothing here worth persisting across a rebuild. The
   # daemon just re-registers with the server (a fresh identity) on next boot.

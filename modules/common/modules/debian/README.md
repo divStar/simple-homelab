@@ -41,6 +41,7 @@ other Debian packages (if specified; `bash`, `curl`, `ca-certificates` and
   - [mount_points](#mount_points-optional) (*Optional*)
   - [packages](#packages-optional) (*Optional*)
   - [provisioning_interface_index](#provisioning_interface_index-optional) (*Optional*)
+  - [start_on_boot](#start_on_boot-optional) (*Optional*)
   - [startup_down_delay](#startup_down_delay-optional) (*Optional*)
   - [startup_up_delay](#startup_up_delay-optional) (*Optional*)
   - [tags](#tags-optional) (*Optional*)
@@ -121,7 +122,7 @@ Source-based routing for secondary interfaces, via an /etc/network/interfaces.d/
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L345"><code>main.tf#L345</code></a></td>
+      <td><a href="./main.tf#L347"><code>main.tf#L347</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_response_routes":end -->
@@ -137,7 +138,7 @@ Disable Debian's own default apt-daily.timer/apt-daily-upgrade.timer. Confirmed 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L291"><code>main.tf#L291</code></a></td>
+      <td><a href="./main.tf#L293"><code>main.tf#L293</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.disable_default_apt_timers":end -->
@@ -153,7 +154,7 @@ ifupdown2's own package ships /etc/network/interfaces.d/ (confirmed via `dpkg -L
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L317"><code>main.tf#L317</code></a></td>
+      <td><a href="./main.tf#L319"><code>main.tf#L319</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.enable_interfaces_d_sourcing":end -->
@@ -169,7 +170,7 @@ Install default aliases
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L403"><code>main.tf#L403</code></a></td>
+      <td><a href="./main.tf#L409"><code>main.tf#L409</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_default_aliases":end -->
@@ -185,7 +186,7 @@ Install OpenSSH into the Debian LXC container
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L156"><code>main.tf#L156</code></a></td>
+      <td><a href="./main.tf#L158"><code>main.tf#L158</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_openssh":end -->
@@ -201,7 +202,7 @@ Install necessary Debian packages (includes cron, needed for the update schedule
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L201"><code>main.tf#L201</code></a></td>
+      <td><a href="./main.tf#L203"><code>main.tf#L203</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_packages":end -->
@@ -216,7 +217,7 @@ Install necessary Debian packages (includes cron, needed for the update schedule
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L225"><code>main.tf#L225</code></a></td>
+      <td><a href="./main.tf#L227"><code>main.tf#L227</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_update_upgrade_scripts":end -->
@@ -232,7 +233,7 @@ Cleanup counterpart to configure_response_routes - without this, removing a resp
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L382"><code>main.tf#L382</code></a></td>
+      <td><a href="./main.tf#L388"><code>main.tf#L388</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.remove_response_routes":end -->
@@ -299,7 +300,7 @@ Network interfaces for the container. The first entry is the primary interface (
     }))
   }))
   ```
-  In file: <a href="./variables.tf#L117"><code>variables.tf#L117</code></a>
+  In file: <a href="./variables.tf#L124"><code>variables.tf#L124</code></a>
 
 </details>
 </blockquote><!-- variable:"network_interfaces":end -->
@@ -338,7 +339,7 @@ Container startup order; shutdowns happen in reverse order
   ```hcl
   number
   ```
-  In file: <a href="./variables.tf#L95"><code>variables.tf#L95</code></a>
+  In file: <a href="./variables.tf#L102"><code>variables.tf#L102</code></a>
 
 </details>
 </blockquote><!-- variable:"startup_order":end -->
@@ -489,7 +490,7 @@ DNS search domain for the container. Defaults to null (Proxmox's own default).
   ```json
   null
   ```
-  In file: <a href="./variables.tf#L165"><code>variables.tf#L165</code></a>
+  In file: <a href="./variables.tf#L172"><code>variables.tf#L172</code></a>
 
 </details>
 </blockquote><!-- variable:"dns_search_domain":end -->
@@ -510,7 +511,7 @@ DNS servers for the container's /etc/resolv.conf, in order. Defaults to null, wh
   ```json
   null
   ```
-  In file: <a href="./variables.tf#L159"><code>variables.tf#L159</code></a>
+  In file: <a href="./variables.tf#L166"><code>variables.tf#L166</code></a>
 
 </details>
 </blockquote><!-- variable:"dns_servers":end -->
@@ -576,7 +577,7 @@ List of mount points for the container
   ```json
   []
   ```
-  In file: <a href="./variables.tf#L180"><code>variables.tf#L180</code></a>
+  In file: <a href="./variables.tf#L187"><code>variables.tf#L187</code></a>
 
 </details>
 </blockquote><!-- variable:"mount_points":end -->
@@ -601,7 +602,7 @@ List of packages to install on the container
   "ca-certificates"
 ]
   ```
-  In file: <a href="./variables.tf#L173"><code>variables.tf#L173</code></a>
+  In file: <a href="./variables.tf#L180"><code>variables.tf#L180</code></a>
 
 </details>
 </blockquote><!-- variable:"packages":end -->
@@ -622,10 +623,31 @@ Index into network_interfaces that Terraform's own SSH provisioning connects to.
   ```json
   0
   ```
-  In file: <a href="./variables.tf#L147"><code>variables.tf#L147</code></a>
+  In file: <a href="./variables.tf#L154"><code>variables.tf#L154</code></a>
 
 </details>
 </blockquote><!-- variable:"provisioning_interface_index":end -->
+<blockquote><!-- variable:"start_on_boot":start -->
+
+### `start_on_boot` (*Optional*)
+
+Whether the container is started automatically when the Proxmox host boots
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  bool
+  ```
+  **Default**:
+  ```json
+  true
+  ```
+  In file: <a href="./variables.tf#L95"><code>variables.tf#L95</code></a>
+
+</details>
+</blockquote><!-- variable:"start_on_boot":end -->
 <blockquote><!-- variable:"startup_down_delay":start -->
 
 ### `startup_down_delay` (*Optional*)
@@ -643,7 +665,7 @@ Delay (in seconds) before next container is shutdown
   ```json
   20
   ```
-  In file: <a href="./variables.tf#L108"><code>variables.tf#L108</code></a>
+  In file: <a href="./variables.tf#L115"><code>variables.tf#L115</code></a>
 
 </details>
 </blockquote><!-- variable:"startup_down_delay":end -->
@@ -664,7 +686,7 @@ Delay (in seconds) before next container is started
   ```json
   20
   ```
-  In file: <a href="./variables.tf#L101"><code>variables.tf#L101</code></a>
+  In file: <a href="./variables.tf#L108"><code>variables.tf#L108</code></a>
 
 </details>
 </blockquote><!-- variable:"startup_up_delay":end -->
@@ -730,7 +752,7 @@ systemd OnCalendar expression for automatic updates, or 'never' to disable
   ```json
   "Sun *-*-* 05:00:00"
   ```
-  In file: <a href="./variables.tf#L190"><code>variables.tf#L190</code></a>
+  In file: <a href="./variables.tf#L197"><code>variables.tf#L197</code></a>
 
 </details>
 </blockquote><!-- variable:"update_interval":end -->
