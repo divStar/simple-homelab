@@ -99,30 +99,27 @@ variable "prune_backups" {
   }
 }
 
-# PBS's own datastore verify job - catches silent chunk corruption (bit rot)
-# on the underlying storage, which ext4-on-mdraid doesn't self-detect the way
-# ZFS would. No native provider resource for this (bpg/proxmox only wraps the
-# PVE API - verify jobs are PBS-native, see the ssh_resource in main.tf), so
-# these stay plain variables rather than a richer per-job structure like
-# var.guests - there's only ever one verify job, on the one datastore.
-# Bimonthly (odd months, 1st at 03:00) rather than a namespace-split verify
-# setup that would let docker-vm alone verify more often - PBS verify-jobs
-# are scoped per-datastore/namespace, not per-guest, and splitting docker-vm
-# into its own namespace (own proxmox_storage_pbs registration, own verify-
-# job) is real structural complexity for a "nice to have" - deliberately not
-# built. Bimonthly instead of quarterly is the cheap middle ground: still one
-# shared job covering all 5 guests, just checked twice as often.
-variable "verify_schedule" {
-  description = "Schedule for the PBS datastore verify job (systemd calendar event format - confirmed accepted by PBS's parser live)"
+# PBS's own verify jobs - catch silent chunk corruption (bit rot) on the underlying
+# storage, which ext4-on-mdraid doesn't self-detect the way ZFS would. No native
+# provider resource for this (bpg/proxmox only wraps the PVE API - verify jobs are
+# PBS-native, see the ssh_resources in main.tf). PBS verify-jobs are scoped per
+# datastore/namespace, not per guest: every folder namespace gets its own job (schedule =
+# that folder's verify_schedule in var.folders), and all guest (VM/CT) backups share the
+# root namespace, hence their one job below. All jobs verify in full (--ignore-verified
+# false) - something verified on the last run can still have gone bad since.
+variable "verify_root_schedule" {
+  description = "Schedule for the PBS verify job of the root namespace, i.e. all VM/CT backups (systemd calendar event format - confirmed accepted by PBS's parser live)"
   type        = string
-  default     = "*-01,03,05,07,09,11-01 03:00:00"
+  default     = "mon 03:00" # every Monday
   nullable    = false
 }
 
-variable "verify_outdated_after_days" {
-  description = "Days after which a prior successful verification is considered stale and re-checked, instead of skipped, on the next verify run - kept in step with verify_schedule's cadence"
-  type        = number
-  default     = 60
+# Prune (client-side, see var.folders / var.prune_backups) only removes snapshots - garbage collection
+# is what actually frees their chunks on the datastore.
+variable "gc_schedule" {
+  description = "Schedule for the PBS datastore garbage collection (systemd calendar event format)"
+  type        = string
+  default     = "sat 05:30"
   nullable    = false
 }
 
@@ -190,7 +187,7 @@ variable "guests" {
 # that only runs every 2 months doesn't map cleanly onto calendar-month
 # buckets, keep-last just keeps the N most recent runs regardless of cadence.
 variable "folders" {
-  description = "Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+prune per entry, its own namespace (= the map key)"
+  description = "Map of name => { archives, schedule, prune_backups, verify_schedule } - one host-type PBS backup+prune+verify per entry, its own namespace (= the map key)"
   type = map(object({
     archives      = list(string) # "<archive-name>.pxar:<source-path>" specs, proxmox-backup-client's own format
     schedule      = string
@@ -199,6 +196,7 @@ variable "folders" {
       script      = string             # filename under files/
       environment = optional(map(string)) # -> EnvironmentFile=; secrets come from var.folder_secrets instead, see main.tf
     }))
+    verify_schedule = string # schedule of the PBS verify job for this folder's namespace
   }))
   nullable = false
   default = {
@@ -206,73 +204,101 @@ variable "folders" {
       archives      = ["etc-pve.pxar:/etc/pve", "etc-network.pxar:/etc/network", "root.pxar:/root"]
       schedule      = "00:30"
       prune_backups = { "keep-daily" = "7", "keep-weekly" = "4", "keep-monthly" = "6" }
+
+      verify_schedule = "tue 03:00" # every Tuesday
     }
     "document" = {
       archives      = ["document.pxar:/mnt/storage/document"]
       schedule      = "00:30"
       prune_backups = { "keep-daily" = "7", "keep-weekly" = "4", "keep-monthly" = "6" }
+
+      verify_schedule = "*-*-10 03:00:00" # the 10th of every month
     }
     "photo" = {
       archives      = ["photo.pxar:/mnt/storage/photo"]
       schedule      = "00:30"
       prune_backups = { "keep-daily" = "7", "keep-weekly" = "4", "keep-monthly" = "6" }
+
+      verify_schedule = "*-*-10 03:00:00" # the 10th of every month
     }
     "kyocera-scan" = {
       archives      = ["kyocera-scan.pxar:/mnt/storage/kyocera-scan"]
       schedule      = "00:30"
       prune_backups = { "keep-daily" = "7", "keep-weekly" = "4", "keep-monthly" = "6" }
+
+      verify_schedule = "*-*-10 03:00:00" # the 10th of every month
     }
     "temp" = {
       archives      = ["temp.pxar:/mnt/storage/temp"]
       schedule      = "00:30"
       prune_backups = { "keep-daily" = "7", "keep-weekly" = "4", "keep-monthly" = "6" }
+
+      verify_schedule = "*-01,04,07,10-18 03:00:00" # the 18th of every third month
     }
     "backup" = {
       archives      = ["backup.pxar:/mnt/storage/backup"]
       schedule      = "sun 01:00"
       prune_backups = { "keep-weekly" = "4", "keep-monthly" = "6" }
+
+      verify_schedule = "*-*-14 03:00:00" # the 14th of every month
     }
     "step-ca" = {
       archives      = ["step-ca.pxar:/mnt/storage/step-ca"]
       schedule      = "sun 01:00"
       prune_backups = { "keep-weekly" = "4", "keep-monthly" = "6" }
+
+      verify_schedule = "tue 03:00" # every Tuesday
     }
     "yuliia" = {
       archives      = ["yuliia.pxar:/mnt/storage/yuliia"]
       schedule      = "*-*-01 02:30:00"
       prune_backups = { "keep-monthly" = "6" }
+
+      verify_schedule = "*-*-12 03:00:00" # the 12th of every month
     }
     "music" = {
       archives      = ["music.pxar:/mnt/storage/music"]
       schedule      = "*-*-01 02:30:00"
       prune_backups = { "keep-monthly" = "6" }
+
+      verify_schedule = "*-01,03,05,07,09,11-16 03:00:00" # the 16th of every other month
     }
     "application" = {
       archives      = ["application.pxar:/mnt/storage/application"]
       schedule      = "*-01,03,05,07,09,11-01 09:00:00"
       prune_backups = { "keep-last" = "3" }
+
+      verify_schedule = "*-01,04,07,10-18 03:00:00" # the 18th of every third month
     }
     "game" = {
       archives      = ["game.pxar:/mnt/storage/game"]
       schedule      = "*-01,03,05,07,09,11-01 09:00:00"
       prune_backups = { "keep-last" = "3" }
+
+      verify_schedule = "*-01,04,07,10-18 03:00:00" # the 18th of every third month
     }
     "picture" = {
       archives      = ["picture.pxar:/mnt/storage/picture"]
       schedule      = "*-01,03,05,07,09,11-01 09:00:00"
       prune_backups = { "keep-last" = "3" }
+
+      verify_schedule = "*-01,04,07,10-18 03:00:00" # the 18th of every third month
     }
     "opnsense-config" = {
       archives       = ["opnsense-config.pxar:/mnt/temp/opnsense"]
       schedule       = "00:30"
       prune_backups  = { "keep-daily" = "7", "keep-weekly" = "4", "keep-monthly" = "6" }
       exec_start_pre = { script = "opnsense-config-fetch.sh" }
+
+      verify_schedule = "tue 03:00" # every Tuesday
     }
     "flint2-config" = {
       archives       = ["flint2-config.pxar:/mnt/temp/flint2"]
       schedule       = "00:30"
       prune_backups  = { "keep-daily" = "7", "keep-weekly" = "4", "keep-monthly" = "6" }
       exec_start_pre = { script = "flint2-config-fetch.sh" }
+
+      verify_schedule = "tue 03:00" # every Tuesday
     }
   }
 }

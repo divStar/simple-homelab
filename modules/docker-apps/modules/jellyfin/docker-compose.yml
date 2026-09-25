@@ -16,8 +16,7 @@ services:
     volumes:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
       - /etc/ssl/certs/step-ca-root.pem:/usr/local/share/ca-certificates/step-ca-root.crt:ro
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      # Not mounting /etc/localtime and /etc/timezone, because it causes issues with .NET and TLS validation
       - jellyfin-config:/config
       - jellyfin-cache:/cache
       # Videos

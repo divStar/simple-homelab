@@ -13,7 +13,11 @@ services:
     security_opt:
       - no-new-privileges:true
     networks:
-      - service-network
+      service-network:
+        aliases:
+          # Jellyfin's ipvlan leg (10.0.10.0/24) can't reach this host's 10.0.10.3, where these names resolve.
+          # Answering them with Traefik's bridge IP on service-network avoids that path.
+          - zitadel.${BASE_DOMAIN}
     environment:
       - TZ
       - TRAEFIK_LOG_LEVEL

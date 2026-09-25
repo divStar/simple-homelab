@@ -79,7 +79,7 @@ systemd drop-in directories are never auto-created (a convention admins/ tooling
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L295"><code>main.tf#L295</code></a></td>
+      <td><a href="./main.tf#L296"><code>main.tf#L296</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.create_daily_update_override_directory":end -->
@@ -95,7 +95,7 @@ Install PBS itself (deb822 apt source + package). Connects as root directly, no 
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L182"><code>main.tf#L182</code></a></td>
+      <td><a href="./main.tf#L183"><code>main.tf#L183</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_pbs":end -->
@@ -143,7 +143,7 @@ Retime PBS's own daily-update service (package updates + ACME cert renewal -- th
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L318"><code>main.tf#L318</code></a></td>
+      <td><a href="./main.tf#L319"><code>main.tf#L319</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.retime_daily_update":end -->
@@ -159,7 +159,7 @@ Get PBS a trusted cert from Step CA via ACME -- identical to modules/pbs-vm, the
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L258"><code>main.tf#L258</code></a></td>
+      <td><a href="./main.tf#L259"><code>main.tf#L259</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.setup_acme":end -->
@@ -175,7 +175,7 @@ Register (or re-register) the PBS datastore at the mount_point path -- see files
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L224"><code>main.tf#L224</code></a></td>
+      <td><a href="./main.tf#L225"><code>main.tf#L225</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.setup_datastore":end -->
@@ -191,7 +191,7 @@ Trigger for container replacement - module outputs aren't valid replace_triggere
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L170"><code>main.tf#L170</code></a></td>
+      <td><a href="./main.tf#L171"><code>main.tf#L171</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terraform_data.container_trigger":end -->

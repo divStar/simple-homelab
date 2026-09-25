@@ -13,6 +13,13 @@ services:
       - GF_SERVER_ROOT_URL
       - GF_SECURITY_CSRF_TRUSTED_ORIGINS
       - GF_AUTH_GENERIC_OAUTH_ICON
+      - GF_SMTP_ENABLED
+      - GF_SMTP_HOST
+      - GF_SMTP_USER
+      - GF_SMTP_PASSWORD
+      - GF_SMTP_FROM_ADDRESS
+      - GF_SMTP_FROM_NAME
+      - GF_SMTP_STARTTLS_POLICY
     networks:
       - management-network
       - monitoring-network

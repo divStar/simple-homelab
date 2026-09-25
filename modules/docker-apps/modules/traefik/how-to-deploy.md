@@ -1,15 +1,19 @@
 # How to deploy
 
-This stack defines **two** Traefik instances in one `docker-compose.yml` - `traefik-management` (Management VLAN,
-`10.0.5.7`) and `traefik-services` (Services VLAN, `10.0.10.3`). Each only picks up containers carrying its own
-`traefik-tier` label (`management`/`services`), via `TRAEFIK_PROVIDERS_DOCKER_CONSTRAINTS`.
+This stack defines **two** Traefik instances, each in its own compose file - `traefik-management` (Management VLAN,
+`10.0.5.7`, `docker-compose-management.yml`) and `traefik-services` (Services VLAN, `10.0.10.3`, `docker-compose-services.yml`).
+Each only picks up containers carrying its own `traefik-tier` label (`management`/`services`), via
+`TRAEFIK_PROVIDERS_DOCKER_CONSTRAINTS`.
 
-Deploy (or redeploy after a config change) with two **separate** commands, one per service:
+Deploy (or redeploy after a config change) with two **separate** commands, one per instance:
 
 ```bash
-docker compose -f docker-compose.yml --env-file stack.env --env-file stack-management.env up -d traefik-management
-docker compose -f docker-compose.yml --env-file stack.env --env-file stack-services.env up -d traefik-services
+docker compose -f docker-compose-management.yml --env-file stack.env --env-file stack-management.env up -d traefik-management
+docker compose -f docker-compose-services.yml --env-file stack.env --env-file stack-services.env up -d traefik-services
 ```
+
+`traefik-services` carries a `zitadel.${BASE_DOMAIN}` network alias on `service-network`: Jellyfin's ipvlan leg can't reach the
+host's own `10.0.10.3` (kernel restriction), so it must resolve Zitadel to Traefik's bridge IP instead.
 
 ## Why two commands, not one
 

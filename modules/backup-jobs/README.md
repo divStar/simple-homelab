@@ -26,6 +26,7 @@ recovery-relevant config).
   - _ssh_resource_.[delete_pbs_user](#ssh_resourcedelete_pbs_user)
   - _ssh_resource_.[delete_verify_job](#ssh_resourcedelete_verify_job)
   - _ssh_resource_.[folder_backup](#ssh_resourcefolder_backup)
+  - _ssh_resource_.[gc_schedule](#ssh_resourcegc_schedule)
   - _ssh_resource_.[grant_pbs_token_acl](#ssh_resourcegrant_pbs_token_acl)
   - _ssh_resource_.[grant_pbs_user_acl](#ssh_resourcegrant_pbs_user_acl)
   - _ssh_resource_.[push_flatcar_data_export](#ssh_resourcepush_flatcar_data_export)
@@ -37,6 +38,7 @@ recovery-relevant config).
   - [flatcar_data_export_schedule](#flatcar_data_export_schedule-optional) (*Optional*)
   - [folder_secrets](#folder_secrets-optional) (*Optional*)
   - [folders](#folders-optional) (*Optional*)
+  - [gc_schedule](#gc_schedule-optional) (*Optional*)
   - [guests](#guests-optional) (*Optional*)
   - [pbs_token_name](#pbs_token_name-optional) (*Optional*)
   - [pbs_token_userid](#pbs_token_userid-optional) (*Optional*)
@@ -44,13 +46,13 @@ recovery-relevant config).
   - [prune_backups](#prune_backups-optional) (*Optional*)
   - [schedule](#schedule-optional) (*Optional*)
   - [storage_id](#storage_id-optional) (*Optional*)
-  - [verify_outdated_after_days](#verify_outdated_after_days-optional) (*Optional*)
-  - [verify_schedule](#verify_schedule-optional) (*Optional*)
+  - [verify_root_schedule](#verify_root_schedule-optional) (*Optional*)
 - [Outputs](#outputs)
   - [folder_backups](#folder_backups)
+  - [gc_schedule](#gc_schedule)
   - [job_ids](#job_ids)
   - [storage_id](#storage_id)
-  - [verify_job](#verify_job)
+  - [verify_jobs](#verify_jobs)
 </blockquote><!-- contents:end -->
 
 ## Providers
@@ -72,7 +74,7 @@ One job per guest - each guest's primary disk(s). Note: EFI disks have no per-di
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L150"><code>main.tf#L150</code></a></td>
+      <td><a href="./main.tf#L165"><code>main.tf#L165</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_backup_job.this":end -->
@@ -88,7 +90,7 @@ Register PBS as a storage target PVE can back guests up to, authenticated with t
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L135"><code>main.tf#L135</code></a></td>
+      <td><a href="./main.tf#L150"><code>main.tf#L150</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_storage_pbs.this":end -->
@@ -104,7 +106,7 @@ Create PBS backup directory if necessary and chmod it.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L196"><code>main.tf#L196</code></a></td>
+      <td><a href="./main.tf#L238"><code>main.tf#L238</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.create_folder_backup_config_dir":end -->
@@ -120,7 +122,7 @@ Create a new PBS token for the user.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L87"><code>main.tf#L87</code></a></td>
+      <td><a href="./main.tf#L102"><code>main.tf#L102</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.create_pbs_token":end -->
@@ -136,7 +138,7 @@ Dedicated PBS user for this module's own storage credential.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L44"><code>main.tf#L44</code></a></td>
+      <td><a href="./main.tf#L59"><code>main.tf#L59</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.create_pbs_user":end -->
@@ -152,7 +154,7 @@ Delete existing PBS token for the user.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L72"><code>main.tf#L72</code></a></td>
+      <td><a href="./main.tf#L87"><code>main.tf#L87</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_existing_pbs_token":end -->
@@ -168,7 +170,7 @@ Remove the Flatcar data export job on module destroy.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L370"><code>main.tf#L370</code></a></td>
+      <td><a href="./main.tf#L412"><code>main.tf#L412</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_flatcar_data_export":end -->
@@ -184,7 +186,7 @@ Delete folder backup runs.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L318"><code>main.tf#L318</code></a></td>
+      <td><a href="./main.tf#L360"><code>main.tf#L360</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_folder_backup":end -->
@@ -200,7 +202,7 @@ Delete folder backup infrastructure from host.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L235"><code>main.tf#L235</code></a></td>
+      <td><a href="./main.tf#L277"><code>main.tf#L277</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_folder_backup_infra":end -->
@@ -216,7 +218,7 @@ Delete the dedicated PBS user.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L57"><code>main.tf#L57</code></a></td>
+      <td><a href="./main.tf#L72"><code>main.tf#L72</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_pbs_user":end -->
@@ -232,7 +234,7 @@ Delete verify jobs.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L181"><code>main.tf#L181</code></a></td>
+      <td><a href="./main.tf#L217"><code>main.tf#L217</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.delete_verify_job":end -->
@@ -248,10 +250,26 @@ One concrete timer + one per-folder env file per var.folders entry - namespace i
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L255"><code>main.tf#L255</code></a></td>
+      <td><a href="./main.tf#L297"><code>main.tf#L297</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.folder_backup":end -->
+<blockquote><!-- resource:"ssh_resource.gc_schedule":start -->
+
+### _ssh_resource_.`gc_schedule`
+
+PBS's own datastore garbage collection schedule.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>ssh (loafoe/ssh)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L202"><code>main.tf#L202</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"ssh_resource.gc_schedule":end -->
 <blockquote><!-- resource:"ssh_resource.grant_pbs_token_acl":start -->
 
 ### _ssh_resource_.`grant_pbs_token_acl`
@@ -264,7 +282,7 @@ Grant the user token the necessary ACL permissions.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L118"><code>main.tf#L118</code></a></td>
+      <td><a href="./main.tf#L133"><code>main.tf#L133</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.grant_pbs_token_acl":end -->
@@ -280,7 +298,7 @@ Grant the user the necessary ACL permissions.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L103"><code>main.tf#L103</code></a></td>
+      <td><a href="./main.tf#L118"><code>main.tf#L118</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.grant_pbs_user_acl":end -->
@@ -296,7 +314,7 @@ Daily export of docker-vm's data disks into the Proxmox import directory, so a d
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L338"><code>main.tf#L338</code></a></td>
+      <td><a href="./main.tf#L380"><code>main.tf#L380</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.push_flatcar_data_export":end -->
@@ -312,7 +330,7 @@ Push folder backup infrastructure to the host.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L207"><code>main.tf#L207</code></a></td>
+      <td><a href="./main.tf#L249"><code>main.tf#L249</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.push_folder_backup_infra":end -->
@@ -320,7 +338,7 @@ Push folder backup infrastructure to the host.
 
 ### _ssh_resource_.`verify_job`
 
-PBS's own datastore verify job.
+PBS's own verify jobs, one per namespace (see local.verify_jobs); always verifying in full.
   <table>
     <tr>
       <td>Provider</td>
@@ -328,7 +346,7 @@ PBS's own datastore verify job.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L166"><code>main.tf#L166</code></a></td>
+      <td><a href="./main.tf#L181"><code>main.tf#L181</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.verify_job":end -->
@@ -426,7 +444,7 @@ Map of folder name => extra env vars for that folder's exec_start_pre script
 
 ### `folders` (*Optional*)
 
-Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+prune per entry, its own namespace (= the map key)
+Map of name => { archives, schedule, prune_backups, verify_schedule } - one host-type PBS backup+prune+verify per entry, its own namespace (= the map key)
 
 <details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
   <summary>Show more...</summary>
@@ -441,6 +459,7 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
       script      = string             # filename under files/
       environment = optional(map(string)) # -> EnvironmentFile=; secrets come from var.folder_secrets instead, see main.tf
     }))
+    verify_schedule = string # schedule of the PBS verify job for this folder's namespace
   }))
   ```
   **Default**:
@@ -453,7 +472,8 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
     "prune_backups": {
       "keep-last": "3"
     },
-    "schedule": "*-01,03,05,07,09,11-01 09:00:00"
+    "schedule": "*-01,03,05,07,09,11-01 09:00:00",
+    "verify_schedule": "*-01,04,07,10-18 03:00:00"
   },
   "backup": {
     "archives": [
@@ -463,7 +483,8 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
       "keep-monthly": "6",
       "keep-weekly": "4"
     },
-    "schedule": "sun 01:00"
+    "schedule": "sun 01:00",
+    "verify_schedule": "*-*-14 03:00:00"
   },
   "document": {
     "archives": [
@@ -474,7 +495,8 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
       "keep-monthly": "6",
       "keep-weekly": "4"
     },
-    "schedule": "00:30"
+    "schedule": "00:30",
+    "verify_schedule": "*-*-10 03:00:00"
   },
   "flint2-config": {
     "archives": [
@@ -488,7 +510,8 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
       "keep-monthly": "6",
       "keep-weekly": "4"
     },
-    "schedule": "00:30"
+    "schedule": "00:30",
+    "verify_schedule": "tue 03:00"
   },
   "game": {
     "archives": [
@@ -497,7 +520,8 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
     "prune_backups": {
       "keep-last": "3"
     },
-    "schedule": "*-01,03,05,07,09,11-01 09:00:00"
+    "schedule": "*-01,03,05,07,09,11-01 09:00:00",
+    "verify_schedule": "*-01,04,07,10-18 03:00:00"
   },
   "kyocera-scan": {
     "archives": [
@@ -508,7 +532,8 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
       "keep-monthly": "6",
       "keep-weekly": "4"
     },
-    "schedule": "00:30"
+    "schedule": "00:30",
+    "verify_schedule": "*-*-10 03:00:00"
   },
   "music": {
     "archives": [
@@ -517,7 +542,8 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
     "prune_backups": {
       "keep-monthly": "6"
     },
-    "schedule": "*-*-01 02:30:00"
+    "schedule": "*-*-01 02:30:00",
+    "verify_schedule": "*-01,03,05,07,09,11-16 03:00:00"
   },
   "opnsense-config": {
     "archives": [
@@ -531,7 +557,8 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
       "keep-monthly": "6",
       "keep-weekly": "4"
     },
-    "schedule": "00:30"
+    "schedule": "00:30",
+    "verify_schedule": "tue 03:00"
   },
   "photo": {
     "archives": [
@@ -542,7 +569,8 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
       "keep-monthly": "6",
       "keep-weekly": "4"
     },
-    "schedule": "00:30"
+    "schedule": "00:30",
+    "verify_schedule": "*-*-10 03:00:00"
   },
   "picture": {
     "archives": [
@@ -551,18 +579,8 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
     "prune_backups": {
       "keep-last": "3"
     },
-    "schedule": "*-01,03,05,07,09,11-01 09:00:00"
-  },
-  "pihole": {
-    "archives": [
-      "pihole.pxar:/mnt/temp/pihole"
-    ],
-    "prune_backups": {
-      "keep-daily": "7",
-      "keep-monthly": "6",
-      "keep-weekly": "4"
-    },
-    "schedule": "00:30"
+    "schedule": "*-01,03,05,07,09,11-01 09:00:00",
+    "verify_schedule": "*-01,04,07,10-18 03:00:00"
   },
   "pve-host": {
     "archives": [
@@ -575,7 +593,8 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
       "keep-monthly": "6",
       "keep-weekly": "4"
     },
-    "schedule": "00:30"
+    "schedule": "00:30",
+    "verify_schedule": "tue 03:00"
   },
   "step-ca": {
     "archives": [
@@ -585,7 +604,8 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
       "keep-monthly": "6",
       "keep-weekly": "4"
     },
-    "schedule": "sun 01:00"
+    "schedule": "sun 01:00",
+    "verify_schedule": "tue 03:00"
   },
   "temp": {
     "archives": [
@@ -596,7 +616,8 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
       "keep-monthly": "6",
       "keep-weekly": "4"
     },
-    "schedule": "00:30"
+    "schedule": "00:30",
+    "verify_schedule": "*-01,04,07,10-18 03:00:00"
   },
   "yuliia": {
     "archives": [
@@ -605,14 +626,36 @@ Map of name => { archives, schedule, prune_backups } - one host-type PBS backup+
     "prune_backups": {
       "keep-monthly": "6"
     },
-    "schedule": "*-*-01 02:30:00"
+    "schedule": "*-*-01 02:30:00",
+    "verify_schedule": "*-*-12 03:00:00"
   }
 }
   ```
-  In file: <a href="./variables.tf#L198"><code>variables.tf#L198</code></a>
+  In file: <a href="./variables.tf#L189"><code>variables.tf#L189</code></a>
 
 </details>
 </blockquote><!-- variable:"folders":end -->
+<blockquote><!-- variable:"gc_schedule":start -->
+
+### `gc_schedule` (*Optional*)
+
+Schedule for the PBS datastore garbage collection (systemd calendar event format)
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  string
+  ```
+  **Default**:
+  ```json
+  "sat 05:30"
+  ```
+  In file: <a href="./variables.tf#L119"><code>variables.tf#L119</code></a>
+
+</details>
+</blockquote><!-- variable:"gc_schedule":end -->
 <blockquote><!-- variable:"guests":start -->
 
 ### `guests` (*Optional*)
@@ -654,9 +697,6 @@ Map of guest name => { vmid, optional per-guest schedule/prune_backups overrides
   "pbs-lxc": {
     "vmid": "704"
   },
-  "pihole": {
-    "vmid": "703"
-  },
   "samba": {
     "vmid": "702"
   },
@@ -665,7 +705,7 @@ Map of guest name => { vmid, optional per-guest schedule/prune_backups overrides
   }
 }
   ```
-  In file: <a href="./variables.tf#L140"><code>variables.tf#L140</code></a>
+  In file: <a href="./variables.tf#L137"><code>variables.tf#L137</code></a>
 
 </details>
 </blockquote><!-- variable:"guests":end -->
@@ -798,32 +838,11 @@ Identifier to register the PBS datastore under in PVE
 
 </details>
 </blockquote><!-- variable:"storage_id":end -->
-<blockquote><!-- variable:"verify_outdated_after_days":start -->
+<blockquote><!-- variable:"verify_root_schedule":start -->
 
-### `verify_outdated_after_days` (*Optional*)
+### `verify_root_schedule` (*Optional*)
 
-Days after which a prior successful verification is considered stale and re-checked, instead of skipped, on the next verify run - kept in step with verify_schedule's cadence
-
-<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
-  <summary>Show more...</summary>
-
-  **Type**:
-  ```hcl
-  number
-  ```
-  **Default**:
-  ```json
-  60
-  ```
-  In file: <a href="./variables.tf#L122"><code>variables.tf#L122</code></a>
-
-</details>
-</blockquote><!-- variable:"verify_outdated_after_days":end -->
-<blockquote><!-- variable:"verify_schedule":start -->
-
-### `verify_schedule` (*Optional*)
-
-Schedule for the PBS datastore verify job (systemd calendar event format - confirmed accepted by PBS's parser live)
+Schedule for the PBS verify job of the root namespace, i.e. all VM/CT backups (systemd calendar event format - confirmed accepted by PBS's parser live)
 
 <details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
   <summary>Show more...</summary>
@@ -834,12 +853,12 @@ Schedule for the PBS datastore verify job (systemd calendar event format - confi
   ```
   **Default**:
   ```json
-  "*-01,03,05,07,09,11-01 03:00:00"
+  "mon 03:00"
   ```
-  In file: <a href="./variables.tf#L115"><code>variables.tf#L115</code></a>
+  In file: <a href="./variables.tf#L110"><code>variables.tf#L110</code></a>
 
 </details>
-</blockquote><!-- variable:"verify_schedule":end -->
+</blockquote><!-- variable:"verify_root_schedule":end -->
 
 ## Outputs
   
@@ -851,6 +870,14 @@ Map of folder name => { namespace, schedule, prune_backups, has_exec_start_pre }
 
 In file: <a href="./outputs.tf#L11"><code>outputs.tf#L11</code></a>
 </blockquote><!-- output:"folder_backups":end -->
+<blockquote><!-- output:"gc_schedule":start -->
+
+#### `gc_schedule`
+
+PBS datastore garbage collection schedule
+
+In file: <a href="./outputs.tf#L33"><code>outputs.tf#L33</code></a>
+</blockquote><!-- output:"gc_schedule":end -->
 <blockquote><!-- output:"job_ids":start -->
 
 #### `job_ids`
@@ -867,11 +894,11 @@ The PVE storage id the PBS datastore was registered under
 
 In file: <a href="./outputs.tf#L1"><code>outputs.tf#L1</code></a>
 </blockquote><!-- output:"storage_id":end -->
-<blockquote><!-- output:"verify_job":start -->
+<blockquote><!-- output:"verify_jobs":start -->
 
-#### `verify_job`
+#### `verify_jobs`
 
-PBS datastore verify job settings - one job, covers every namespace, not per-folder
+PBS verify jobs - one per namespace (key "root" = all VM/CT backups, other keys = folder namespaces)
 
 In file: <a href="./outputs.tf#L23"><code>outputs.tf#L23</code></a>
-</blockquote><!-- output:"verify_job":end -->
+</blockquote><!-- output:"verify_jobs":end -->

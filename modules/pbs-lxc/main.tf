@@ -130,6 +130,7 @@ module "setup_container" {
   # were under the eval floor, not just thin for our workload.
   cpu_cores        = 2
   memory_dedicated = 4096
+  disk_size        = 8
 
   network_interfaces = [
     {

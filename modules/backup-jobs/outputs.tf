@@ -20,10 +20,17 @@ output "folder_backups" {
   }
 }
 
-output "verify_job" {
-  description = "PBS datastore verify job settings - one job, covers every namespace, not per-folder"
+output "verify_jobs" {
+  description = "PBS verify jobs - one per namespace (key \"root\" = all VM/CT backups, other keys = folder namespaces)"
   value = {
-    schedule            = var.verify_schedule
-    outdated_after_days = var.verify_outdated_after_days
+    for key, job in local.verify_jobs : key => {
+      id       = job.id
+      schedule = job.schedule
+    }
   }
+}
+
+output "gc_schedule" {
+  description = "PBS datastore garbage collection schedule"
+  value       = var.gc_schedule
 }

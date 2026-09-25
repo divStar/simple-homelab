@@ -38,6 +38,21 @@ locals {
       })
     })
   }
+
+  # One PBS verify job per namespace: the root namespace (all VM/CT backups) plus one per folder. The root job
+  # keeps the "<storage_id>-verify" id of the former single job. "--max-depth 0" limits a job to its own namespace.
+  verify_jobs = merge(
+    {
+      root = { id = "${var.storage_id}-verify", schedule = var.verify_root_schedule, args = "--max-depth 0" }
+    },
+    {
+      for name, folder in var.folders : name => {
+        id       = "${var.storage_id}-verify-${name}"
+        schedule = folder.verify_schedule
+        args     = "--ns ${name} --max-depth 0"
+      }
+    },
+  )
 }
 
 # Dedicated PBS user for this module's own storage credential.
@@ -162,8 +177,9 @@ resource "proxmox_backup_job" "this" {
   depends_on = [proxmox_storage_pbs.this]
 }
 
-# PBS's own datastore verify job.
+# PBS's own verify jobs, one per namespace (see local.verify_jobs); always verifying in full.
 resource "ssh_resource" "verify_job" {
+  for_each   = local.verify_jobs
   depends_on = [proxmox_storage_pbs.this]
 
   host        = local.pbs_ssh.host
@@ -171,7 +187,27 @@ resource "ssh_resource" "verify_job" {
   private_key = local.pbs_ssh.private_key
 
   commands = [
-    "proxmox-backup-manager verify-job list --output-format json | grep -q '\"id\":\"${var.storage_id}-verify\"' && proxmox-backup-manager verify-job update ${var.storage_id}-verify --schedule '${var.verify_schedule}' --outdated-after ${var.verify_outdated_after_days} || proxmox-backup-manager verify-job create ${var.storage_id}-verify --store ${var.pbs.datastore} --schedule '${var.verify_schedule}' --outdated-after ${var.verify_outdated_after_days}",
+    "proxmox-backup-manager verify-job list --output-format json | grep -q '\"id\":\"${each.value.id}\"' && proxmox-backup-manager verify-job update ${each.value.id} --schedule '${each.value.schedule}' ${each.value.args} --ignore-verified false || proxmox-backup-manager verify-job create ${each.value.id} --store ${var.pbs.datastore} --schedule '${each.value.schedule}' ${each.value.args} --ignore-verified false",
+  ]
+
+  timeout = "20s"
+}
+
+moved {
+  from = ssh_resource.verify_job
+  to   = ssh_resource.verify_job["root"]
+}
+
+# PBS's own datastore garbage collection schedule.
+resource "ssh_resource" "gc_schedule" {
+  depends_on = [proxmox_storage_pbs.this]
+
+  host        = local.pbs_ssh.host
+  user        = local.pbs_ssh.user
+  private_key = local.pbs_ssh.private_key
+
+  commands = [
+    "proxmox-backup-manager datastore update ${var.pbs.datastore} --gc-schedule '${var.gc_schedule}'",
   ]
 
   timeout = "20s"
@@ -179,17 +215,23 @@ resource "ssh_resource" "verify_job" {
 
 # Delete verify jobs.
 resource "ssh_resource" "delete_verify_job" {
-  when = "destroy"
+  for_each = local.verify_jobs
+  when     = "destroy"
 
   host        = local.pbs_ssh.host
   user        = local.pbs_ssh.user
   private_key = local.pbs_ssh.private_key
 
   commands = [
-    "proxmox-backup-manager verify-job remove ${var.storage_id}-verify",
+    "proxmox-backup-manager verify-job remove ${each.value.id} || true",
   ]
 
   timeout = "20s"
+}
+
+moved {
+  from = ssh_resource.delete_verify_job
+  to   = ssh_resource.delete_verify_job["root"]
 }
 
 # Create PBS backup directory if necessary and chmod it.
