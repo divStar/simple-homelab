@@ -68,6 +68,7 @@ services:
       SCANOPY_PUBLIC_URL: https://topology.${BASE_DOMAIN}
       # Same service-name-over-shared-network substitution as SCANOPY_SERVER_URL above.
       SCANOPY_INTEGRATED_DAEMON_URL: http://scanopy-daemon:60073
+      SCANOPY_TRUSTED_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
     volumes:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
       - scanopy-server-data:/data
