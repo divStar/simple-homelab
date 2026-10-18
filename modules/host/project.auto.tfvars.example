@@ -121,3 +121,16 @@ directory_mappings = [
     comment = "Video storage"
   }
 ]
+
+share_permissions = {
+  paths = [
+    "/mnt/storage/documents",
+    "/mnt/storage/music",
+    "/mnt/storage/pictures",
+    "/mnt/storage/video"
+  ]
+  exclude_paths = [
+    "/mnt/storage/temp/archive-with-original-owners"
+  ]
+  schedule = "*-*-* 04:30:00"
+}

@@ -1,0 +1,11 @@
+[Unit]
+Description=Add missing group permissions on share paths
+
+[Service]
+Type=oneshot
+Nice=19
+IOSchedulingClass=idle
+%{ if textfile_directory != null ~}
+Environment=TEXTFILE_DIRECTORY=${textfile_directory}
+%{ endif ~}
+ExecStart=/usr/local/bin/share-permissions.sh

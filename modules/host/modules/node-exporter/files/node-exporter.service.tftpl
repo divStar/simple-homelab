@@ -9,7 +9,8 @@ User=root
 ExecStart=/usr/local/bin/node_exporter \
   --web.listen-address=:9100 \
   --collector.ethtool \
-  --collector.cpu.info
+  --collector.cpu.info \
+  --collector.textfile.directory=${textfile_directory}
 Restart=on-failure
 RestartSec=5s
 

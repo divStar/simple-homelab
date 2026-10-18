@@ -81,6 +81,15 @@ module "node_exporter" {
   ssh = var.ssh
 }
 
+# Handles a daily repair of missing group permissions on the share paths.
+module "share_permissions" {
+  source = "./modules/share-permissions"
+
+  ssh                = var.ssh
+  share_permissions  = var.share_permissions
+  textfile_directory = module.node_exporter.textfile_directory
+}
+
 # Handles the creation of Linux bridges and VLAN interfaces on the Proxmox host.
 module "network_bridges" {
   source = "./modules/network-bridges"
@@ -104,7 +113,7 @@ module "interface_adjustments" {
 
 # Handles the import of directories into Proxmox.
 module "proxmox_storage_import" {
-  source     = "./modules/proxmox-storage-import"
+  source = "./modules/proxmox-storage-import"
 
   ssh                 = var.ssh
   storage_directories = var.storage_directories
@@ -121,7 +130,7 @@ module "packages" {
 
 # Handles mapping directories for future use (e.g. file sharing via `virtiofs` into VMs).
 module "directory_mappings" {
-  source     = "./modules/directory-mappings"
+  source = "./modules/directory-mappings"
 
   ssh                = var.ssh
   proxmox_node_name  = var.proxmox_node_name
@@ -135,7 +144,7 @@ module "directory_mappings" {
 # > who need access, have to be introduced into the `/home/<user, e.g. gitops>/.ssh/authorized_keys` file.<br>
 # > You can use the [`authorized-keys-appender`](./modules/authorized-keys-appender/README.md) module for this.
 module "gitops_user" {
-  source     = "./modules/gitops-user"
+  source = "./modules/gitops-user"
 
   ssh = var.ssh
 }

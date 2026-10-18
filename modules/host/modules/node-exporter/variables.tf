@@ -22,3 +22,9 @@ variable "node_exporter_version" {
   type        = string
   default     = null
 }
+
+variable "textfile_directory" {
+  description = "Directory the textfile collector reads `*.prom` files from (metrics written by scripts, e.g. share-permissions)"
+  type        = string
+  default     = "/var/lib/node_exporter/textfile_collector"
+}

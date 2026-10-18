@@ -21,7 +21,9 @@ LLDP neighbor data) are unrelated to this daemon and stay in place.
 - [Resources](#resources)
   - _ssh_resource_.[configure_timezone](#ssh_resourceconfigure_timezone)
   - _ssh_resource_.[install_scanopy_daemon](#ssh_resourceinstall_scanopy_daemon)
+  - _ssh_resource_.[update_scanopy_daemon](#ssh_resourceupdate_scanopy_daemon)
   - _terraform_data_.[container_trigger](#terraform_datacontainer_trigger)
+  - _terraform_data_.[update_scanopy_daemon_trigger](#terraform_dataupdate_scanopy_daemon_trigger)
 - [Variables](#variables)
   - [proxmox](#proxmox-required) (**Required**)
   - [scanopy_daemon_api_key](#scanopy_daemon_api_key-required) (**Required**)
@@ -51,7 +53,7 @@ Debian LXC container setup
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L39"><code>main.tf#L39</code></a></td>
+      <td><a href="./main.tf#L42"><code>main.tf#L42</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="../common/modules/debian/README.md">README.md</a> <em>(experimental)</em></td>
@@ -73,7 +75,7 @@ Set the container timezone
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L70"><code>main.tf#L70</code></a></td>
+      <td><a href="./main.tf#L73"><code>main.tf#L73</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_timezone":end -->
@@ -89,10 +91,26 @@ Install the daemon and register it with the Scanopy server. allow-self-signed-ce
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L98"><code>main.tf#L98</code></a></td>
+      <td><a href="./main.tf#L101"><code>main.tf#L101</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.install_scanopy_daemon":end -->
+<blockquote><!-- resource:"ssh_resource.update_scanopy_daemon":start -->
+
+### _ssh_resource_.`update_scanopy_daemon`
+
+Weekly daemon self-update - install.sh has no apt repo behind it, so debian-update.timer never updates the binary. Runs once right away, too.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>ssh (loafoe/ssh)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L140"><code>main.tf#L140</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"ssh_resource.update_scanopy_daemon":end -->
 <blockquote><!-- resource:"terraform_data.container_trigger":start -->
 
 ### _terraform_data_.`container_trigger`
@@ -105,10 +123,26 @@ Trigger for container replacement - see modules/pihole/main.tf for why this patt
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L65"><code>main.tf#L65</code></a></td>
+      <td><a href="./main.tf#L68"><code>main.tf#L68</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terraform_data.container_trigger":end -->
+<blockquote><!-- resource:"terraform_data.update_scanopy_daemon_trigger":start -->
+
+### _terraform_data_.`update_scanopy_daemon_trigger`
+
+`file { source }` content isn't diffed by the ssh provider - this forces a re-push whenever a file or the schedule changes.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>terraform (hashicorp/terraform)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L129"><code>main.tf#L129</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"terraform_data.update_scanopy_daemon_trigger":end -->
 
 ## Variables
   

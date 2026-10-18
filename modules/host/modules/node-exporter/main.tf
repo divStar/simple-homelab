@@ -47,7 +47,7 @@ resource "ssh_resource" "install_node_exporter" {
   private_key = local.ssh.private_key
 
   file {
-    source      = "${path.module}/files/node-exporter.service"
+    content     = templatefile("${path.module}/files/node-exporter.service.tftpl", { textfile_directory = var.textfile_directory })
     destination = "/etc/systemd/system/node-exporter.service"
     permissions = "644"
     owner       = "root"
@@ -57,8 +57,11 @@ resource "ssh_resource" "install_node_exporter" {
   commands = [
     "curl -L ${local.download_url} -o /tmp/node_exporter-${local.version}.tar.gz",
     "tar -xzf /tmp/node_exporter-${local.version}.tar.gz -C /tmp",
+    # A running binary can't be overwritten ("Text file busy")
+    "systemctl stop node-exporter || true",
     "cp /tmp/node_exporter-${local.version}.linux-amd64/node_exporter /usr/local/bin/",
     "chmod +x /usr/local/bin/node_exporter",
+    "mkdir -p ${var.textfile_directory}",
     "systemctl daemon-reload",
     "systemctl enable node-exporter",
     "systemctl start node-exporter",

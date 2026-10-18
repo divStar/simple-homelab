@@ -57,6 +57,8 @@ resource "ssh_resource" "install_smartctl_exporter" {
   commands = [
     "curl -L ${local.download_url} -o /tmp/smartctl_exporter-${local.version}.tar.gz",
     "tar -xzf /tmp/smartctl_exporter-${local.version}.tar.gz -C /tmp",
+    # A running binary can't be overwritten ("Text file busy")
+    "systemctl stop smartctl-exporter || true",
     "cp /tmp/smartctl_exporter-${local.version}.linux-amd64/smartctl_exporter /usr/local/bin/",
     "chmod +x /usr/local/bin/smartctl_exporter",
     "systemctl daemon-reload",
