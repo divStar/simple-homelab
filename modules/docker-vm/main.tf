@@ -113,7 +113,8 @@ resource "proxmox_virtual_environment_vm" "flatcar" {
   }
 
   memory {
-    dedicated = 65536 // 64GB RAM
+    dedicated = 32768 // 32GB RAM
+    floating  = 32768 // balloon device for free-page-reporting; equal to dedicated, so no auto-ballooning
   }
 
   agent {
@@ -144,7 +145,7 @@ resource "proxmox_virtual_environment_vm" "flatcar" {
       iothread     = true
       discard      = "on"
       cache        = "none"
-      ssd          = true
+      ssd          = false // PVE rejects ssd on virtio-blk disks
       file_format  = disk.value.file_format
       size         = disk.value.size
       serial       = disk.value.serial
