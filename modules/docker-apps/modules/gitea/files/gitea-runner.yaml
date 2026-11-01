@@ -1,0 +1,22 @@
+# act_runner configuration for gitea-runner: only the settings that differ from act_runner's defaults
+# (`act_runner generate-config` prints all of them). Labels stay as registered in /data/.runner.
+# Lives on the Docker VM at /mnt/data/gitea/gitea-runner.yaml (scripts/upload-configs.sh).
+
+runner:
+  envs:
+    # Node-based actions (e.g. actions/checkout) ignore the system CA bundle and need the homelab CA explicitly
+    NODE_EXTRA_CA_CERTS: /etc/ssl/certs/ca-certificates.crt
+
+container:
+  # Job containers can only reach gitea.my.world (Traefik on this VM) from a network Traefik is attached to
+  network: service-network
+  # Trust the homelab Step CA through the host's CA bundle, the same file gitea and gitea-runner mount
+  options: -v /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+  valid_volumes:
+    - /etc/ssl/certs/ca-certificates.crt
+  # Privileged job and service containers, so a workflow can build images with its own `docker:dind` service.
+  # A deliberate homelab trade-off: privileged containers can reach the VM's kernel and devices.
+  privileged: true
+  # Don't mount the VM's Docker socket into job containers: image builds use their own docker:dind daemon
+  # and never touch the VM's images and containers
+  docker_host: "-"
