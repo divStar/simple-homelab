@@ -1,0 +1,10 @@
+[Unit]
+Description=Run share permission repair
+
+[Timer]
+OnCalendar=${schedule}
+Persistent=true
+Unit=share-permissions.service
+
+[Install]
+WantedBy=timers.target

@@ -299,3 +299,18 @@ variable "directory_mappings" {
   }))
   default = []
 }
+
+variable "share_permissions" {
+  description = "Share paths whose group permissions get repaired on a schedule (dirs: g+rwxs, files: g+rw)"
+  # @field paths         Host paths backing the Samba shares (e.g. "/mnt/storage/yuliia")
+  # @field exclude_paths Subtrees to skip entirely (e.g. archives that must keep their original modes)
+  # @field schedule      systemd `OnCalendar` expression
+  type = object({
+    paths         = list(string)
+    exclude_paths = optional(list(string), [])
+    schedule      = optional(string, "*-*-* 04:30:00")
+  })
+  default = {
+    paths = []
+  }
+}

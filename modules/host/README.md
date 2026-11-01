@@ -21,11 +21,11 @@ This module and its sub-modules setup the Proxmox host.
   - [proxmox_storage_import](#proxmox_storage_import)
   - [repositories](#repositories)
   - [scripts](#scripts)
+  - [share_permissions](#share_permissions)
   - [share_user](#share_user)
   - [smartctl_exporter](#smartctl_exporter)
   - [terraform_user](#terraform_user)
   - [trust_proxmox_ca](#trust_proxmox_ca)
-  - [zfs_storage](#zfs_storage)
 - [Variables](#variables)
   - [configuration_files](#configuration_files-required) (**Required**)
   - [proxmox](#proxmox-required) (**Required**)
@@ -40,9 +40,9 @@ This module and its sub-modules setup the Proxmox host.
   - [packages](#packages-optional) (*Optional*)
   - [response_routes](#response_routes-optional) (*Optional*)
   - [scripts](#scripts-optional) (*Optional*)
+  - [share_permissions](#share_permissions-optional) (*Optional*)
   - [share_user](#share_user-optional) (*Optional*)
   - [storage_directories](#storage_directories-optional) (*Optional*)
-  - [storage_pools](#storage_pools-optional) (*Optional*)
   - [terraform_user](#terraform_user-optional) (*Optional*)
   - [vlan_interfaces](#vlan_interfaces-optional) (*Optional*)
 - [Outputs](#outputs)
@@ -56,7 +56,6 @@ This module and its sub-modules setup the Proxmox host.
   - [node_exporter_version](#node_exporter_version)
   - [share_user](#share_user)
   - [smartctl_exporter_version](#smartctl_exporter_version)
-  - [storage_pools](#storage_pools)
   - [terraform_user](#terraform_user)
 </blockquote><!-- contents:end -->
 
@@ -80,7 +79,7 @@ Handles adding the SSH key of the machine running this script to the gitops user
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L156"><code>main.tf#L156</code></a></td>
+      <td><a href="./main.tf#L153"><code>main.tf#L153</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/authorized-keys-appender/README.md">README.md</a> <em>(experimental)</em></td>
@@ -99,7 +98,7 @@ Handles copying configuration files.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L41"><code>main.tf#L41</code></a></td>
+      <td><a href="./main.tf#L40"><code>main.tf#L40</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/copy-configs/README.md">README.md</a> <em>(experimental)</em></td>
@@ -118,7 +117,7 @@ Handles mapping directories for future use (e.g. file sharing via `virtiofs` int
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L133"><code>main.tf#L133</code></a></td>
+      <td><a href="./main.tf#L132"><code>main.tf#L132</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/directory-mappings/README.md">README.md</a> <em>(experimental)</em></td>
@@ -137,7 +136,7 @@ Handles creating a gitops user, providing it with access to the gitops git repos
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L148"><code>main.tf#L148</code></a></td>
+      <td><a href="./main.tf#L146"><code>main.tf#L146</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/gitops-user/README.md">README.md</a> <em>(experimental)</em></td>
@@ -194,7 +193,7 @@ Handles the installation of `node-exporter`.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L87"><code>main.tf#L87</code></a></td>
+      <td><a href="./main.tf#L78"><code>main.tf#L78</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/node-exporter/README.md">README.md</a> <em>(experimental)</em></td>
@@ -213,7 +212,7 @@ Handles the installation of additional `apt` packages.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L124"><code>main.tf#L124</code></a></td>
+      <td><a href="./main.tf#L123"><code>main.tf#L123</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/packages/README.md">README.md</a> <em>(experimental)</em></td>
@@ -251,7 +250,7 @@ Handles the deactivation of the enterprise `apt` repository and the activation o
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L49"><code>main.tf#L49</code></a></td>
+      <td><a href="./main.tf#L48"><code>main.tf#L48</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/repositories/README.md">README.md</a> <em>(experimental)</em></td>
@@ -270,13 +269,32 @@ Handles the execution of various *non-interactive* scripts.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L57"><code>main.tf#L57</code></a></td>
+      <td><a href="./main.tf#L56"><code>main.tf#L56</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/scripts/README.md">README.md</a> <em>(experimental)</em></td>
     </tr>
   </table>
 </blockquote><!-- module:"scripts":end -->
+<blockquote><!-- module:"share_permissions":start -->
+
+### `share_permissions`
+
+Handles a daily repair of missing group permissions on the share paths.
+  <table>
+    <tr>
+      <td>Module location</td>
+      <td><code>./modules/share-permissions</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L85"><code>main.tf#L85</code></a></td>
+    </tr>
+    <tr>
+      <td colspan="2"><a href="./modules/share-permissions/README.md">README.md</a> <em>(experimental)</em></td>
+    </tr>
+  </table>
+</blockquote><!-- module:"share_permissions":end -->
 <blockquote><!-- module:"share_user":start -->
 
 ### `share_user`
@@ -289,7 +307,7 @@ Handles creating a share user.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L33"><code>main.tf#L33</code></a></td>
+      <td><a href="./main.tf#L32"><code>main.tf#L32</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/share-user/README.md">README.md</a> <em>(experimental)</em></td>
@@ -308,7 +326,7 @@ Handles the installation of the `smartctl-exporter`.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L80"><code>main.tf#L80</code></a></td>
+      <td><a href="./main.tf#L71"><code>main.tf#L71</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/smartctl-exporter/README.md">README.md</a> <em>(experimental)</em></td>
@@ -327,7 +345,7 @@ Handles the creation of a Terraform user and API token. This user can be used fo
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L25"><code>main.tf#L25</code></a></td>
+      <td><a href="./main.tf#L24"><code>main.tf#L24</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/terraform-user/README.md">README.md</a> <em>(experimental)</em></td>
@@ -346,32 +364,13 @@ Handles letting Proxmox trust its own CA certificate.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L73"><code>main.tf#L73</code></a></td>
+      <td><a href="./main.tf#L64"><code>main.tf#L64</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="./modules/trust-proxmox-ca/README.md">README.md</a> <em>(experimental)</em></td>
     </tr>
   </table>
 </blockquote><!-- module:"trust_proxmox_ca":end -->
-<blockquote><!-- module:"zfs_storage":start -->
-
-### `zfs_storage`
-
-Handles the import of ZFS pools.
-  <table>
-    <tr>
-      <td>Module location</td>
-      <td><code>./modules/zfs-storage</code></td>
-    </tr>
-    <tr>
-      <td>In file</td>
-      <td><a href="./main.tf#L65"><code>main.tf#L65</code></a></td>
-    </tr>
-    <tr>
-      <td colspan="2"><a href="./modules/zfs-storage/README.md">README.md</a> <em>(experimental)</em></td>
-    </tr>
-  </table>
-</blockquote><!-- module:"zfs_storage":end -->
 
 ## Variables
   
@@ -511,7 +510,7 @@ Directory mappings for the Proxmox node
   ```json
   []
   ```
-  In file: <a href="./variables.tf#L296"><code>variables.tf#L296</code></a>
+  In file: <a href="./variables.tf#L290"><code>variables.tf#L290</code></a>
 
 </details>
 </blockquote><!-- variable:"directory_mappings":end -->
@@ -561,7 +560,7 @@ NICs that should have specific ethtool link modes force-advertised via a persist
   ```json
   []
   ```
-  In file: <a href="./variables.tf#L285"><code>variables.tf#L285</code></a>
+  In file: <a href="./variables.tf#L279"><code>variables.tf#L279</code></a>
 
 </details>
 </blockquote><!-- variable:"nic_link_advertise":end -->
@@ -693,6 +692,33 @@ Configuration for script management including shared directory and script items
 
 </details>
 </blockquote><!-- variable:"scripts":end -->
+<blockquote><!-- variable:"share_permissions":start -->
+
+### `share_permissions` (*Optional*)
+
+Share paths whose group permissions get repaired on a schedule (dirs: g+rwxs, files: g+rw)
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  object({
+    paths         = list(string)
+    exclude_paths = optional(list(string), [])
+    schedule      = optional(string, "*-*-* 04:30:00")
+  })
+  ```
+  **Default**:
+  ```json
+  {
+  "paths": []
+}
+  ```
+  In file: <a href="./variables.tf#L303"><code>variables.tf#L303</code></a>
+
+</details>
+</blockquote><!-- variable:"share_permissions":end -->
 <blockquote><!-- variable:"share_user":start -->
 
 ### `share_user` (*Optional*)
@@ -744,31 +770,10 @@ Map of storage directories to configure; the key is the name of the directory.
   ```json
   {}
   ```
-  In file: <a href="./variables.tf#L276"><code>variables.tf#L276</code></a>
-
-</details>
-</blockquote><!-- variable:"storage_directories":end -->
-<blockquote><!-- variable:"storage_pools":start -->
-
-### `storage_pools` (*Optional*)
-
-Configuration of the storage (pools and directories) to import
-
-<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
-  <summary>Show more...</summary>
-
-  **Type**:
-  ```hcl
-  list(string)
-  ```
-  **Default**:
-  ```json
-  []
-  ```
   In file: <a href="./variables.tf#L270"><code>variables.tf#L270</code></a>
 
 </details>
-</blockquote><!-- variable:"storage_pools":end -->
+</blockquote><!-- variable:"storage_directories":end -->
 <blockquote><!-- variable:"terraform_user":start -->
 
 ### `terraform_user` (*Optional*)
@@ -877,7 +882,7 @@ In file: <a href="./outputs.tf#L6"><code>outputs.tf#L6</code></a>
 
 User and git+ssh URL for gitops purposes
 
-In file: <a href="./outputs.tf#L54"><code>outputs.tf#L54</code></a>
+In file: <a href="./outputs.tf#L49"><code>outputs.tf#L49</code></a>
 </blockquote><!-- output:"gitops_user":end -->
 <blockquote><!-- output:"imported_directories":start -->
 
@@ -885,7 +890,7 @@ In file: <a href="./outputs.tf#L54"><code>outputs.tf#L54</code></a>
 
 Imported directories
 
-In file: <a href="./outputs.tf#L40"><code>outputs.tf#L40</code></a>
+In file: <a href="./outputs.tf#L35"><code>outputs.tf#L35</code></a>
 </blockquote><!-- output:"imported_directories":end -->
 <blockquote><!-- output:"installed_packages":start -->
 
@@ -917,7 +922,7 @@ In file: <a href="./outputs.tf#L21"><code>outputs.tf#L21</code></a>
 
 Version of `node-exporter`, that was installed
 
-In file: <a href="./outputs.tf#L70"><code>outputs.tf#L70</code></a>
+In file: <a href="./outputs.tf#L65"><code>outputs.tf#L65</code></a>
 </blockquote><!-- output:"node_exporter_version":end -->
 <blockquote><!-- output:"share_user":start -->
 
@@ -933,21 +938,13 @@ In file: <a href="./outputs.tf#L26"><code>outputs.tf#L26</code></a>
 
 Version of `smartctl-exporter`, that was installed
 
-In file: <a href="./outputs.tf#L65"><code>outputs.tf#L65</code></a>
+In file: <a href="./outputs.tf#L60"><code>outputs.tf#L60</code></a>
 </blockquote><!-- output:"smartctl_exporter_version":end -->
-<blockquote><!-- output:"storage_pools":start -->
-
-#### `storage_pools`
-
-List of storage pools that were imported and added to Proxmox
-
-In file: <a href="./outputs.tf#L35"><code>outputs.tf#L35</code></a>
-</blockquote><!-- output:"storage_pools":end -->
 <blockquote><!-- output:"terraform_user":start -->
 
 #### `terraform_user`
 
 The user and role created to manage the Proxmox host via Terraform/OpenTofu
 
-In file: <a href="./outputs.tf#L45"><code>outputs.tf#L45</code></a>
+In file: <a href="./outputs.tf#L40"><code>outputs.tf#L40</code></a>
 </blockquote><!-- output:"terraform_user":end -->

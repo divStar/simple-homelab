@@ -7,8 +7,16 @@ for Gitea to authenticate via Zitadel SSO.
 
   1. `tofu apply` - creates Zitadel project, app, roles, and grants
   2. Copy the `stack_env_guide` output values into `stack.env`
-  3. `docker compose up` - starts Gitea; `gitea-init` registers the auth
+  3. `bash scripts/upload-configs.sh --input modules/docker-apps/modules/gitea/files --dest /mnt/data/gitea` - the runner config
+  4. `docker compose up` - starts Gitea; `gitea-init` registers the auth
      source automatically using the values from `stack.env`
+
+## Actions runner
+
+  `gitea-runner` reads `files/gitea-runner.yaml`, which holds only the settings that differ from act\_runner's defaults. Job containers
+  join `service-network` (the only network from which they reach gitea.my.world through Traefik) and trust the homelab CA through
+  the host's CA bundle. They run privileged, so a workflow can build images with its own `docker:dind` service container, but they
+  never get the VM's Docker socket.
 
 ## Role mapping (via the `flatRoles` Zitadel Action)
 
@@ -17,6 +25,8 @@ for Gitea to authenticate via Zitadel SSO.
   Gitea reads this via --group-claim-name=roles and maps:
     gitea\_admin  →  Gitea administrator
     gitea\_user   →  regular Gitea user (default for any authenticated user)
+
+<!-- docs-meta: order=140 icon=gitea,postgres -->
 
 ## Contents
 
@@ -51,7 +61,7 @@ for Gitea to authenticate via Zitadel SSO.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L45"><code>main.tf#L45</code></a></td>
+      <td><a href="./main.tf#L55"><code>main.tf#L55</code></a></td>
     </tr>
     <tr>
       <td colspan="2"><a href="../../../common/modules/oidc/README.md">README.md</a> <em>(experimental)</em></td>
@@ -67,7 +77,7 @@ for Gitea to authenticate via Zitadel SSO.
 
 Zitadel client ID for Gitea
 
-In file: <a href="./main.tf#L118"><code>main.tf#L118</code></a>
+In file: <a href="./main.tf#L128"><code>main.tf#L128</code></a>
 </blockquote><!-- output:"client_id":end -->
 <blockquote><!-- output:"client_secret":start -->
 
@@ -75,7 +85,7 @@ In file: <a href="./main.tf#L118"><code>main.tf#L118</code></a>
 
 Zitadel client secret for Gitea
 
-In file: <a href="./main.tf#L124"><code>main.tf#L124</code></a>
+In file: <a href="./main.tf#L134"><code>main.tf#L134</code></a>
 </blockquote><!-- output:"client_secret":end -->
 <blockquote><!-- output:"oidc_discovery_url":start -->
 
@@ -83,7 +93,7 @@ In file: <a href="./main.tf#L124"><code>main.tf#L124</code></a>
 
 Zitadel OpenID Connect auto-discovery URL
 
-In file: <a href="./main.tf#L130"><code>main.tf#L130</code></a>
+In file: <a href="./main.tf#L140"><code>main.tf#L140</code></a>
 </blockquote><!-- output:"oidc_discovery_url":end -->
 <blockquote><!-- output:"stack_env_guide":start -->
 
@@ -91,5 +101,5 @@ In file: <a href="./main.tf#L130"><code>main.tf#L130</code></a>
 
 Paste these values into stack.env, then run docker compose up
 
-In file: <a href="./main.tf#L97"><code>main.tf#L97</code></a>
+In file: <a href="./main.tf#L107"><code>main.tf#L107</code></a>
 </blockquote><!-- output:"stack_env_guide":end -->

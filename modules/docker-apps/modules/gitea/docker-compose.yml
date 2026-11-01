@@ -180,10 +180,13 @@ services:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
       - gitea-runner-data:/data
       - /var/run/docker.sock:/var/run/docker.sock
+      # Job container settings (network, CA trust); upload files/ with scripts/upload-configs.sh first
+      - /mnt/data/gitea/gitea-runner.yaml:/config.yaml:ro
     environment:
       - GITEA_INSTANCE_URL
       - GITEA_RUNNER_REGISTRATION_TOKEN
       - GITEA_RUNNER_NAME
+      - CONFIG_FILE=/config.yaml
 
 networks:
   service-network:

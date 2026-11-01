@@ -8,8 +8,16 @@
  *
  *   1. `tofu apply` - creates Zitadel project, app, roles, and grants
  *   2. Copy the `stack_env_guide` output values into `stack.env`
- *   3. `docker compose up` - starts Gitea; `gitea-init` registers the auth
+ *   3. `bash scripts/upload-configs.sh --input modules/docker-apps/modules/gitea/files --dest /mnt/data/gitea` - the runner config
+ *   4. `docker compose up` - starts Gitea; `gitea-init` registers the auth
  *      source automatically using the values from `stack.env`
+ *
+ * ## Actions runner
+ *
+ *   `gitea-runner` reads `files/gitea-runner.yaml`, which holds only the settings that differ from act_runner's defaults. Job containers
+ *   join `service-network` (the only network from which they reach gitea.my.world through Traefik) and trust the homelab CA through
+ *   the host's CA bundle. They run privileged, so a workflow can build images with its own `docker:dind` service container, but they
+ *   never get the VM's Docker socket.
  *
  * ## Role mapping (via the `flatRoles` Zitadel Action)
  *

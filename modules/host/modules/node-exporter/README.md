@@ -14,8 +14,10 @@ Handles exporting host-level metrics (CPU, memory, network interfaces, etc.) eve
   - [ssh](#ssh-required) (**Required**)
   - [node_exporter_github_repository](#node_exporter_github_repository-optional) (*Optional*)
   - [node_exporter_version](#node_exporter_version-optional) (*Optional*)
+  - [textfile_directory](#textfile_directory-optional) (*Optional*)
 - [Outputs](#outputs)
   - [node_exporter_version](#node_exporter_version)
+  - [textfile_directory](#textfile_directory)
 </blockquote><!-- contents:end -->
 
 ## Providers
@@ -51,7 +53,7 @@ Uninstalls node_exporter.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L73"><code>main.tf#L73</code></a></td>
+      <td><a href="./main.tf#L76"><code>main.tf#L76</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.uninstall_node_exporter":end -->
@@ -121,6 +123,27 @@ Particular version to install; keep empty to install the latest
 
 </details>
 </blockquote><!-- variable:"node_exporter_version":end -->
+<blockquote><!-- variable:"textfile_directory":start -->
+
+### `textfile_directory` (*Optional*)
+
+Directory the textfile collector reads `*.prom` files from (metrics written by scripts, e.g. share-permissions)
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  string
+  ```
+  **Default**:
+  ```json
+  "/var/lib/node_exporter/textfile_collector"
+  ```
+  In file: <a href="./variables.tf#L26"><code>variables.tf#L26</code></a>
+
+</details>
+</blockquote><!-- variable:"textfile_directory":end -->
 
 ## Outputs
   
@@ -132,3 +155,11 @@ Version of `node_exporter`, that was installed
 
 In file: <a href="./outputs.tf#L1"><code>outputs.tf#L1</code></a>
 </blockquote><!-- output:"node_exporter_version":end -->
+<blockquote><!-- output:"textfile_directory":start -->
+
+#### `textfile_directory`
+
+Directory the textfile collector reads `*.prom` files from
+
+In file: <a href="./outputs.tf#L6"><code>outputs.tf#L6</code></a>
+</blockquote><!-- output:"textfile_directory":end -->

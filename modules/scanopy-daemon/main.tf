@@ -33,6 +33,9 @@ locals {
   dns_search_domain = "my.world"
 
   scanopy_server_url = "https://topology.my.world"
+
+  # Daemon self-update schedule - 30 min after the base module's debian-update.timer
+  scanopy_update_schedule = "Sun *-*-* 05:30:00"
 }
 
 # Debian LXC container setup
@@ -117,6 +120,63 @@ resource "ssh_resource" "install_scanopy_daemon" {
 
   lifecycle {
     replace_triggered_by = [terraform_data.container_trigger.id]
+  }
+
+  timeout = "5m"
+}
+
+# `file { source }` content isn't diffed by the ssh provider - this forces a re-push whenever a file or the schedule changes.
+resource "terraform_data" "update_scanopy_daemon_trigger" {
+  triggers_replace = {
+    script   = filesha256("${path.module}/files/update-scanopy-daemon.sh")
+    service  = filesha256("${path.module}/files/scanopy-daemon-update.service")
+    timer    = filesha256("${path.module}/files/scanopy-daemon-update.timer.tftpl")
+    schedule = local.scanopy_update_schedule
+  }
+}
+
+# Weekly daemon self-update - install.sh has no apt repo behind it, so debian-update.timer never updates the binary.
+# Runs once right away, too.
+resource "ssh_resource" "update_scanopy_daemon" {
+  depends_on = [ssh_resource.install_scanopy_daemon]
+
+  host        = local.container_ip
+  user        = "root"
+  private_key = module.setup_container.ssh_private_key
+
+  file {
+    source      = "${path.module}/files/update-scanopy-daemon.sh"
+    destination = "/usr/local/bin/update-scanopy-daemon.sh"
+    permissions = "0755"
+    owner       = "root"
+    group       = "root"
+  }
+
+  file {
+    source      = "${path.module}/files/scanopy-daemon-update.service"
+    destination = "/etc/systemd/system/scanopy-daemon-update.service"
+    permissions = "0644"
+    owner       = "root"
+    group       = "root"
+  }
+
+  file {
+    content     = templatefile("${path.module}/files/scanopy-daemon-update.timer.tftpl", { schedule = local.scanopy_update_schedule })
+    destination = "/etc/systemd/system/scanopy-daemon-update.timer"
+    permissions = "0644"
+    owner       = "root"
+    group       = "root"
+  }
+
+  commands = [
+    "systemctl daemon-reload",
+    "systemctl enable --now scanopy-daemon-update.timer",
+    "systemctl start scanopy-daemon-update.service",
+    "journalctl -u scanopy-daemon-update.service -n 1 --no-pager --output cat"
+  ]
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.container_trigger.id, terraform_data.update_scanopy_daemon_trigger]
   }
 
   timeout = "5m"

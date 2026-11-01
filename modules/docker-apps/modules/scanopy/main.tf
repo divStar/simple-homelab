@@ -82,6 +82,7 @@ output "scanopy_oidc_toml" {
     issuer_url = "https://zitadel.${local.base_domain}"
     client_id = "${module.scanopy_web_ui_oidc.client_id}"
     client_secret = "${module.scanopy_web_ui_oidc.client_secret}"
+    trusted_audiences = ["${module.scanopy_web_ui_oidc.project_id}"]
   EOT
   sensitive   = true
 }

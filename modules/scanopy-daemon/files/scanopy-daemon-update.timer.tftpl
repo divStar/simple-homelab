@@ -1,0 +1,10 @@
+[Unit]
+Description=Run scanopy-daemon update
+
+[Timer]
+OnCalendar=${schedule}
+Persistent=true
+Unit=scanopy-daemon-update.service
+
+[Install]
+WantedBy=timers.target

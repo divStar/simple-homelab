@@ -51,7 +51,7 @@ Uninstalls the smartctl-exporter.
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L73"><code>main.tf#L73</code></a></td>
+      <td><a href="./main.tf#L75"><code>main.tf#L75</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.uninstall_smartctl_exporter":end -->
