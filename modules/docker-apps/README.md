@@ -87,11 +87,11 @@ chown igvo:staff "$KEY_PATH"
 Docker's TLS port (2376) is served by [ghostunnel](https://github.com/ghostunnel/ghostunnel), not by Docker itself. The certificates
 are auto-renewed every 12 hours; a renewal only reloads ghostunnel, so Docker and its containers keep running.
 
-Traefik's and Portainer's `docker-compose.yml` mount `- /var/run:/var/run/:ro` **instead** of just the `docker.sock`. This dates back to
-when Docker itself served port 2376 and was restarted on every certificate renewal: each restart deletes the socket file and creates it
-anew, possibly occupying a different [inode](https://en.wikipedia.org/wiki/Inode), so a container mounting only the file lost its
-connection to the Docker host. With ghostunnel those restarts no longer happen, so mounting `/var/run/docker.sock` directly (like the
-other stacks do) is an option again.
+All stacks mount `- /var/run/docker.sock:/var/run/docker.sock:ro` directly. Traefik and Portainer used to mount the whole `/var/run`
+instead, because back when Docker itself served port 2376, every renewal restarted Docker, which deleted the socket file and created it
+anew, possibly with a different [inode](https://en.wikipedia.org/wiki/Inode) - a container mounting only the file lost its connection to
+the Docker host. Should Docker ever be restarted (e.g. a Flatcar update reboot recreates everything anyway, a manual
+`systemctl restart docker` does not), restart the containers mounting the socket too.
 
 ## Installing Traefik `docker-compose.yml`
 
@@ -103,10 +103,8 @@ You will be installing Traefik without a proper dashboard, because the dashboard
 > [!WARNING]
 > If you are following this guide, you probably could not restore any backups. If so, create the `/mnt/data/traefik` directory (with `sudo`) **in the Flatcar Linux Docker VM** and assign it to the user:group `1000:1000` by running `sudo chmod -R 1000:1000 /mnt/data/traefik`. This directory will store **the `acme.json`** file.
 
-From the `traefik` directory (on your client), run the following to install Traefik.
-```bash
-$ docker compose -f ./docker-compose.yml --env-file ./stack.env up -d
-```
+Traefik runs as two instances (`traefik-management` and `traefik-services`), each deployed with its own command and env files - see
+[`traefik/how-to-deploy.md`](./modules/traefik/how-to-deploy.md) for the exact commands and why a single `up -d` must not be used.
 
 Assuming Step CA LXC is available and properly set up, Traefik should start up.
 
@@ -156,7 +154,7 @@ You will be installing Portainer in an insecure mode first. It will be available
 
 From the `portainer` directory, run the following to install Portainer.
 ```bash
-$ docker compose -f ./docker-compose.yml -d
+$ docker compose -f ./docker-compose.yml --env-file ./stack.env up -d
 ```
 
 Use e.g. `docker ps` to check if the container is running properly.
