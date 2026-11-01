@@ -2,7 +2,9 @@
 
 This module sets up a [Flatcar Linux VM](https://www.flatcar.org/) with Docker.
 
-Docker is exposed via TLS port (2376). Look at the [`./files` folder](./files) for more configuration details.
+Docker is exposed via TLS on port 2376 through [ghostunnel](https://github.com/ghostunnel/ghostunnel), which proxies to the local
+Docker socket - certificate renewals reload ghostunnel instead of restarting Docker. Look at the [`./files` folder](./files) for more
+configuration details.
 
 <!-- docs-meta: order=60 icon=flatcar -->
 
@@ -22,6 +24,8 @@ Docker is exposed via TLS port (2376). Look at the [`./files` folder](./files) f
   - [efi_disk_datastore_id](#efi_disk_datastore_id-required) (**Required**)
   - [flatcar_image_datastore_id](#flatcar_image_datastore_id-required) (**Required**)
   - [flatcar_image_file_name](#flatcar_image_file_name-required) (**Required**)
+  - [ghostunnel_sha256](#ghostunnel_sha256-required) (**Required**)
+  - [ghostunnel_version](#ghostunnel_version-required) (**Required**)
   - [ignition_config_datastore_id](#ignition_config_datastore_id-required) (**Required**)
   - [ignition_config_file_name](#ignition_config_file_name-required) (**Required**)
   - [proxmox_endpoint](#proxmox_endpoint-required) (**Required**)
@@ -81,7 +85,7 @@ Download Flatcar stable image
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L83"><code>main.tf#L83</code></a></td>
+      <td><a href="./main.tf#L89"><code>main.tf#L89</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_download_file.flatcar_image":end -->
@@ -97,7 +101,7 @@ Upload the transpiled Ignition config as a snippet
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L71"><code>main.tf#L71</code></a></td>
+      <td><a href="./main.tf#L77"><code>main.tf#L77</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_file.ignition_config":end -->
@@ -113,7 +117,7 @@ Create the Flatcar VM
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L95"><code>main.tf#L95</code></a></td>
+      <td><a href="./main.tf#L101"><code>main.tf#L101</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"proxmox_virtual_environment_vm.flatcar":end -->
@@ -141,7 +145,7 @@ Disks, that should be mounted
     mount_path   = optional(string)
   }))
   ```
-  In file: <a href="./variables.tf#L176"><code>variables.tf#L176</code></a>
+  In file: <a href="./variables.tf#L191"><code>variables.tf#L191</code></a>
 
 </details>
 </blockquote><!-- variable:"disks":end -->
@@ -158,7 +162,7 @@ Docker daemon.json configuration file content
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L156"><code>variables.tf#L156</code></a>
+  In file: <a href="./variables.tf#L171"><code>variables.tf#L171</code></a>
 
 </details>
 </blockquote><!-- variable:"docker_daemon_configuration":end -->
@@ -175,7 +179,7 @@ Proxmox location for the EFI disk
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L171"><code>variables.tf#L171</code></a>
+  In file: <a href="./variables.tf#L186"><code>variables.tf#L186</code></a>
 
 </details>
 </blockquote><!-- variable:"efi_disk_datastore_id":end -->
@@ -192,7 +196,7 @@ Proxmox location for the FlatCar image
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L135"><code>variables.tf#L135</code></a>
+  In file: <a href="./variables.tf#L150"><code>variables.tf#L150</code></a>
 
 </details>
 </blockquote><!-- variable:"flatcar_image_datastore_id":end -->
@@ -209,10 +213,44 @@ Filename of the FlatCar image (image type must match format of the boot disk in 
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L140"><code>variables.tf#L140</code></a>
+  In file: <a href="./variables.tf#L155"><code>variables.tf#L155</code></a>
 
 </details>
 </blockquote><!-- variable:"flatcar_image_file_name":end -->
+<blockquote><!-- variable:"ghostunnel_sha256":start -->
+
+### `ghostunnel_sha256` (**Required**)
+
+SHA-256 of that release's `ghostunnel-linux-amd64` binary, as listed on its GitHub release page
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  string
+  ```
+  In file: <a href="./variables.tf#L130"><code>variables.tf#L130</code></a>
+
+</details>
+</blockquote><!-- variable:"ghostunnel_sha256":end -->
+<blockquote><!-- variable:"ghostunnel_version":start -->
+
+### `ghostunnel_version` (**Required**)
+
+ghostunnel release version without the leading `v` (used in `ghostunnel.config.yaml.tftpl`)
+
+<details style="border-top-color: inherit; border-top-width: 0.1em; border-top-style: solid; padding-top: 0.5em; padding-bottom: 0.5em;">
+  <summary>Show more...</summary>
+
+  **Type**:
+  ```hcl
+  string
+  ```
+  In file: <a href="./variables.tf#L125"><code>variables.tf#L125</code></a>
+
+</details>
+</blockquote><!-- variable:"ghostunnel_version":end -->
 <blockquote><!-- variable:"ignition_config_datastore_id":start -->
 
 ### `ignition_config_datastore_id` (**Required**)
@@ -226,7 +264,7 @@ Proxmox location of the Ignition configuration
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L125"><code>variables.tf#L125</code></a>
+  In file: <a href="./variables.tf#L140"><code>variables.tf#L140</code></a>
 
 </details>
 </blockquote><!-- variable:"ignition_config_datastore_id":end -->
@@ -243,7 +281,7 @@ Filename of the Ignition configuration; use `VM_ID` in the filename to replace i
   ```hcl
   string
   ```
-  In file: <a href="./variables.tf#L130"><code>variables.tf#L130</code></a>
+  In file: <a href="./variables.tf#L145"><code>variables.tf#L145</code></a>
 
 </details>
 </blockquote><!-- variable:"ignition_config_file_name":end -->
@@ -413,7 +451,7 @@ Map of VirtioFS mapping names to attach to all VMs
   ```hcl
   map(string)
   ```
-  In file: <a href="./variables.tf#L166"><code>variables.tf#L166</code></a>
+  In file: <a href="./variables.tf#L181"><code>variables.tf#L181</code></a>
 
 </details>
 </blockquote><!-- variable:"viritofs_resources":end -->
@@ -570,7 +608,7 @@ Image channel of the FlatCar image (alpha, beta, stable)
   ```json
   "stable"
   ```
-  In file: <a href="./variables.tf#L145"><code>variables.tf#L145</code></a>
+  In file: <a href="./variables.tf#L160"><code>variables.tf#L160</code></a>
 
 </details>
 </blockquote><!-- variable:"flatcar_image_channel":end -->

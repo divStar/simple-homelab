@@ -3,7 +3,9 @@
  *
  * This module sets up a [Flatcar Linux VM](https://www.flatcar.org/) with Docker.
  *
- * Docker is exposed via TLS port (2376). Look at the [`./files` folder](./files) for more configuration details.
+ * Docker is exposed via TLS on port 2376 through [ghostunnel](https://github.com/ghostunnel/ghostunnel), which proxies to the local
+ * Docker socket - certificate renewals reload ghostunnel instead of restarting Docker. Look at the [`./files` folder](./files) for more
+ * configuration details.
  *
  * <!-- docs-meta: order=60 icon=flatcar -->
  */
@@ -60,6 +62,10 @@ data "ct_config" "flatcar" {
       vm_domain           = var.vm_domain
       vm_management_ip    = var.vm_management_ip
     }),
+    templatefile("${local.config_directory}/ghostunnel${local.config_file_suffix}", {
+      ghostunnel_version = var.ghostunnel_version
+      ghostunnel_sha256  = var.ghostunnel_sha256
+    }),
     templatefile("${local.config_directory}/docker-service${local.config_file_suffix}", {
       docker_daemon_configuration = var.docker_daemon_configuration
       virtiofs_resources          = var.viritofs_resources
@@ -94,7 +100,7 @@ resource "proxmox_download_file" "flatcar_image" {
 # Create the Flatcar VM
 resource "proxmox_virtual_environment_vm" "flatcar" {
   depends_on     = [proxmox_download_file.flatcar_image, proxmox_virtual_environment_file.ignition_config]
-  timeout_create = 300
+  timeout_create = 1800 // importing the ~80GB docker disk alone takes well over 5 minutes
 
   name        = var.vm_hostname
   description = "Flatcar Container Linux with Docker (with TLS from the Step CA LXC container) and *virtiofs* mounts for media."

@@ -35,8 +35,10 @@ storage:
           chmod 0644 /etc/docker/server.pem
           chmod 0644 /etc/docker/ca.pem
 
-          if systemctl is-active --quiet docker.service; then
-            systemctl restart docker.service --no-block
+          # Re-read the renewed certificate without dropping connections (Docker itself keeps running).
+          # --no-block: ghostunnel.service is ordered After=docker-cert.service, so a blocking reload would deadlock this unit
+          if systemctl is-active --quiet ghostunnel.service; then
+            systemctl reload ghostunnel.service --no-block
           fi
 
 systemd:
