@@ -16,7 +16,7 @@ services:
       - "traefik.enable=true"
       - "traefik-tier=management"
       # Dashboard
-      - "traefik.http.routers.portainer-secure.rule=Host(`portainer.my.world`)"
+      - "traefik.http.routers.portainer-secure.rule=Host(`portainer.${BASE_DOMAIN}`)"
       - "traefik.http.routers.portainer-secure.entrypoints=websecure"
       - "traefik.http.routers.portainer-secure.service=portainer-secure"
       - "traefik.http.services.portainer-secure.loadbalancer.server.port=9000"
