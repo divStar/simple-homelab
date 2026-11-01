@@ -61,10 +61,13 @@ services:
       - ALLOY_DEPLOY_MODE=docker
       - HOSTNAME=${HOSTNAME:-docker-vm}
     volumes:
-      - /var/run:/var/run:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # cAdvisor reads container rootfs paths from containerd once Docker uses the containerd image store (Docker 29+ default)
+      - /run/containerd/containerd.sock:/run/containerd/containerd.sock:ro
+      # node_exporter's diskstats collector reads device properties (model, serial, path) from udev
+      - /run/udev/data:/run/udev/data:ro
       - /:/rootfs:ro
       - /sys:/sys:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
       - alloy-data:/var/lib/alloy
