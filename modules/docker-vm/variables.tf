@@ -122,6 +122,21 @@ variable "step_ca_provisioner_password" {
   sensitive   = true
 }
 
+variable "ghostunnel_version" {
+  description = "ghostunnel release version without the leading `v` (used in `ghostunnel.config.yaml.tftpl`)"
+  type        = string
+}
+
+variable "ghostunnel_sha256" {
+  description = "SHA-256 of that release's `ghostunnel-linux-amd64` binary, as listed on its GitHub release page"
+  type        = string
+
+  validation {
+    condition     = can(regex("^[0-9a-f]{64}$", var.ghostunnel_sha256))
+    error_message = "ghostunnel SHA-256 must be 64 lowercase hex characters"
+  }
+}
+
 variable "ignition_config_datastore_id" {
   description = "Proxmox location of the Ignition configuration"
   type        = string

@@ -21,6 +21,9 @@ step_ca_domain               = "<step-ca-domain>"
 step_ca_provisioner          = "<jwk-provisioner>"
 step_ca_provisioner_password = "<jwk-provisioner-password>"
 
+ghostunnel_version = "<version-without-v>"
+ghostunnel_sha256  = "<sha256-of-ghostunnel-linux-amd64>"
+
 ignition_config_datastore_id = "local-zfs"
 ignition_config_file_name    = "flatcar-ignition-VM_ID.json"
 
@@ -37,12 +40,7 @@ docker_daemon_configuration = <<-EOT
       "max-size": "100m",
       "max-file": "10"
     },
-    "metrics-addr": "127.0.0.1:9323",
-    "tls": true,
-    "tlsverify": true,
-    "tlscacert": "/etc/docker/ca.pem",
-    "tlscert": "/etc/docker/server.pem",
-    "tlskey": "/etc/docker/server-key.pem"
+    "metrics-addr": "127.0.0.1:9323"
   }
 EOT
 

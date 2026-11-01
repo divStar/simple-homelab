@@ -3,7 +3,9 @@
  *
  * This module sets up a [Flatcar Linux VM](https://www.flatcar.org/) with Docker.
  *
- * Docker is exposed via TLS port (2376). Look at the [`./files` folder](./files) for more configuration details.
+ * Docker is exposed via TLS on port 2376 through [ghostunnel](https://github.com/ghostunnel/ghostunnel), which proxies to the local
+ * Docker socket - certificate renewals reload ghostunnel instead of restarting Docker. Look at the [`./files` folder](./files) for more
+ * configuration details.
  *
  * <!-- docs-meta: order=60 icon=flatcar -->
  */
@@ -59,6 +61,10 @@ data "ct_config" "flatcar" {
       vm_hostname         = var.vm_hostname
       vm_domain           = var.vm_domain
       vm_management_ip    = var.vm_management_ip
+    }),
+    templatefile("${local.config_directory}/ghostunnel${local.config_file_suffix}", {
+      ghostunnel_version = var.ghostunnel_version
+      ghostunnel_sha256  = var.ghostunnel_sha256
     }),
     templatefile("${local.config_directory}/docker-service${local.config_file_suffix}", {
       docker_daemon_configuration = var.docker_daemon_configuration

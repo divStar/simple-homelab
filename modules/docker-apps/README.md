@@ -84,11 +84,14 @@ chown igvo:staff "$KEY_PATH"
 
 ### Consequences of exposing Docker securely via TLS
 
-In the `docker-compose.yml` the following volume is mounted: `- /var/run:/var/run/:ro` **instead** of mounting just the `docker.sock` directly, because unfortunately when restarting the Docker (systemd) service in the Flatcar Linux Docker VM, the file is deleted and created anew rather than updated, possibly occupying a different [inode](https://en.wikipedia.org/wiki/Inode). Therefore the container (e.g. Traefik or Portainer) loses its bind mount to the Docker host and is not able to function properly anymore.
+Docker's TLS port (2376) is served by [ghostunnel](https://github.com/ghostunnel/ghostunnel), not by Docker itself. The certificates
+are auto-renewed every 12 hours; a renewal only reloads ghostunnel, so Docker and its containers keep running.
 
-Mounting `/var/run` does not result in the same issue and the Docker host connection is picked up correctly every time.
-
-The **reason** Docker (systemd) service is restarted frequently is, that it's exposed via Docker TLS (port 2376) and the certificates are auto-updated every 12-24 hours.
+Traefik's and Portainer's `docker-compose.yml` mount `- /var/run:/var/run/:ro` **instead** of just the `docker.sock`. This dates back to
+when Docker itself served port 2376 and was restarted on every certificate renewal: each restart deletes the socket file and creates it
+anew, possibly occupying a different [inode](https://en.wikipedia.org/wiki/Inode), so a container mounting only the file lost its
+connection to the Docker host. With ghostunnel those restarts no longer happen, so mounting `/var/run/docker.sock` directly (like the
+other stacks do) is an option again.
 
 ## Installing Traefik `docker-compose.yml`
 

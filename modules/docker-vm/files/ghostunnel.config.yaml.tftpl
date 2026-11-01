@@ -1,0 +1,69 @@
+variant: flatcar
+version: 1.1.0
+
+storage:
+  files:
+    # Pinned ghostunnel release, verified against its published SHA-256
+    - path: /opt/bin/install-ghostunnel.sh
+      mode: 0755
+      contents:
+        inline: |
+          #!/bin/bash
+          set -euo pipefail
+
+          curl -fsSL -o /tmp/ghostunnel "https://github.com/ghostunnel/ghostunnel/releases/download/v${ghostunnel_version}/ghostunnel-linux-amd64"
+          echo "${ghostunnel_sha256}  /tmp/ghostunnel" | sha256sum -c -
+          install -m 0755 /tmp/ghostunnel /opt/bin/ghostunnel
+          rm -f /tmp/ghostunnel
+
+systemd:
+  units:
+    # Install ghostunnel; retried until the binary exists (not just on first boot), so a failed download can't leave Docker without TLS
+    - name: install-ghostunnel.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Install ghostunnel from GitHub releases
+        ConditionPathExists=!/opt/bin/ghostunnel
+        After=network-online.target
+        Wants=network-online.target
+        Before=ghostunnel.service
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/opt/bin/install-ghostunnel.sh
+        Restart=on-failure
+        RestartSec=30
+
+        [Install]
+        WantedBy=multi-user.target
+
+    # TLS front end for the Docker API: certificate renewals reload this instead of restarting Docker
+    - name: ghostunnel.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=ghostunnel TLS proxy for the Docker API
+        Wants=docker-cert.service install-ghostunnel.service network-online.target
+        After=docker-cert.service install-ghostunnel.service network-online.target
+
+        [Service]
+        Type=notify-reload
+        # Block until certs exist (handles the 1min timer delay or slow CA)
+        ExecStartPre=/usr/bin/bash -c 'for i in {1..120}; do [ -f /etc/docker/server.pem ] && exit 0; sleep 1; done; exit 1'
+        TimeoutStartSec=150
+        # --allow-all accepts any client certificate signed by the Step CA, same as dockerd's former tlsverify
+        ExecStart=/opt/bin/ghostunnel server \
+          --listen=0.0.0.0:2376 \
+          --target=unix:/run/docker.sock \
+          --cert=/etc/docker/server.pem \
+          --key=/etc/docker/server-key.pem \
+          --cacert=/etc/docker/ca.pem \
+          --allow-all
+        WatchdogSec=10
+        Restart=always
+        RestartSec=5
+
+        [Install]
+        WantedBy=multi-user.target
