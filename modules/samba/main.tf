@@ -53,7 +53,10 @@ module "setup_container" {
     { volume = "/mnt/backup/video", path = "/mnt/video" },
     { volume = "/mnt/backup/backup/macbook-m1-pro", path = "/mnt/macbook-m1-pro" },
   ]
-  packages = ["bash", "curl", "ca-certificates", "samba", "samba-common-tools", "iperf3"]
+  packages = [
+    "bash", "curl", "ca-certificates", "samba", "samba-common-tools", "iperf3",
+    "dbus", "dbus-openrc", "avahi", "avahi-openrc", "avahi-tools", "wsdd", "wsdd-openrc",
+  ]
 }
 
 # Trigger for user list changes. Uses triggers_replace, NOT input -- input-only
@@ -153,6 +156,47 @@ resource "ssh_resource" "configure_users" {
   lifecycle {
     replace_triggered_by = [
       terraform_data.users_trigger.id,
+      terraform_data.container_trigger.id,
+    ]
+  }
+
+  timeout = "1m"
+}
+
+# Network discovery across VLANs: Avahi/Bonjour for macOS Finder (which wants
+# _smb._tcp on 445), wsdd/WS-Discovery for Windows Explorer.
+resource "ssh_resource" "configure_discovery" {
+  depends_on = [ssh_resource.configure_users]
+
+  host        = local.container_ip
+  user        = "root"
+  private_key = module.setup_container.ssh_private_key
+
+  file {
+    source      = "${path.module}/files/avahi-smb.service"
+    destination = "/etc/avahi/services/smb.service"
+    permissions = "0644"
+  }
+
+  file {
+    source      = "${path.module}/files/wsdd.confd"
+    destination = "/etc/conf.d/wsdd"
+    permissions = "0644"
+  }
+
+  commands = [
+    "rc-update add dbus default",
+    "rc-update add avahi-daemon default",
+    "rc-update add wsdd default",
+    "rc-service dbus start",
+    "rc-service avahi-daemon restart",
+    "rc-service wsdd restart",
+  ]
+
+  # Only the container matters here, not samba_users - see the matching
+  # comment on ssh_resource.configure_samba above for why.
+  lifecycle {
+    replace_triggered_by = [
       terraform_data.container_trigger.id,
     ]
   }

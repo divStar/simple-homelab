@@ -12,6 +12,7 @@ This module sets up Samba server in an Alpine LXC container using the provided i
 - [Modules](#modules) _(nested and adjacent)_
   - [setup_container](#setup_container)
 - [Resources](#resources)
+  - _ssh_resource_.[configure_discovery](#ssh_resourceconfigure_discovery)
   - _ssh_resource_.[configure_samba](#ssh_resourceconfigure_samba)
   - _ssh_resource_.[configure_users](#ssh_resourceconfigure_users)
   - _terraform_data_.[container_trigger](#terraform_datacontainer_trigger)
@@ -55,6 +56,22 @@ Alpine LXC container setup
 
 ## Resources
   
+<blockquote><!-- resource:"ssh_resource.configure_discovery":start -->
+
+### _ssh_resource_.`configure_discovery`
+
+Network discovery across VLANs: Avahi/Bonjour for macOS Finder (which wants _smb._tcp on 445), wsdd/WS-Discovery for Windows Explorer.
+  <table>
+    <tr>
+      <td>Provider</td>
+      <td><code>ssh (loafoe/ssh)</code></td>
+    </tr>
+    <tr>
+      <td>In file</td>
+      <td><a href="./main.tf#L168"><code>main.tf#L168</code></a></td>
+    </tr>
+  </table>
+</blockquote><!-- resource:"ssh_resource.configure_discovery":end -->
 <blockquote><!-- resource:"ssh_resource.configure_samba":start -->
 
 ### _ssh_resource_.`configure_samba`
@@ -67,7 +84,7 @@ Deploy Samba configuration
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L79"><code>main.tf#L79</code></a></td>
+      <td><a href="./main.tf#L82"><code>main.tf#L82</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_samba":end -->
@@ -83,7 +100,7 @@ Create system users, set Samba passwords, and configure the shared write group
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L107"><code>main.tf#L107</code></a></td>
+      <td><a href="./main.tf#L110"><code>main.tf#L110</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"ssh_resource.configure_users":end -->
@@ -99,7 +116,7 @@ Trigger for container replacement - module outputs aren't valid replace_triggere
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L74"><code>main.tf#L74</code></a></td>
+      <td><a href="./main.tf#L77"><code>main.tf#L77</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terraform_data.container_trigger":end -->
@@ -115,7 +132,7 @@ Trigger for user list changes. Uses triggers_replace, NOT input -- input-only ch
     </tr>
     <tr>
       <td>In file</td>
-      <td><a href="./main.tf#L66"><code>main.tf#L66</code></a></td>
+      <td><a href="./main.tf#L69"><code>main.tf#L69</code></a></td>
     </tr>
   </table>
 </blockquote><!-- resource:"terraform_data.users_trigger":end -->
