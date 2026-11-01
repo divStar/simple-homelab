@@ -100,7 +100,7 @@ resource "proxmox_download_file" "flatcar_image" {
 # Create the Flatcar VM
 resource "proxmox_virtual_environment_vm" "flatcar" {
   depends_on     = [proxmox_download_file.flatcar_image, proxmox_virtual_environment_file.ignition_config]
-  timeout_create = 300
+  timeout_create = 1800 // importing the ~80GB docker disk alone takes well over 5 minutes
 
   name        = var.vm_hostname
   description = "Flatcar Container Linux with Docker (with TLS from the Step CA LXC container) and *virtiofs* mounts for media."
