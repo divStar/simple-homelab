@@ -1,3 +1,6 @@
+# This module's documentation: ./README.md
+# docs-title: Grafana
+# docs-purpose: Dashboard that displays various stats from various sources
 services:
   grafana:
     image: grafana/grafana:latest

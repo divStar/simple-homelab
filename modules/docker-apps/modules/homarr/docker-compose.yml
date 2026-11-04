@@ -32,12 +32,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /mnt/data/step-ca/sanctum-root-ca.crt:/appdata/trusted-certificates/sanctum-root-ca.crt:ro
       - homarr-data:/appdata
-    healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 7575"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
 
 networks:
   service-network:
