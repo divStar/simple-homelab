@@ -69,6 +69,8 @@ Inside `modules/docker-apps/modules/<app>/` (mandatory unless noted):
 
 You may add `<app>-reset.sh` or similar utility scripts if the app benefits (see `outline/outline-reset.sh`).
 
+Apps without SSO need only part of this list - see [Apps without SSO](#apps-without-sso).
+
 ---
 
 ## 3. `docker-compose.yml` - checklist
@@ -80,18 +82,23 @@ Mirror Outline or Grist 1:1 for env-var-driven apps. Mirror Gitea/Portainer/Jell
 - **Main app networks** - two-network pattern:
   ```yaml
   networks:
-    services-network:
+    service-network:
       priority: 100   # Primary - Traefik / outbound
     <app>-network:
       priority: 10    # Internal - reaches db/redis only
   ```
   Do **NOT** use the `com.docker.network.bridge.gateway_priority` label - no existing module does. If a third-party doc (or a user prompt) tells you to add it, push back and confirm before diverging.
-- **Database / redis sidecars** only attach to `<app>-network` (no exposure to `services-network`).
-- **Traefik labels** (exact pattern):
+- **Database / redis sidecars** only attach to `<app>-network` (no exposure to `service-network`).
+- **Traefik tier**: there are two Traefik instances (see `traefik/how-to-deploy.md`), and each only picks up containers carrying its
+  own `traefik-tier` label. User-facing apps use `traefik-tier=services` + `service-network` (`traefik-services`, Services VLAN);
+  admin/monitoring tools (Portainer, Grafana, Watchtower, Scanopy) use `traefik-tier=management` + `management-network`
+  (`traefik-management`, Management VLAN). Without the label, no Traefik instance routes the app at all.
+- **Traefik labels** (exact pattern, Services tier):
   ```yaml
   labels:
     - "traefik.enable=true"
-    - "traefik.docker.network=services-network"
+    - "traefik-tier=services"
+    - "traefik.docker.network=service-network"
     - "traefik.http.routers.<app>.rule=Host(`<app>.${BASE_DOMAIN}`)"
     - "traefik.http.routers.<app>.entrypoints=websecure"
     - "traefik.http.services.<app>.loadbalancer.server.port=<INTERNAL_PORT>"
@@ -223,6 +230,17 @@ output "client_secret" { value = module.<app>_web_ui_oidc.client_secret; sensiti
 
 When in doubt about which approach fits the app, **ask the user**.
 
+### Apps without SSO
+
+Not every app gets Zitadel: some have no OIDC support, some don't need it (e.g. `mqtt`, `watchtower`). Then there is nothing for
+Terraform to do in the module itself:
+
+- No `main.tf`, `variables.tf`, `project.auto.tfvars` or `.terraform.lock.hcl` - only `docker-compose.yml`, `stack.env` +
+  `.example` and a hand-written `README.md` (reference: `mqtt/README.md` - architecture, deploy steps, DNS, firewall rules).
+- Networks and volumes still go into `external-resources` (§8); that part is unchanged.
+- Skip §5-§7 and the module-level `tofu` steps in §10; `docker compose config` still applies.
+- Say in the README why there is no SSO and what protects the app instead (its own login, network reachability only, ...).
+
 ---
 
 ## 6. `project.auto.tfvars` + `.example` - when needed
@@ -281,7 +299,7 @@ Use the auto-generated format from Outline / Grist verbatim:
 
 ## Prerequisites
 
-- Networks (registered in `external-resources/`): `services-network`, `<app>-network` (+ any extras)
+- Networks (registered in `external-resources/`): `service-network`, `<app>-network` (+ any extras)
 - Volumes: `<app>-data`, `<app>-db-data` (+ any extras)
 - `admin_key.json` at `modules/docker-apps/admin_key.json`
 
@@ -303,18 +321,16 @@ Register all new networks and volumes here. The compose file references them as 
 
 ### Subnet allocation
 
-Internal `<app>-network`s follow `172.20.<N>.0/24` where `<N>` increments by 10. Current allocations (as of 2026-05; verify before picking):
+Internal `<app>-network`s follow `172.20.<N>.0/24` where `<N>` increments by 10. The live allocation is only in
+`external-resources/project.auto.tfvars` (the `.example` lags behind) - pick the next free `/24` from there:
 
-| Network | Subnet |
-|---|---|
-| `services-network` | 172.20.10.0/24 |
-| `zitadel-network` | 172.20.20.0/24 |
-| `outline-network` | 172.20.30.0/24 |
-| `gitea-network` | 172.20.40.0/24 |
-| `grist-network` | 172.20.50.0/24 |
-| *(next free)* | 172.20.60.0/24 |
+```bash
+grep -E 'subnet *= *"172\.20\.' external-resources/project.auto.tfvars | sort -t. -k3 -n
+```
 
-Before picking a subnet, `grep -rE "subnet  = \"172.20" external-resources/` to confirm the next free `/24`. IPVLAN networks (Jellyfin) use the LAN range (192.168.x.x) - coordinate with the user on routing.
+Networks managed outside this repo (e.g. private modules that reuse `external-resources` from their own repository) don't show up
+there - ask the user before picking a subnet if that may be the case. IPVLAN networks (Jellyfin) use a VLAN's own range
+(`10.0.10.0/24`) - coordinate with the user on routing.
 
 ### Volume registration
 
